@@ -1,0 +1,35 @@
+from bigbutton.resident_advisor import *
+import pytest
+
+
+def test_get_events_no_events():
+
+    # Web pages that dont read properly should raise an error
+    with pytest.raises(Exception):
+        get_events_list_from_search_url(r'httsp:www.google.com')
+
+    with pytest.raises(Exception):
+        get_events_list_from_search_url(r'https://www.residentadvisor.net/events/1424611')
+
+    with pytest.raises(Exception):
+        get_events_list_from_search_url(r'https://www.residentadvisor.net/dj/hunee')
+
+
+def test_get_artists_no_artists():
+    with pytest.raises(Exception):
+        get_artists_from_event_url(r'httsp:www.google.com')
+
+    with pytest.raises(Exception):
+        get_artists_from_event_url(r'https://www.residentadvisor.net/dj/hunee')
+
+    with pytest.raises(Exception):
+        get_artists_from_event_url(r'https://www.residentadvisor.net/events/1424565')
+
+
+def test_random_souncloud():
+    searchurl = r'https://www.residentadvisor.net/events/de/berlin/week/2020-09-18'
+    link = get_random_souncloud_from_search(searchurl)
+
+def test_random_souncloud_fails():
+    with pytest.raises(Exception):
+        get_random_souncloud_from_search(r'httsp:www.google.com')
