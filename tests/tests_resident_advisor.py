@@ -27,7 +27,8 @@ def test_get_artists_no_artists():
 
 
 def test_random_souncloud():
-    searchurl = r'https://www.residentadvisor.net/events/de/berlin/week/2020-09-18'
+    generic_url = r'https://ra.co/events/uk/london?week=2021-05-20'
+    searchurl = generic_url
     link = get_random_souncloud_from_search(searchurl)
 
 def test_random_souncloud_fails():

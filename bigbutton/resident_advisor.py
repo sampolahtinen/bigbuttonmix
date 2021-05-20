@@ -4,12 +4,13 @@ import pandas as pd
 import requests
 from bs4 import BeautifulSoup
 from bigbutton.request_library import *
+#from request_library import *
 import random
 
-def href_resident_advisor(href):
-    return 'https://www.residentadvisor.net' + href
+def href_to_url_RA(href):
+    return r'https://ra.co' + href
 
-def get_soup(url =r'https://www.residentadvisor.net/events/de/berlin/week/2020-09-18'):
+def get_soup(url =r'https://ra.co/events/uk/london?week=2021-05-20'):
     r = request_hidden(url)
 
     content = r.content
@@ -21,15 +22,10 @@ def get_events_list_from_search(soup):
     """
     Soup object for the search list webpage
     :param soup:
-    :return: list of dicts with href and name
+    :return: list of href in string format for event pages
     """
-    links = []
-    for article in soup.find_all('article',
-                                 {'itemtype': "http://data-vocabulary.org/Event"}
-                                 ):
-        links.append(article.find('div').find('a').attrs)
-
-    return links
+    links = soup.find_all('span',{'data-test-id':"event-listing-heading"})
+    return [l['href'] for l in links]
 
 def get_events_list_from_search_url(url):
     soup = get_soup(url)
@@ -43,11 +39,12 @@ def get_artists_from_event(soup):
     """
     read event page and return list of links to artist pages
     :param soup:
-    :return: urls
+    :return: href strings for artist pages
     """
-    tags = soup.find('p', {'class': 'lineup large'}).find_all('a')
-    if len(tags)>0:
-        return [href_resident_advisor(t['href']) for t in tags]
+    lineup = soup.find('div', {'data-tracking-id': 'event-detail-lineup'})
+    artists = lineup.find_all('a')
+    if len(artists)>0:
+        return [a['href'] for a in artists]
     else:
         raise Exception('No artist links found on event page')
 
@@ -68,30 +65,27 @@ def get_souncloud_from_artistpage(soup):
         raise Exception('No soundcloud link found')
 
 def get_random_souncloud_from_search(url):
-    events = get_events_list_from_search_url(url)
-
-    # get event urls
-    event_urls = []
-    for e in events:
-        event_urls.append(href_resident_advisor(e['href']))
+    event_hrefs = get_events_list_from_search_url(url)
 
     # shuffle the list
-    random.shuffle(event_urls)
+    random.shuffle(event_hrefs)
 
     # iterate and take the first successful soundcloud link
-    for event_url in event_urls:
+    for event_href in event_hrefs:
         try:
+            event_url = href_to_url_RA(event_href)
             event_soup = get_soup(event_url)
 
             # get list of artists and shuffle
-            artists = get_artists_from_event(event_soup)
+            artist_hrefs = get_artists_from_event(event_soup)
 
-            random.shuffle(artists)
+            random.shuffle(artist_hrefs)
 
-            # iterate through list and take first successful souncloud link
-            for artist in artists:
+            # iterate through list and take first successful soundcloud link
+            for artist_href in artist_hrefs:
                 try:
-                    artist_soup = get_soup(artist)
+                    artist_url = href_to_url_RA(artist_href)
+                    artist_soup = get_soup(artist_url)
                     link = get_souncloud_from_artistpage(artist_soup)
                     return link
                 except:
@@ -101,7 +95,7 @@ def get_random_souncloud_from_search(url):
 
 
 def main():
-    search_url = r'https://www.residentadvisor.net/events/de/berlin/week/2020-09-18'
+    search_url = r'https://ra.co/events/uk/london?week=2021-05-20'
     link = get_random_souncloud_from_search(search_url)
     print(link)
 
