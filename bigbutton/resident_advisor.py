@@ -10,7 +10,7 @@ import random
 def href_to_url_RA(href):
     return r'https://ra.co' + href
 
-def get_soup(url =r'https://ra.co/events/uk/london?week=2021-05-20'):
+def get_soup_RA(url =r'https://ra.co/events/uk/london?week=2021-05-20'):
     r = request_hidden(url)
 
     content = r.content
@@ -28,7 +28,7 @@ def get_events_list_from_search(soup):
     return [l['href'] for l in links]
 
 def get_events_list_from_search_url(url):
-    soup = get_soup(url)
+    soup = get_soup_RA(url)
     links = get_events_list_from_search(soup)
     if len(links)>0:
         return links
@@ -49,7 +49,7 @@ def get_artists_from_event(soup):
         raise Exception('No artist links found on event page')
 
 def get_artists_from_event_url(url):
-    soup = get_soup(url)
+    soup = get_soup_RA(url)
     return get_artists_from_event(soup)
 
 def get_souncloud_from_artistpage(soup):
@@ -74,7 +74,7 @@ def get_random_souncloud_from_search(url):
     for event_href in event_hrefs:
         try:
             event_url = href_to_url_RA(event_href)
-            event_soup = get_soup(event_url)
+            event_soup = get_soup_RA(event_url)
 
             # get list of artists and shuffle
             artist_hrefs = get_artists_from_event(event_soup)
@@ -85,7 +85,7 @@ def get_random_souncloud_from_search(url):
             for artist_href in artist_hrefs:
                 try:
                     artist_url = href_to_url_RA(artist_href)
-                    artist_soup = get_soup(artist_url)
+                    artist_soup = get_soup_RA(artist_url)
                     link = get_souncloud_from_artistpage(artist_soup)
                     return link
                 except:
