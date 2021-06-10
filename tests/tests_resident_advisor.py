@@ -29,8 +29,8 @@ def test_get_artists_no_artists():
 def test_random_souncloud():
     generic_url = r'https://ra.co/events/uk/london?week=2021-05-20'
     searchurl = generic_url
-    link = get_random_souncloud_from_search(searchurl)
+    link = get_random_soundcloud_from_search(searchurl)
 
 def test_random_souncloud_fails():
     with pytest.raises(Exception):
-        get_random_souncloud_from_search(r'https://www.google.com/')
+        get_random_soundcloud_from_search(r'https://www.google.com/')

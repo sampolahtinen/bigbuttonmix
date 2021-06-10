@@ -3,8 +3,8 @@ import re
 import pandas as pd
 import requests
 from bs4 import BeautifulSoup
-from bigbutton.request_library import *
-#from request_library import *
+#from bigbutton.request_library import *
+from request_library import *
 import random
 
 def href_to_url_RA(href):
@@ -24,8 +24,21 @@ def get_events_list_from_search(soup):
     :param soup:
     :return: list of href in string format for event pages
     """
-    links = soup.find_all('span',{'data-test-id':"event-listing-heading"})
-    return [l['href'] for l in links]
+    #links = soup.find_all('span',{'data-test-id':"event-listing-heading"})
+    links = soup.find_all('span')
+    hrefs = []
+    for l in links:
+        try:
+            href = l['href']
+            hrefs.append(href)
+        except:
+            continue
+
+    hrefs = [h for h in hrefs if h.split('/')[1]=='events']
+
+    hrefs = [h for h in hrefs if h.split('/')[-1].isnumeric()]
+
+    return hrefs
 
 def get_events_list_from_search_url(url):
     soup = get_soup_RA(url)
@@ -64,7 +77,12 @@ def get_souncloud_from_artistpage(soup):
     except:
         raise Exception('No soundcloud link found')
 
-def get_random_souncloud_from_search(url):
+def get_random_soundcloud_from_search(url):
+    """
+    Take URL and return URL
+    :param url:
+    :return:
+    """
     event_hrefs = get_events_list_from_search_url(url)
 
     # shuffle the list
@@ -96,7 +114,7 @@ def get_random_souncloud_from_search(url):
 
 def main():
     search_url = r'https://ra.co/events/uk/london?week=2021-05-20'
-    link = get_random_souncloud_from_search(search_url)
+    link = get_random_soundcloud_from_search(search_url)
     print(link)
 
 

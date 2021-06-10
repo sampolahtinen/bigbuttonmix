@@ -14,4 +14,4 @@ def test_get_track_urls():
     track_urls = get_tracks_url_list_from_artist(artist_soup)
 
 def test_get_track_url_random():
-    track_url_random = get_random_track_from_artist(artist_soup)
+    track_url_random = get_random_track_url_from_artist_soup(artist_soup)
