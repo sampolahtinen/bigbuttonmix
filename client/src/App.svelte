@@ -13,17 +13,13 @@
 
   const getScEmbedCode = async () => {
     console.log("fetching");
-    // const response = await fetch("https://swapi.dev/api/people/1");
-    const response = (await fetch(
-      "http://localhost:4000/api/random-mix"
-    )) as any;
+    const response = await getRandomMixtape();
     console.log(response);
+
     const { html } = await response.json();
     console.log(html);
-    scEmbedCode = html;
 
-    // const iframeElement = new DOMParser().parseFromString(html, "text/html");
-    // console.log(iframeElement);
+    scEmbedCode = html;
   };
 
   const handleCitySelection = ({ detail }) => console.log(detail);

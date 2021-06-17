@@ -15,7 +15,7 @@ const app = express()
 const allowList = [
   'http://localhost:3000',
   'http://localhost:5000',
-  'https://e9aec1f2539d.ngrok.io'
+  'http://192.168.178.170:8080'
 ]
 app.use(
   cors({
