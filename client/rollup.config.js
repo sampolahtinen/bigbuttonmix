@@ -2,6 +2,7 @@ import svelte from 'rollup-plugin-svelte';
 import dev from 'rollup-plugin-dev';
 import commonjs from '@rollup/plugin-commonjs';
 import resolve from '@rollup/plugin-node-resolve';
+import injectProcessEnv from 'rollup-plugin-inject-process-env'
 import livereload from 'rollup-plugin-livereload';
 import { terser } from 'rollup-plugin-terser';
 import sveltePreprocess from 'svelte-preprocess';
@@ -65,6 +66,9 @@ export default {
 			sourceMap: !production,
 			inlineSources: !production
 		}),
+		injectProcessEnv({ 
+            NODE_ENV: production,
+         }),
 
 		// In dev mode, call `npm run start` once
 		// the bundle has been generated
