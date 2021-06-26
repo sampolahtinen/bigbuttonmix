@@ -36,57 +36,6 @@ const hardcodedUrl = 'https://ra.co/events/de/berlin?week=2021-06-17'
 
 const generateRandomNumber = max => Math.floor(Math.random() * max)
 
-export const residentAdvisorScraper = async (location?: string) => {
-  try {
-    if (!location) location = 'berlin'
-    // const page = await axios.get(hardcodedUrl)
-    // console.log(page.data)
-    const browser = await puppeteer.launch();
-
-    // const baseRaUrl = 'https://ra.co'
-
-    const page = await browser.newPage();
-
-    await page.goto(hardcodedUrl);
-    await page.screenshot({ path: 'screenshots.png'})
-
-    // const eventLinks = await page.$$eval('h3 > a[href^="/events"]', anchorTags => 
-    //   anchorTags.map(a => a.getAttribute('href'))
-    // )
-    // console.log(eventLinks)
-
-    // const randomNumber = generateRandomNumber(eventLinks.length)
-
-    // await page.goto(`${baseRaUrl}${eventLinks[randomNumber]}`)
-    
-    // const artistLinks = await page.$$eval('a > span[href^="/dj"', elements => elements.map(element => element.getAttribute('href')))
-    // console.log(artistLinks)
-    // await page.goto(baseRaUrl + artistLinks[generateRandomNumber(artistLinks.length)])
-
-    // const soundcloudLink = await page.$eval('a[href^="https://www.soundcloud.com"', element => element.getAttribute('href'))
-    // await page.goto(soundcloudLink + '/tracks')
-
-    // const artistTracks = await page.$$eval('.soundList .soundTitle__title', elements => elements.map(element => element.getAttribute('href')))
-    // console.log(artistTracks)
-    
-    // const soundcloudBaseUrl = 'https://soundcloud.com'
-    // // const fullTrackUrl = soundcloudLink + artistTracks[generateRandomNumber(artistTracks.length)]
-    // // console.log(fullTrackUrl)
-    
-    // const soundcloudEmbedServiceUrl = 'https://soundcloud.com/oembed'
-    // const response = await axios.get(soundcloudEmbedServiceUrl, {
-    //   params: {
-    //     url: soundcloudBaseUrl + artistTracks[generateRandomNumber(artistTracks.length)],
-    //     format: 'json'
-    //   }
-    // })
-    // console.log(response.data)
-  } catch (error) {
-    console.log(error)
-  }
-  
-}
-
 const fetchRandomEvent = async (eventLinks: string[]) => {
   const randomNumber = generateRandomNumber(eventLinks.length)
   const baseRaUrl = 'https://ra.co'
@@ -110,6 +59,9 @@ const fetchRandomEventArtist = async (eventArtistLinks: string[]) => {
     const body = await response.text()
     const artistPage = parse(body)
     const artistSoundcloudLink = artistPage.querySelector('a[href^="https://www.soundcloud.com"]')
+    
+    console.log('ARTIST SOUNDCLOUD LINK:')
+    console.log(artistSoundcloudLink)
 
     if (isEmpty(artistSoundcloudLink))  return fetchRandomEventArtist(eventArtistLinks)
 
@@ -119,7 +71,7 @@ const fetchRandomEventArtist = async (eventArtistLinks: string[]) => {
   }
 }
 
-export const residentAdvisorScraperFetch = async (location?: string) => {
+export const getRandomRAEventArtistTrack = async (location?: string) => {
   try {
     if (!location) location = 'berlin'
     const response = await fetch(hardcodedUrl)
@@ -146,6 +98,7 @@ export const residentAdvisorScraperFetch = async (location?: string) => {
        '.soundList .soundTitle__title',
         elements => elements.map(element => element.getAttribute('href')
       ))
+      browser.close()
       console.log(artistTracks)
     /**
      * Generating embed code
@@ -160,11 +113,10 @@ export const residentAdvisorScraperFetch = async (location?: string) => {
     })
 
     console.log(soundcloudEmbedResponse.data)
+    return soundcloudEmbedResponse.data
 
   } catch (error) {
     console.log(error)
   }
   
 }
-
-residentAdvisorScraperFetch()

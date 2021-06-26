@@ -10,15 +10,18 @@
   let userCity: string;
   let scEmbedCode: boolean;
   let cityDropdownOptions = generateCityOptions(countryOptions as any);
+  let isLoading: boolean = false;
 
   const getScEmbedCode = async () => {
     console.log("fetching");
+    isLoading = true;
     const response = await getRandomMixtape();
     console.log(response);
 
     const { html } = await response.json();
     console.log(html);
 
+    isLoading = false
     scEmbedCode = html;
   };
 
@@ -32,7 +35,7 @@
         {@html scEmbedCode}
       </div>
     {/if}
-    <BigButton on:click={getScEmbedCode} isSmall={scEmbedCode} />
+    <BigButton on:click={getScEmbedCode} isSmall={scEmbedCode} isLoading={isLoading} />
     <!-- <Dropdown items={cityDropdownOptions} on:select={handleCitySelection} /> -->
     <span class="copyright">(c) Andrew Moore & Sampo Lahtinen</span>
   </div>
