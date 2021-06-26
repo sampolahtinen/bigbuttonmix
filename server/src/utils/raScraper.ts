@@ -135,25 +135,31 @@ export const residentAdvisorScraperFetch = async (location?: string) => {
     /**
      * Soundcloud scrape
      */
-    const artistSoundcloudTracksResponse = await fetch(randomEventArtistSoundcloudLink + '/tracks')
-    const html = await artistSoundcloudTracksResponse.text()
-    const tracksHtml = parse(html)
-    console.log(tracksHtml)
-    const artistTracks = tracksHtml.querySelectorAll('.soundList .soundTitle__title').map(element => element.getAttribute('href'))
-    const soundcloudBaseUrl = 'https://soundcloud.com'
-    const soundcloudEmbedServiceUrl = 'https://soundcloud.com/oembed'
-    console.log(artistTracks)
+
+    console.log('OPENING PUPETTEER')
+     const browser = await puppeteer.launch();
+     const page = await browser.newPage();
+ 
+     await page.goto(randomEventArtistSoundcloudLink + '/tracks');
+    //  await page.waitForTimeout(500)
+     const artistTracks = await page.$$eval(
+       '.soundList .soundTitle__title',
+        elements => elements.map(element => element.getAttribute('href')
+      ))
+      console.log(artistTracks)
     /**
      * Generating embed code
      */
-    // const soundcloudEmbedResponse = await axios.get(soundcloudEmbedServiceUrl, {
-    //   params: {
-    //     url: soundcloudBaseUrl + artistTracks[generateRandomNumber(artistTracks.length)],
-    //     format: 'json'
-    //   }
-    // })
+    const soundcloudBaseUrl = 'https://soundcloud.com'
+    const soundcloudEmbedServiceUrl = 'https://soundcloud.com/oembed'
+    const soundcloudEmbedResponse = await axios.get(soundcloudEmbedServiceUrl, {
+      params: {
+        url: soundcloudBaseUrl + artistTracks[generateRandomNumber(artistTracks.length)],
+        format: 'json'
+      }
+    })
 
-    // console.log(soundcloudEmbedResponse.data)
+    console.log(soundcloudEmbedResponse.data)
 
   } catch (error) {
     console.log(error)
