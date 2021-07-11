@@ -18,5 +18,6 @@ export type SoundcloudEmbedResponse = {
 export const getRandomMixtape = async (city?: string) => {
     console.log('getting')
     const url =  __DEV__ ? '/api/random-mix' : `${CONFIG.baseUrl}/api/random-mix`
+    // const url =  __DEV__ ? '/api/random-mix' : `${CONFIG.baseUrl}/api/random-mix`
     return fetch(url)
 }
