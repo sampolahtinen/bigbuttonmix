@@ -15,7 +15,8 @@ const app = express()
 const allowList = [
   'http://localhost:3000',
   'http://localhost:5000',
-  'http://192.168.178.170:8080'
+  'http://192.168.178.170:8080',
+  'http://192.168.178.170:5000',
 ]
 app.use(
   cors({
