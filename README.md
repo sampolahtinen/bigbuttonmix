@@ -9,6 +9,8 @@ Installing a package globally:
 `npm i package_name -g`
 'npm install [package-name]@[version-number]'
 
+NB for windows: https://www.youtube.com/watch?v=t9okUDkRUDc
+
 packages:
 * yarn
 * rollup
