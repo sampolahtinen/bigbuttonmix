@@ -37,10 +37,13 @@ const generateRandomNumber = max => Math.floor(Math.random() * max)
 
 const fetchRandomEvent = async (eventLinks: string[]) => {
   const randomNumber = generateRandomNumber(eventLinks.length)
+  //console.log('List item: '+randomNumber)
+  
   const baseRaUrl = 'https://ra.co'
+  
   try {
     const eventUrl = `${baseRaUrl}${eventLinks[randomNumber]}`
-    console.log(`PROCESSING EVENT: ${eventUrl}`)
+	//console.log(`PROCESSING EVENT: ${eventUrl}`)
     const response = await fetch((eventUrl))
     const body = await response.text()
     const eventPage = parse(body)
@@ -99,6 +102,10 @@ export const getRandomRAEventArtistTrack = async (location?: string) => {
     const body = await response.text()
     const root = parse(body)
     const eventLinks = root.querySelectorAll('h3 > a[href^="/events"]').map(a => a.getAttribute('href'))
+	
+	console.log('Event links list: ')
+	console.log(eventLinks)
+	
     const randomEventPage = await fetchRandomEvent(eventLinks)
 
     let artistLinks = randomEventPage.querySelectorAll('a > span[href^="/dj"]').map(element => element.getAttribute('href'))
