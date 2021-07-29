@@ -7,6 +7,12 @@ Maybe you have to install yarn globally (and any other that throws errors).
 
 Installing a package globally:
 `npm i package_name -g`
+'npm install [package-name]@[version-number]'
+
+packages:
+* yarn
+* rollup
+* 
 
 If you dont have npm installed, follow:
 https://docs.npmjs.com/downloading-and-installing-node-js-and-npm
