@@ -25,15 +25,94 @@
 // }
 // import puppeteer from 'puppeteer'
 
+// imports for using node: 'const library = require('cool-library')
+// const puppeteer = required('puppeteer-extra')
+// import fetch from 'node-fetch'
+// import { parse } from 'node-html-parser';
+// import axios from 'axios';
+// import { isEmpty } from 'ramda';
+// import { Console } from 'node:console';
+
+
+
+//imports original
+
 import puppeteer from 'puppeteer-extra'
 import fetch from 'node-fetch'
 import { parse } from 'node-html-parser';
 import axios from 'axios';
 import { isEmpty } from 'ramda';
 import { Console } from 'node:console';
+import UserAgent from 'user-agents';
+
+
 
 
 const generateRandomNumber = max => Math.floor(Math.random() * max)
+
+const hardcodedUrl = 'https://ra.co/events/de/berlin?week=2021-06-17'
+
+const puppetRequest = async (browser, url, cssSelector) => {
+  const page = await browser.newPage()
+  const user = new UserAgent().toString()
+  await page.setUserAgent(user)
+  await page.goto(url)
+  const html = await page.content()
+  const page_text = await parse(html)
+  const elements = await page_text.querySelectorAll(cssSelector)
+  return elements
+}
+
+const fetchEventLinks = async(searchPageURL,browser_default) => {
+  // selector uses CCS selectors: https://developer.mozilla.org/en-US/docs/Web/CSS/CSS_Selectors
+  // .map is a function to apply a function to every item in an array and then return the array
+  //const events = root.querySelectorAll('h3 > a[href^="/events"]').map(a => a.getAttribute('href'))
+  
+
+  // https://stackoverflow.com/questions/55678095/bypassing-captchas-with-headless-chrome-using-puppeteer
+
+  const chromeOptions = {
+    headless:false,
+    defaultViewport: null};
+    
+  const browser = await puppeteer.launch();
+  // const searchPage = await browser.newPage();
+  // const user = new UserAgent().toString()
+  // console.log(user)
+
+  // await searchPage.setUserAgent(user)
+  // await searchPage.goto(searchPageURL);
+
+  // console.log(searchPageURL)
+
+  // await searchPage.screenshot({path: 'screenshot_RA_events.png'})
+  // const html = await searchPage.content()
+  // const page_text = await parse(html)
+
+
+  // const event_elements = await page_text.querySelectorAll('h3 > a[href^="/events"]')
+  
+  const event_elements = await puppetRequest(browser,searchPageURL,'h3 > a[href^="/events"]')
+
+  const event_elements_array = await Array.from(event_elements)
+  
+  const events = await event_elements_array.map(a => a.getAttribute('href'))
+  console.log(events)
+
+  console.log('Number of events found:')
+  console.log(typeof events)
+  console.log(events.length)
+  //await searchPage.close()
+
+  if(events.length == 0) {
+    const message = "Event list is empty"
+    console.log(message)
+    throw message    
+  }
+  
+  return events
+}
+
 
 const fetchRandomEvent = async (eventLinks: string[]) => {
   const randomNumber = generateRandomNumber(eventLinks.length)
@@ -85,8 +164,6 @@ const fetchRandomEventArtist = async (eventArtistLinks: string[]) => {
   }
 }
 
-const hardcodedUrl = 'https://ra.co/events/de/berlin?week=2021-06-17'
-
 
 export const getRandomRAEventArtistTrack = async (location?: string) => {
   console.log('OPENING PUPETTEER')
@@ -98,10 +175,8 @@ export const getRandomRAEventArtistTrack = async (location?: string) => {
 
   try {
     if (!location) location = 'berlin'
-    const response = await fetch(hardcodedUrl)
-    const body = await response.text()
-    const root = parse(body)
-    const eventLinks = root.querySelectorAll('h3 > a[href^="/events"]').map(a => a.getAttribute('href'))
+
+    const eventLinks = await fetchEventLinks(hardcodedUrl,browser)
 	
 	console.log('Event links list: ')
 	console.log(eventLinks)
@@ -113,6 +188,7 @@ export const getRandomRAEventArtistTrack = async (location?: string) => {
     while (isEmpty(artistLinks)) {
       console.log('artistLinks were empty, trying again...')
       const randomEventPage = await fetchRandomEvent(eventLinks)
+      await setTimeout(() => { console.log("Waiting"); }, 2000);
       artistLinks = randomEventPage.querySelectorAll('a > span[href^="/dj"]').map(element => element.getAttribute('href'))
     }
 
@@ -155,7 +231,14 @@ export const getRandomRAEventArtistTrack = async (location?: string) => {
 
   } catch (error) {
     console.error('There was an unknown general error. Fetching a new event.')
-    getRandomRAEventArtistTrack(location)
+    console.log(error)
+    //getRandomRAEventArtistTrack(location)
   }
   
+}
+
+if (require.main === module) {
+  console.log('called directly');
+} else {
+  console.log('required as a module');
 }
