@@ -42,7 +42,7 @@ import fetch from 'node-fetch'
 import { parse } from 'node-html-parser';
 import axios from 'axios';
 import { isEmpty } from 'ramda';
-import { Console } from 'node:console';
+//import { Console } from 'node:console';
 import UserAgent from 'user-agents';
 import { ar } from 'date-fns/locale';
 import { Message } from 'firebase-functions/lib/providers/pubsub';
