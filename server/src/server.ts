@@ -19,6 +19,7 @@ const allowList = [
   'http://192.168.178.170:5000',
   'http://192.168.178.22:8080',
   'http://192.168.178.22:5000',
+  'https://bigbuttonmix-client.vercel.app/'
 ]
 app.use(
   cors({

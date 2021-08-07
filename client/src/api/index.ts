@@ -21,7 +21,5 @@ export const getRandomMixtape = async (city?: string) => {
     // const url =  __DEV__ ? '/api/random-mix' : `${CONFIG.baseUrl}/api/random-mix`
     console.log('getting from url '+url)
     
-    return fetch(url,{
-        headers: new Headers({ 'Access-Control-Allow-Origin': '*' })
-    })
+    return fetch(url)
 }
