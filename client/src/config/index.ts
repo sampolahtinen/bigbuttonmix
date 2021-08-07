@@ -1,6 +1,8 @@
 export const CONFIG = {
     //baseUrl: 'http://localhost:4000'
-    baseUrl: 'https://bigbuttonmix-server.vercel.app/'
+    
+    //https://stackoverflow.com/questions/43262121/trying-to-use-fetch-and-pass-in-mode-no-cors
+    baseUrl: 'https://cors-proxy-orpin.vercel.app//https://bigbuttonmix-server.vercel.app/'
     
 }
 
