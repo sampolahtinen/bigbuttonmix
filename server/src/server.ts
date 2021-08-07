@@ -21,6 +21,17 @@ const allowList = [
   'http://192.168.178.22:5000',
   'https://bigbuttonmix-client.vercel.app/'
 ]
+
+
+// make a simple middleware to log requests
+app.use((req,res,next) => {
+  console.log(`Request coming from: ${req.get('host')}`)
+  return next()
+}  
+)
+
+
+
 app.use(
   cors({
     origin: allowList,

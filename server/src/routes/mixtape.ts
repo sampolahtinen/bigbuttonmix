@@ -13,4 +13,11 @@ router.get(
   }
 )
 
+router.get(
+  '/test',
+  (req,res) => {
+    res.json({Message:'Likmaballs'})
+  }
+)
+
 export default router
