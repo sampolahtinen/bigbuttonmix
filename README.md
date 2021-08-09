@@ -1,34 +1,38 @@
-# bigbuttonmix
+# create-svelte
 
-Web page that chooses a soundcloud mix by a random DJ playing in your area
+Everything you need to build a Svelte project, powered by [`create-svelte`](https://github.com/sveltejs/kit/tree/master/packages/create-svelte);
 
-## Installing Server & Client
-Maybe you have to install yarn globally (and any other that throws errors).
+## Creating a project
 
-Installing a package globally:
-`npm i package_name -g`
-'npm install [package-name]@[version-number]'
+If you're seeing this, you've probably already done this step. Congrats!
 
-NB for windows: https://www.youtube.com/watch?v=t9okUDkRUDc
+```bash
+# create a new project in the current directory
+npm init svelte@next
 
-packages:
-* yarn
-* rollup
-* 
+# create a new project in my-app
+npm init svelte@next my-app
+```
 
-If you dont have npm installed, follow:
-https://docs.npmjs.com/downloading-and-installing-node-js-and-npm
+> Note: the `@next` is temporary
 
-If you get any weird troubles, try to match with my node version: v14.15.5 and npm version: 6.14.11
+## Developing
 
-1. `cd client && yarn`
-2. `cd server && yarn`
+Once you've created a project and installed dependencies with `npm install` (or `pnpm install` or `yarn`), start a development server:
 
+```bash
+npm run dev
 
-## Run the projects:
-1. Open two terminals
-2. In one, `cd client && yarn dev`
-3. In the another, `cd serer && yarn dev`
+# or start the server and open the app in a new browser tab
+npm run dev -- --open
+```
 
-### Deployment idea:
-https://github.com/mars/heroku-cra-node
+## Building
+
+Before creating a production version of your app, install an [adapter](https://kit.svelte.dev/docs#adapters) for your target environment. Then:
+
+```bash
+npm run build
+```
+
+> You can preview the built app with `npm run preview`, regardless of whether you installed an adapter. This should _not_ be used to serve your app in production.

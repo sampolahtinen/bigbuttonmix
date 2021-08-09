@@ -1,2 +1,9 @@
-/server/node_modules
-node_modules
+.vscode
+.svelte-kit
+.nvm
+.vercel
+/node_modules/
+/public/build/
+
+.DS_Store
+/.vscode
