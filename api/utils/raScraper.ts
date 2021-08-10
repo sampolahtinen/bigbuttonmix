@@ -1,50 +1,13 @@
-// const browser = await puppeteer.launch({ 
-//     headless: false,
-//     defaultViewport: null,
-// }); ;
-// const page = await browser.newPage();
-// const runScript = async () => {
-//   console.log('Running script again..')
-//   try {
-//     await page.goto('https://soundcloud.com/paulatape/paula-tape-streaming-from-isolation');
-//     const shareBtn = '.sc-button-share.sc-button.sc-button-medium.sc-button-responsive'
-//     const cookiesAccept = '#onetrust-accept-btn-handler'
-//     await page.waitForTimeout(1000)
-//     await page.click(cookiesAccept)
-//     await page.waitForTimeout(1000)
-//     await page.click(shareBtn)
-//     const embedTabSel = '.tabs__tab.g-tabs-link'
-//     await page.click(embedTabSel)
-//     const iframeInput = 'widgetCustomization__textInput.widgetCustomization__widgetCode'
-//     const embedCode = await page.$$eval(iframeInput, e => console.log(e))
-//   }
-// catch (error) {
-//         setTimeout(() => runScript(), 1000 * 60)
-//       console.error(error)
-//   }
-// }
-// import puppeteer from 'puppeteer'
-
-// imports for using node: 'const library = require('cool-library')
-// const puppeteer = required('puppeteer-extra')
-// import fetch from 'node-fetch'
-// import { parse } from 'node-html-parser';
-// import axios from 'axios';
-// import { isEmpty } from 'ramda';
-// import { Console } from 'node:console';
-
-
-
-//imports original
-
-//import puppeteer from 'puppeteer-extra'
-import chromium from 'chrome-aws-lambda'
-
+import dotenv from 'dotenv'
 import { parse } from 'node-html-parser';
 import axios from 'axios';
 import { isEmpty } from 'ramda';
 import UserAgent from 'user-agents';
+import chrome from 'chrome-aws-lambda'
+import puppeteer from 'puppeteer-core';
 
+dotenv.config()
+console.log(process.env)
 
 const generateRandomNumber = max => Math.floor(Math.random() * max)
 
@@ -169,13 +132,21 @@ export const getRandomRAEventArtistTrack = async (location?: string) => {
 
   // https://github.com/vercel/vercel/discussions/4903
 
-  const browser = await chromium.puppeteer.launch({
-    args: [...chromium.args, "--hide-scrollbars", "--disable-web-security"],
-    defaultViewport: chromium.defaultViewport,
-    executablePath: await chromium.executablePath,
-    headless: true,
-    ignoreHTTPSErrors: true,
-  })
+
+  const browser = process.env.AWS_EXECUTION_ENV 
+    ? await puppeteer.launch({
+      args: [...chrome.args, "--hide-scrollbars", "--disable-web-security"],
+      defaultViewport: chrome.defaultViewport,
+      executablePath: await chrome.executablePath,
+      headless: true,
+      ignoreHTTPSErrors: true,
+    })
+    : await puppeteer.launch({
+      args: [],
+      headless: true,
+      ignoreHTTPSErrors: true,
+      executablePath: '/Applications/Google Chrome.app/Contents/MacOS/Google Chrome'
+    })
 
 
 
