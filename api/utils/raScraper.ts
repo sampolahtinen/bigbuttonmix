@@ -37,7 +37,9 @@
 
 //imports original
 
-import puppeteer from 'puppeteer-extra'
+//import puppeteer from 'puppeteer-extra'
+import chromium from 'chrome-aws-lambda'
+
 import { parse } from 'node-html-parser';
 import axios from 'axios';
 import { isEmpty } from 'ramda';
@@ -163,7 +165,20 @@ export const getRandomRAEventArtistTrack = async (location?: string) => {
   /**
    * TODO: maybe do not block the function , move this to other async thread
    */
-  const browser = await puppeteer.launch();
+  //const browser = await puppeteer.launch();
+
+  // https://github.com/vercel/vercel/discussions/4903
+
+  const browser = await chromium.puppeteer.launch({
+    args: [...chromium.args, "--hide-scrollbars", "--disable-web-security"],
+    defaultViewport: chromium.defaultViewport,
+    executablePath: await chromium.executablePath,
+    headless: true,
+    ignoreHTTPSErrors: true,
+  })
+
+
+
   const page = await browser.newPage();
 
   try {
