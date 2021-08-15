@@ -1,0 +1,19 @@
+{
+    "compilerOptions": {
+      "esModuleInterop": true,
+      "noImplicitAny": false,
+      "moduleResolution": "node",
+      "allowJs": true,
+      "module": "commonjs",
+      "noImplicitReturns": false,
+      "noUnusedLocals": false,
+      "outDir": "./lib",
+      "sourceMap": true,
+      "strict": false,
+      "target": "es2017",
+      "rootDir": "./src"
+    },
+    "include": ["src"],
+    "exclude": ["node_modules"]
+  }
+  

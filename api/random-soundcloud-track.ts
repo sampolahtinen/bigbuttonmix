@@ -1,6 +1,6 @@
 import redis from 'redis'
-import { generateSoundcloudEmbed, getRandomRaEventArtists, getRandomSoundcloudTrack } from './utils/raScraper'
-import { createChromiumBrowser } from './utils/createChromiumBrowser';
+import { generateSoundcloudEmbed, getRandomRaEventArtists, getRandomSoundcloudTrack } from './src/utils/raScraper'
+import { createChromiumBrowser } from './src/utils/createChromiumBrowser';
 
 // This is the endpoint for the client to interact with the server
 export default async (req, res: any) => {

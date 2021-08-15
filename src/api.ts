@@ -5,7 +5,8 @@ type CustomResponse = Promise<{
 
 type RequestType = 'GET' | 'PATCH' | 'PUT' | 'POST'
 
-const base = '/api'
+// const base = process.env.IS_SERVERLESS ? '/api' : 'http://localhost:5000/api'
+const base = 'http://localhost:5000/api'
 
 export const api = async function api(
     requestMethod: RequestType = 'GET', 
