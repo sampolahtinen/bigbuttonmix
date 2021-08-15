@@ -7,7 +7,6 @@ const constants_1 = require("./constants");
 const express_1 = __importDefault(require("express"));
 const cookie_parser_1 = __importDefault(require("cookie-parser"));
 const cors_1 = __importDefault(require("cors"));
-const utils_1 = require("./utils");
 const dotenv_1 = __importDefault(require("dotenv"));
 const routes_1 = require("./routes");
 dotenv_1.default.config();
@@ -25,9 +24,7 @@ app.use(express_1.default.json());
 app.use(express_1.default.urlencoded({ extended: true }));
 app.use(cookie_parser_1.default());
 app.use(routes_1.randomSoundcloudTrackRoute);
-if (utils_1.isDev) {
-    app.listen(constants_1.PORT, () => {
-        console.log(`Server listening at http://localhost:${constants_1.PORT}`);
-    });
-}
+app.listen(constants_1.PORT, () => {
+    console.log(`Server listening at http://localhost:${constants_1.PORT}`);
+});
 //# sourceMappingURL=server.js.map
