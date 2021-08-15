@@ -19,7 +19,6 @@ export const api = async function api(
 		},
 		body: data && JSON.stringify(data)
 	});
-
 	return {
 		status: res.status,
 		body: await res.json()

@@ -1,88 +1,36 @@
 import dotenv from 'dotenv'
-import { parse } from 'node-html-parser';
 import axios from 'axios';
 import { isEmpty } from 'ramda';
-import UserAgent from 'user-agents';
-import chrome from 'chrome-aws-lambda'
-import puppeteer  from 'puppeteer-core';
+import puppeteer, { Page }  from 'puppeteer-core';
+import { EventInfo, EventMetaInfo, RaEventInfo } from '../types';
 
 dotenv.config()
 
-const generateRandomNumber = max => Math.floor(Math.random() * max)
+const generateRandomNumber = (max: number) => Math.floor(Math.random() * max)
 
-const hardcodedUrl = 'https://ra.co/events/de/berlin?week=2021-08-03'
-
-const blockedDomains = [
-  "securepubads.g.doubleclick.net",
-  "google-analytics.com",
-  "p1.parsely.com",
-  "live.ravelin.click",
-  "stats.g.doubleclick.net",
-  "a-v2.sndcdn.com"
-]
-
-const minimalArgs = [
-  '--autoplay-policy=user-gesture-required',
-  '--disable-background-networking',
-  '--disable-background-timer-throttling',
-  '--disable-backgrounding-occluded-windows',
-  '--disable-breakpad',
-  '--disable-client-side-phishing-detection',
-  '--disable-component-update',
-  '--disable-default-apps',
-  '--disable-dev-shm-usage',
-  '--disable-domain-reliability',
-  '--disable-extensions',
-  '--disable-features=AudioServiceOutOfProcess',
-  '--disable-hang-monitor',
-  '--disable-ipc-flooding-protection',
-  '--disable-notifications',
-  '--disable-offer-store-unmasked-wallet-cards',
-  '--disable-popup-blocking',
-  '--disable-print-preview',
-  '--disable-prompt-on-repost',
-  '--disable-renderer-backgrounding',
-  '--disable-setuid-sandbox',
-  '--disable-speech-api',
-  '--disable-sync',
-  '--hide-scrollbars',
-  '--ignore-gpu-blacklist',
-  '--metrics-recording-only',
-  '--mute-audio',
-  '--no-default-browser-check',
-  '--no-first-run',
-  '--no-pings',
-  '--no-sandbox',
-  '--no-zygote',
-  '--password-store=basic',
-  '--use-gl=swiftshader',
-  '--use-mock-keychain',
-];
-
-const puppetRequest = async (page: puppeteer.Page, url: string, cssSelector: string) => {
-  // This function takes a puppetteer browser and uses it to make a request, 
-  // using techniques to make it harder for the website to block the scrape
-  // https://stackoverflow.com/questions/55678095/bypassing-captchas-with-headless-chrome-using-puppeteer
-  console.time('puppetRequest')
-  
+const puppetRequest = async (
+  page: puppeteer.Page, 
+  url: string, 
+  cssSelector: string,
+  cb: (args: Element[]) => string[]
+) => {
   console.log('Requestion from: ', url)
   console.log('Using selectors: ', cssSelector)
-
   await page.goto(url)
-  const html = await page.content()
-  const pageText = parse(html)
-  const elements = pageText.querySelectorAll(cssSelector)
 
-  console.timeEnd('puppetRequest')
+  const elements = await page.$$eval(cssSelector, cb)
+
   return elements
 }
 
-const fetchEventLinks = async(searchPageURL, page) => {
-  // This function fetches event links from RA and throws and error if it is empty
-  // let events = JSON.parse(localStorage.getItem(searchPageURL))
-  console.time('raEvents')
-  const eventElements = await puppetRequest(page, searchPageURL,'h3 > a[href^="/events"]')
-  const events = [...eventElements].map(a => a.getAttribute('href'))
+// This function fetches event links from RA and throws and error if it is empty
+const fetchEventLinks = async(searchPageURL: string, page: puppeteer.Page) => {
+  const events = await puppetRequest(
+    page, 
+    searchPageURL, 
+    'h3 > a[href^="/events"]',
+    elements => elements.map(e => e.getAttribute('href'))
+  )
 
   console.log('Number of events found:')
   console.log(events.length)
@@ -92,8 +40,6 @@ const fetchEventLinks = async(searchPageURL, page) => {
     console.log(message)
     throw message    
   }
-  console.timeEnd('raEvents')
-  // localStorage.setItem(searchPageURL, JSON.stringify(events))
 
   return events
 }
@@ -107,22 +53,23 @@ const convertRSHreftoURL = async(href) => {
 
 const fetchRandomEvent = async (eventLinks: string[]) => {
   const randomNumber = generateRandomNumber(eventLinks.length)
-  //const baseRaUrl = 'https://ra.co'
-  //const eventUrl = `${baseRaUrl}${eventLinks[randomNumber]}`
 	const eventUrl = await convertRSHreftoURL(eventLinks[randomNumber])
   return eventUrl
 }
 
-const fetchSoundCloudLinkFromArtist = async (page, artistUrl) => {
+const fetchSoundCloudLinkFromArtist = async (page: puppeteer.Page, artistUrl: string) => {
   // Reads soundcloud link from artist's RA page
-  const soundCloudLink = await puppetRequest(page, artistUrl, 'a[href^="https://www.soundcloud.com"]')
-  return soundCloudLink[0]
+  const soundCloudLinks = await puppetRequest(
+    page, 
+    artistUrl, 
+    'a[href^="https://www.soundcloud.com"]',
+    elements => elements.map(elem => elem.getAttribute('href'))
+  )
+  return soundCloudLinks[0]
 }
 
-const fetchRandomEventArtist = async (page, eventArtistLinks: string[]) => {
+const fetchRandomEventArtistScLink = async (page, eventArtistLinks: string[]) => {
   console.log('GETTING RANDOM SOUNDCLOUD LINK')
-  console.log('event artist links:')
-  // console.log(eventArtistLinks)
   const randomNumber = generateRandomNumber(eventArtistLinks.length)
   const randomArtist = eventArtistLinks[randomNumber]
   const baseRaUrl = 'https://ra.co'
@@ -137,21 +84,50 @@ const fetchRandomEventArtist = async (page, eventArtistLinks: string[]) => {
 
     if (!artistSoundcloudLink)  {
       const reducedEventArtistLinks = eventArtistLinks.filter(artist => artist !== randomArtist)
-      return fetchRandomEventArtist(page, reducedEventArtistLinks)
+      return fetchRandomEventArtistScLink(page, reducedEventArtistLinks)
     }
 
-    return artistSoundcloudLink.getAttribute('href')
+    return artistSoundcloudLink
   } catch (error) {
-    console.log('ERROR IN: fetchRandomEventArtist')
+    console.log('ERROR IN: fetchRandomEventArtistScLink')
     console.log(error)
-    return fetchRandomEventArtist(page, eventArtistLinks)
+    return fetchRandomEventArtistScLink(page, eventArtistLinks)
   }
 }
 
-const fetchArtistLinksFromEvent = async (page, url) => {
+const fetchArtistLinksFromEvent = async (
+  page: puppeteer.Page, 
+  url: string
+): Promise<EventInfo> => {
   // This function searches for artist links on an event page
-  const artistsLinks = await puppetRequest(page, url,'a > span[href^="/dj"]')
-  const artists = [...artistsLinks].map(a => a.getAttribute('href'))
+  const artists = await puppetRequest(
+    page, 
+    url, 
+    'a > span[href^="/dj"]',
+    elements => elements.map(elem => elem.getAttribute('href'))
+  )
+
+  const title = await page.title()
+  
+  const metaInfoArray = await page.$$eval('[data-tracking-id=event-detail-bar] span', (elements: Element[]) => {
+    return elements.map(element => element.textContent)
+  })
+  
+  let metaInfo: EventMetaInfo = {
+    venue: '',
+    address: '',
+    date: '',
+    openingHours: '',
+  }
+
+  if (metaInfoArray.length > 0) {
+    metaInfo = {
+      venue: metaInfoArray[1],
+      address: metaInfoArray[2],
+      date: metaInfoArray[4],
+      openingHours: `${metaInfoArray[5]} - ${metaInfoArray[7]}`
+    }
+  }
   
   if (artists.length == 0){
     const message = "No artists found in event page: " + url
@@ -159,116 +135,79 @@ const fetchArtistLinksFromEvent = async (page, url) => {
     //throw message 
   }
   
-  return artists
+  return { title, artists, ...metaInfo }
 }
 
-export const getRandomRAEventArtistTrack = async (location?: string) => {
-  console.log('OPENING PUPETTEER')
-  /**
-   * TODO: maybe do not block the function , move this to other async thread
-   */
-  //const browser = await puppeteer.launch();
-  // https://github.com/vercel/vercel/discussions/4903
-
-  console.time('puppeteerLaunch')
-  const  browser = process.env.AWS_EXECUTION_ENV 
-  ? await puppeteer.launch({
-    args: [...chrome.args, "--hide-scrollbars", "--disable-web-security"],
-    defaultViewport: chrome.defaultViewport,
-    executablePath: await chrome.executablePath,
-    headless: true,
-    ignoreHTTPSErrors: true,
-  })
-  : await puppeteer.launch({
-    dumpio: false,
-    args: minimalArgs,
-    headless: true,
-    ignoreHTTPSErrors: true,
-    executablePath: '/Applications/Google Chrome.app/Contents/MacOS/Google Chrome'
-  })
-
-  const page = await browser.newPage();
-  await page.setRequestInterception(true);
-  const user = new UserAgent().toString()
-  await page.setUserAgent(user)
-
-  page.on('request', (req) => {
-    if(
-      req.resourceType() === 'image'
-      || req.resourceType() === 'stylesheet'
-      || req.resourceType() === 'font'
-      || req.resourceType() === 'script'
-      || blockedDomains.some(domain => req.url().includes(domain))
-    ){
-      req.abort();
-    } else {
-      req.continue();
-    }
-})
-  console.timeEnd('puppeteerLaunch')
-
+export const getRandomRaEventArtists = async (
+  location?: string, 
+  date?: string, 
+  page?: Page
+): Promise<RaEventInfo> => {
   try {
     if (!location) location = 'berlin'
 
-    const eventLinks = await fetchEventLinks(hardcodedUrl, page)
-
-    console.log('Event links list: ')
-    // console.log(eventLinks)
+    const raUrl = `https://ra.co/events/de/${location}?week=${date}`
+    const eventLinks = await fetchEventLinks(raUrl, page)
 	
-    console.time('raRandomEvent')
     const randomEventPage = await fetchRandomEvent(eventLinks)
-    console.timeEnd('raRandomEvent')
 
-    console.time('raEventArtists')
-    let artistLinks = await fetchArtistLinksFromEvent(page,randomEventPage)
-    console.timeEnd('raEventArtists')
+    let eventInfo = await fetchArtistLinksFromEvent(page, randomEventPage)
 
-    while (isEmpty(artistLinks)) {
+    while (isEmpty(eventInfo.artists)) {
       console.log('artistLinks were empty, trying again...')
       const randomEventPage = await fetchRandomEvent(eventLinks)
-      await setTimeout(() => { console.log("Waiting"); }, 2000);
-      artistLinks = await fetchArtistLinksFromEvent(page,randomEventPage)
+      eventInfo = await fetchArtistLinksFromEvent(page, randomEventPage)
     }
 
-    const randomEventArtistSoundcloudLink = await fetchRandomEventArtist(page, artistLinks)
+    const randomEventArtistSoundcloudLink = await fetchRandomEventArtistScLink(page, eventInfo.artists)
     console.log('ARTIST SOUNDCLOUD LINK:')
     console.log(randomEventArtistSoundcloudLink)
 
     if (!randomEventArtistSoundcloudLink) {
-      return getRandomRAEventArtistTrack(location)
+      return getRandomRaEventArtists(location)
     }
 
-    /**
-     * Soundcloud scrape
-     */
-    const scClientId = 'fSSdm5yTnDka1g0Fz1CO5Yx6z0NbeHAj'
-    const scPageString = await axios.get(`${randomEventArtistSoundcloudLink}/tracks/`)
-    const scUserID = scPageString.data.match(/(?<=soundcloud:users:)\d+/g)
-    const d = await axios.get(`https://api-v2.soundcloud.com/users/${scUserID[0]}/tracks?representation=&client_id=fSSdm5yTnDka1g0Fz1CO5Yx6z0NbeHAj&limit=20&offset=0&linked_partitioning=1&app_version=1628858614&app_locale=en`)
-    const tracks = d.data.collection.map(entry => entry.permalink_url)
-    console.log(tracks)
-    const soundcloudEmbedServiceUrl = 'https://soundcloud.com/oembed'
-    const soundcloudEmbedResponse = await axios.get(soundcloudEmbedServiceUrl, {
-      params: {
-        url: tracks[generateRandomNumber(tracks.length)],
-        format: 'json',
-        auto_play: true,
-        show_teaser: false,
-      }
-    })
-
-    return soundcloudEmbedResponse.data
+    return {
+      eventLink: randomEventPage,
+      randomEventScLink: randomEventArtistSoundcloudLink,
+      ...eventInfo
+    }
 
   } catch (error) {
     console.error('There was an unknown general error. Fetching a new event.')
     console.log(error)
     //getRandomRAEventArtistTrack(location)
-  }
-  
+  }  
 }
 
-if (require.main === module) {
-  console.log('called directly');
-} else {
-  console.log('required as a module');
+/**
+ * Soundcloud scrape
+ */
+export const getRandomSoundcloudTrack = async (scArtistLink: string) => {
+  const scClientId = 'fSSdm5yTnDka1g0Fz1CO5Yx6z0NbeHAj'
+  const scPageString = await axios.get(`${scArtistLink}/tracks/`)
+  const scUserID = scPageString.data.match(/(?<=soundcloud:users:)\d+/g)
+  const d = await axios.get(`https://api-v2.soundcloud.com/users/${scUserID[0]}/tracks?representation=&client_id=fSSdm5yTnDka1g0Fz1CO5Yx6z0NbeHAj&limit=20&offset=0&linked_partitioning=1&app_version=1628858614&app_locale=en`)
+  const tracks = d.data.collection.map(entry => entry.permalink_url)
+  return tracks[generateRandomNumber(tracks.length)]
 }
+
+export const generateSoundcloudEmbed = async (scTrackUrl: string) => {
+  const soundcloudEmbedServiceUrl = 'https://soundcloud.com/oembed'
+  const soundcloudEmbedResponse = await axios.get(soundcloudEmbedServiceUrl, {
+    params: {
+      url: scTrackUrl,
+      format: 'json',
+      auto_play: true,
+      show_teaser: false,
+    }
+  })
+
+  return soundcloudEmbedResponse.data
+}
+
+// if (require.main === module) {
+//   console.log('called directly');
+// } else {
+//   console.log('required as a module');
+// }

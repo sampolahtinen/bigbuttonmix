@@ -6,27 +6,33 @@
   import { onMount } from "svelte";
   import BigButton from "../components/BigButton.svelte";
   import Dropdown from "../components/Dropdown.svelte";
+  // import { RaEventInfo } from '../types';
   // import { countryOptions } from '../constants";
-  import { generateCityOptions } from "../utils";
+  // import { generateCityOptions } from "../utils";
   import { api } from '../api'
 
   let name: string;
   let userCity: string;
   // let cityDropdownOptions = generateCityOptions(countryOptions as any);
-  let scEmbedCode: boolean;
+  let scEmbedCode: string;
+  let raEventInformation: any;
   let isLoading: boolean = false;
 
   const getScEmbedCode = async () => {
     console.log("fetching");
     isLoading = true;
-    // const response = await fetch('/api/random-soundcloud-track')
-    const response = await api('GET', 'random-soundcloud-track')
 
+    const response = await api(
+      'GET', 
+      'random-soundcloud-track?location=berlin&week=2021-08-21'
+    )
+
+    console.log(response.body)
     const { html } = response.body;
-    console.log(html);
 
     isLoading = false
     scEmbedCode = html;
+    raEventInformation = response.body
   };
 
   
@@ -40,9 +46,22 @@
     {#if scEmbedCode}
       <div class="soundcloud-embedded-player">
         {@html scEmbedCode}
+        <div class="event-info-container">
+          <div class="column">
+            <span class="event-info-heading">Event</span>
+            <a class="event-info-row" href={raEventInformation.eventLink} target="_blank">{raEventInformation.title}</a>
+            <span class="event-info-heading">Venue</span>
+            <a class="event-info-row" href={raEventInformation.venue} target="_blank">{raEventInformation.venue}</a>
+          </div>
+          <div class="column">
+            <span class="event-info-heading">Date</span>
+            <span class="event-info-row date">{raEventInformation.date}</span>
+            <span class="event-info-row">{raEventInformation.openingHours}</span>
+          </div>
+        </div>
       </div>
     {/if}
-    <BigButton on:click={getScEmbedCode} isSmall={scEmbedCode} isLoading={isLoading} />
+    <BigButton on:click={getScEmbedCode} isSmall={!!scEmbedCode} isLoading={isLoading} />
     <!-- <Dropdown items={cityDropdownOptions} on:select={handleCitySelection} /> -->
     <span class="copyright">(c) Andrew Moore & Sampo Lahtinen</span>
   </div>
@@ -80,19 +99,50 @@
     max-width: 500px;
   }
 
-  .copyright {
+  .event-info-container {
+    display: flex;
+    padding: 16px;
+    background-color: hsl(231deg 24% 15%);
+    text-align: left;
+  }
+
+  .event-info-heading {
+    display: block;
+    color: white;
+    opacity: 0.7;
+    font-size: 8px;
+    font-weight: 200;
+  }
+  .event-info-row {
+    text-decoration: none;
+    color: white;
     font-size: 10px;
+    text-align: left;
+    margin-bottom: 16px;
+  }
+
+  .event-info-row.date {
+    display: block;
+    white-space: nowrap;
+    margin-bottom: 0;
+  }
+
+  .copyright {
+    font-size: 8px;
     align-self: flex-end;
     position: absolute;
     bottom: 0;
-    right: 50%;
+    right: 0;
+    color: white;
+    opacity: 0.6;
+    white-space: nowrap;
   }
 
   .full-width-container {
     display: flex;
     flex-direction: column;
     align-items: center;
-    justify-content: center;
+    /* justify-content: center; */
     width: 100vw;
     height: 100vh;
     max-width: 500px;
