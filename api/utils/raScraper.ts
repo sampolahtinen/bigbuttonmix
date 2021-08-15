@@ -1,11 +1,10 @@
 import dotenv from 'dotenv'
 import { parse } from 'node-html-parser';
 import axios from 'axios';
-import fetch from 'node-fetch'
 import { isEmpty } from 'ramda';
 import UserAgent from 'user-agents';
 import chrome from 'chrome-aws-lambda'
-import puppeteer, { Browser, Puppeteer, registerCustomQueryHandler } from 'puppeteer-core';
+import puppeteer  from 'puppeteer-core';
 
 dotenv.config()
 
@@ -14,11 +13,11 @@ const generateRandomNumber = max => Math.floor(Math.random() * max)
 const hardcodedUrl = 'https://ra.co/events/de/berlin?week=2021-08-03'
 
 const blockedDomains = [
-  // "securepubads.g.doubleclick.net",
-  // "google-analytics.com",
-  // "p1.parsely.com",
-  // "live.ravelin.click",
-  // "stats.g.doubleclick.net",
+  "securepubads.g.doubleclick.net",
+  "google-analytics.com",
+  "p1.parsely.com",
+  "live.ravelin.click",
+  "stats.g.doubleclick.net",
   "a-v2.sndcdn.com"
 ]
 
@@ -60,28 +59,6 @@ const minimalArgs = [
   '--use-mock-keychain',
 ];
 
-const fetchPage = async (url: string, cssSelector: string) => {
-  // This function takes a puppetteer browser and uses it to make a request, 
-  // using techniques to make it harder for the website to block the scrape
-  // https://stackoverflow.com/questions/55678095/bypassing-captchas-with-headless-chrome-using-puppeteer
-  console.time('fetchPage')
-  
-  console.log('Requestion from: ', url)
-  console.log('Using selectors: ', cssSelector)
-  const userAgent = new UserAgent().toString()
-  const response = await axios.get(url, {
-    headers: {
-      'User-Agent': 'Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_4) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/92.0.4515.131 Safari/537.36'
-    }
-  })
-  // const body = await response.text()
-  const pageContent = parse(response.data)
-  console.log(pageContent)
-  const elements = pageContent.querySelectorAll(cssSelector)
-  console.timeEnd('fetchPage')
-  return elements
-}
-
 const puppetRequest = async (page: puppeteer.Page, url: string, cssSelector: string) => {
   // This function takes a puppetteer browser and uses it to make a request, 
   // using techniques to make it harder for the website to block the scrape
@@ -102,10 +79,9 @@ const puppetRequest = async (page: puppeteer.Page, url: string, cssSelector: str
 
 const fetchEventLinks = async(searchPageURL, page) => {
   // This function fetches event links from RA and throws and error if it is empty
+  // let events = JSON.parse(localStorage.getItem(searchPageURL))
   console.time('raEvents')
   const eventElements = await puppetRequest(page, searchPageURL,'h3 > a[href^="/events"]')
-  // const fetchResults = await fetchPage(searchPageURL,'h3 > a[href^="/events"]')
-  // console.log(fetchResults)
   const events = [...eventElements].map(a => a.getAttribute('href'))
 
   console.log('Number of events found:')
@@ -117,6 +93,8 @@ const fetchEventLinks = async(searchPageURL, page) => {
     throw message    
   }
   console.timeEnd('raEvents')
+  // localStorage.setItem(searchPageURL, JSON.stringify(events))
+
   return events
 }
 
@@ -144,7 +122,7 @@ const fetchSoundCloudLinkFromArtist = async (page, artistUrl) => {
 const fetchRandomEventArtist = async (page, eventArtistLinks: string[]) => {
   console.log('GETTING RANDOM SOUNDCLOUD LINK')
   console.log('event artist links:')
-  console.log(eventArtistLinks)
+  // console.log(eventArtistLinks)
   const randomNumber = generateRandomNumber(eventArtistLinks.length)
   const randomArtist = eventArtistLinks[randomNumber]
   const baseRaUrl = 'https://ra.co'
@@ -202,7 +180,7 @@ export const getRandomRAEventArtistTrack = async (location?: string) => {
     ignoreHTTPSErrors: true,
   })
   : await puppeteer.launch({
-    dumpio: true,
+    dumpio: false,
     args: minimalArgs,
     headless: true,
     ignoreHTTPSErrors: true,
@@ -211,32 +189,31 @@ export const getRandomRAEventArtistTrack = async (location?: string) => {
 
   const page = await browser.newPage();
   await page.setRequestInterception(true);
+  const user = new UserAgent().toString()
+  await page.setUserAgent(user)
 
   page.on('request', (req) => {
     if(
       req.resourceType() === 'image'
       || req.resourceType() === 'stylesheet'
       || req.resourceType() === 'font'
+      || req.resourceType() === 'script'
       || blockedDomains.some(domain => req.url().includes(domain))
-      || (req.url().includes('https://api-v2.soundcloud.com') && !req.url().includes('/tracks'))
     ){
       req.abort();
     } else {
       req.continue();
     }
 })
-
-  const user = new UserAgent().toString()
-  await page.setUserAgent(user)
-
   console.timeEnd('puppeteerLaunch')
+
   try {
     if (!location) location = 'berlin'
 
     const eventLinks = await fetchEventLinks(hardcodedUrl, page)
 
     console.log('Event links list: ')
-    console.log(eventLinks)
+    // console.log(eventLinks)
 	
     console.time('raRandomEvent')
     const randomEventPage = await fetchRandomEvent(eventLinks)
@@ -264,32 +241,24 @@ export const getRandomRAEventArtistTrack = async (location?: string) => {
     /**
      * Soundcloud scrape
      */
+    const scClientId = 'fSSdm5yTnDka1g0Fz1CO5Yx6z0NbeHAj'
+    const scPageString = await axios.get(`${randomEventArtistSoundcloudLink}/tracks/`)
+    const scUserID = scPageString.data.match(/(?<=soundcloud:users:)\d+/g)
+    const d = await axios.get(`https://api-v2.soundcloud.com/users/${scUserID[0]}/tracks?representation=&client_id=fSSdm5yTnDka1g0Fz1CO5Yx6z0NbeHAj&limit=20&offset=0&linked_partitioning=1&app_version=1628858614&app_locale=en`)
+    const tracks = d.data.collection.map(entry => entry.permalink_url)
+    console.log(tracks)
     const soundcloudEmbedServiceUrl = 'https://soundcloud.com/oembed'
+    const soundcloudEmbedResponse = await axios.get(soundcloudEmbedServiceUrl, {
+      params: {
+        url: tracks[generateRandomNumber(tracks.length)],
+        format: 'json',
+        auto_play: true,
+        show_teaser: false,
+      }
+    })
 
-    await page.goto(randomEventArtistSoundcloudLink + '/tracks');
+    return soundcloudEmbedResponse.data
 
-  //   page.on('response', async (res) => {
-  //     const url = res.url()
-  //     console.log(url)
-  //     if (url.includes('https://api-v2.soundcloud.com/users') && url.includes('/tracks')) {
-  //       console.log(res.url())
-  //       const data = await res.json()
-  //       const tracks = data.collection.map(entry => entry.permalink_url)
-  //       console.log(tracks)
-  //       // const soundcloudEmbedResponse = await axios.get(soundcloudEmbedServiceUrl, {
-  //       //   params: {
-  //       //     url: tracks[generateRandomNumber(tracks.length)],
-  //       //     format: 'json',
-  //       //     auto_play: true,
-  //       //     show_teaser: false,
-  //       //   }
-  //       // })
-
-  //       // Promise.resolve(soundcloudEmbedResponse.data)
-  //     }
-  // })
-
-    return 'ok'
   } catch (error) {
     console.error('There was an unknown general error. Fetching a new event.')
     console.log(error)
