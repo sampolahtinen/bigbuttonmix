@@ -3,10 +3,8 @@
     "homepage": ".",
     "scripts": {
       "lint": "eslint .",
-      "build:ts": "tsc --project ./",
-      "debug:ts": "node --inspect --require ts-node/register src/server.ts",
       "dev": "NODE_ENV=development nodemon --watch '**/*' -e ts,tsx,js  --ignore 'src/**/*.spec.ts' --exec 'ts-node' src/server.ts",
-      "start:debug": "node server.js",
+      "start": "node ./dist/server.js",
       "build": "NODE_ENV=production tsc"
     },
     "engines": {

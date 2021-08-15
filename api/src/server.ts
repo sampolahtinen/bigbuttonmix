@@ -2,7 +2,6 @@ import { PORT } from './constants';
 import express from 'express'
 import cookieParser from 'cookie-parser'
 import cors from 'cors'
-import { isDev } from './utils'
 import dotenv from 'dotenv'
 import {
   randomSoundcloudTrackRoute,
@@ -31,8 +30,6 @@ app.use(express.urlencoded({ extended: true }))
 app.use(cookieParser())
 app.use(randomSoundcloudTrackRoute)
 
-if (isDev) {
-  app.listen(PORT, () => {
-    console.log(`Server listening at http://localhost:${PORT}`)
-  })
-}
+app.listen(PORT, () => {
+  console.log(`Server listening at http://localhost:${PORT}`)
+})
