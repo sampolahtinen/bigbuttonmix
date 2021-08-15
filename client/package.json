@@ -7,6 +7,7 @@
     "dev": "svelte-kit dev",
     "build": "svelte-kit build",
     "build:serer": "cd api && yarn build",
+    "start": "serve -s build",
     "preview": "svelte-kit preview",
     "dev:server": "cd api && yarn dev",
     "start:server": "cd api && yarn start",
@@ -55,6 +56,7 @@
     "puppeteer": "^10.2.0",
     "ramda": "^0.27.1",
     "redis": "^3.1.2",
+    "serve": "^12.0.0",
     "svelte-select": "^4.3.0",
     "user-agents": "^1.0.738",
     "xml2js": "^0.4.23"
