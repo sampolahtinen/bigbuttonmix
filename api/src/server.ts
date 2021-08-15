@@ -14,8 +14,7 @@ const app = express()
 const allowList = [
   'http://localhost:3000',
   'http://localhost:5000',
-  'https://bigbuttonmix-client.vercel.app/',
-  'https://big-button-mix.herokuapp.com/'
+  'https://bigbutton-mix.herokuapp.com/'
 ]
 
 
