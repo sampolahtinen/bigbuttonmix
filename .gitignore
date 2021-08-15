@@ -2,9 +2,13 @@
 .svelte-kit
 .nvm
 .vercel
-/node_modules/
+/api/node_modules/
+/client/node_modules/
 /public/build/
+/api/dist
 .env
 .DS_Store
 ./*/dist
 /.vscode
+/node_modules/
+.idea
