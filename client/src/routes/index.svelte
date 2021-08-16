@@ -3,19 +3,19 @@
 </script> -->
 
 <script lang="typescript">
-  import { onMount } from "svelte";
+  // import { onMount } from "svelte";
   import BigButton from "../components/BigButton.svelte";
-  import Dropdown from "../components/Dropdown.svelte";
+  import { api } from '../api';
+  // import Dropdown from "../components/Dropdown.svelte";
   // import { RaEventInfo } from '../types';
   // import { countryOptions } from '../constants";
   // import { generateCityOptions } from "../utils";
-  import { api } from '../api';
 
-  let name: string;
-  let userCity: string;
+  // let name: string;
+  // let userCity: string;
   // let cityDropdownOptions = generateCityOptions(countryOptions as any);
-  let scEmbedCode: string;
-  let raEventInformation: any;
+  let scEmbedCode: string = '';
+  let raEventInformation: any = '';
   let isLoading: boolean = false;
   let errorMessage: string = '';
 
@@ -34,22 +34,21 @@
       const { html } = response.body;
 
       scEmbedCode = html;
-      raEventInformation = response.body  
+      raEventInformation = response.body;
     } catch (error) {
-      errorMessage = error
+      errorMessage = error;
     } finally {
       isLoading = false;
     }
     
   };
 
-  const handleCitySelection = ({ detail }) => console.log(detail);
+  // const handleCitySelection = ({ detail }) => console.log(detail);
 
 </script>
 
 <main>
   <div class="full-width-container">
-    <!-- <Header /> -->
     {#if scEmbedCode}
       <div class="soundcloud-embedded-player">
         {@html scEmbedCode}
