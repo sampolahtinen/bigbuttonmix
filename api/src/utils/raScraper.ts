@@ -198,7 +198,7 @@ export const generateSoundcloudEmbed = async (scTrackUrl: string) => {
     params: {
       url: scTrackUrl,
       format: 'json',
-      auto_play: true,
+      auto_play: false,
       show_teaser: false,
     }
   })

@@ -16,19 +16,23 @@ router.get(
     const  { browser, page } = await createChromiumBrowser()
     const { location, week } = req.query
     
-    console.time('raRandomEventInfo')
-    const randomRaEventInfo = await getRandomRaEventArtists(location as string, week as string, page)
-    console.timeEnd('raRandomEventInfo')
-
-    const randomSoundcloudTrack = await getRandomSoundcloudTrack(randomRaEventInfo.randomEventScLink)
-    console.log('SOUNDCLOUD TRACK: ', randomSoundcloudTrack)
-    const soundcloudOembed = await generateSoundcloudEmbed(randomSoundcloudTrack)
-    console.timeEnd('raFunction')
-
-    res.json({
+    try {
+      const randomRaEventInfo = await getRandomRaEventArtists(location as string, week as string, page)
+  
+      const randomSoundcloudTrack = await getRandomSoundcloudTrack(randomRaEventInfo.randomEventScLink)
+      console.log('SOUNDCLOUD TRACK: ', randomSoundcloudTrack)
+      const soundcloudOembed = await generateSoundcloudEmbed(randomSoundcloudTrack)
+      
+      res.json({
         ...soundcloudOembed,
         ...randomRaEventInfo
-    })
+      })
+    } catch (error) {
+      console.trace(error.message)
+      res.status(500).send('Error')
+    }
+
+    console.timeEnd('raFunction')
   }
 )
 

@@ -1,6 +1,6 @@
-<script context="module" lang="ts">
+<!-- <script context="module" lang="ts">
 	export const prerender = true;
-</script>
+</script> -->
 
 <script lang="typescript">
   import { onMount } from "svelte";
@@ -17,27 +17,34 @@
   let scEmbedCode: string;
   let raEventInformation: any;
   let isLoading: boolean = false;
+  let errorMessage: string = '';
 
   const getScEmbedCode = async () => {
     console.log("fetching");
     isLoading = true;
+    errorMessage = '';
 
-    const response = await api(
+    try {
+      const response = await api(
       'GET', 
       'random-soundcloud-track?location=berlin&week=2021-08-21'
-    )
+      )
 
-    console.log(response.body)
-    const { html } = response.body;
+      console.log(response.body)
+      const { html } = response.body;
 
-    isLoading = false
-    scEmbedCode = html;
-    raEventInformation = response.body
+      scEmbedCode = html;
+      raEventInformation = response.body  
+    } catch (error) {
+      errorMessage = error
+    } finally {
+      isLoading = false
+    }
+    
   };
 
-  
-
   const handleCitySelection = ({ detail }) => console.log(detail);
+
 </script>
 
 <main>
@@ -62,6 +69,9 @@
       </div>
     {/if}
     <BigButton on:click={getScEmbedCode} isSmall={!!scEmbedCode} isLoading={isLoading} />
+    {#if errorMessage}
+      <span>{errorMessage}</span>
+    {/if}
     <!-- <Dropdown items={cityDropdownOptions} on:select={handleCitySelection} /> -->
     <span class="copyright">(c) Andrew Moore & Sampo Lahtinen</span>
   </div>
