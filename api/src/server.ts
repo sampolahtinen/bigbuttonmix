@@ -17,7 +17,7 @@ const allowList = [
   'https://bigbutton-mix.herokuapp.com'
 ]
 
-
+// change
 app.use(
   cors({
     origin: '*',
