@@ -1,6 +1,6 @@
-<!-- <script context="module" lang="ts">
+<script context="module" lang="ts">
 	export const prerender = true;
-</script> -->
+</script>
 
 <script lang="typescript">
   // import { onMount } from "svelte";
