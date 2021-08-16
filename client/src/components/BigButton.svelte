@@ -47,10 +47,6 @@
     animation: pulse 2s infinite ease-in-out;
   }
 
-  .is-small span {
-    font-size: 1rem;
-  }
-
   @keyframes pulse {
   0% {
     border-color: #FFF;

@@ -14,10 +14,14 @@
   // let name: string;
   // let userCity: string;
   // let cityDropdownOptions = generateCityOptions(countryOptions as any);
-  let scEmbedCode: string = '';
-  let raEventInformation: any = '';
-  let isLoading: boolean = false;
-  let errorMessage: string = '';
+  let scEmbedCode = '';
+  let raEventInformation;
+  let isLoading = false;
+  let errorMessage = '';
+  // let scEmbedCode: string = '';
+  // let raEventInformation: any = '';
+  // let isLoading: boolean = false;
+  // let errorMessage: string = '';
 
   const getScEmbedCode = async () => {
     console.log("fetching");
