@@ -9,7 +9,7 @@
   // import { RaEventInfo } from '../types';
   // import { countryOptions } from '../constants";
   // import { generateCityOptions } from "../utils";
-  import { api } from '../api'
+  import { api } from '../api';
 
   let name: string;
   let userCity: string;
@@ -38,7 +38,7 @@
     } catch (error) {
       errorMessage = error
     } finally {
-      isLoading = false
+      isLoading = false;
     }
     
   };
