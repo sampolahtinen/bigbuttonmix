@@ -4,7 +4,7 @@
   "start_url": "/",
   "scope": "/",
   "display": "standalone",
-  "background_color": "#fff",
+  "background_color": "#12151f",
   "description": "Get a random soundcloud track of a RA event close to you.",
   "icons": [
       {
