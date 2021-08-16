@@ -1,4 +1,4 @@
-import puppeteer  from 'puppeteer-core';
+import puppeteer  from 'puppeteer';
 import chrome from 'chrome-aws-lambda'
 import UserAgent from 'user-agents';
 
@@ -52,21 +52,11 @@ const blockedDomains = [
 
 export const createChromiumBrowser = async () => {
   console.time('chromeInit')
-  const  browser = process.env.AWS_EXECUTION_ENV 
-      ? await puppeteer.launch({
-          args: [...chrome.args, "--hide-scrollbars", "--disable-web-security"],
-          defaultViewport: chrome.defaultViewport,
-          executablePath: await chrome.executablePath,
-          headless: true,
-          ignoreHTTPSErrors: true,
-      })
-      : await puppeteer.launch({
-          dumpio: false,
-          args: minimalArgs,
-          headless: true,
-          ignoreHTTPSErrors: true,
-          executablePath: '/Applications/Google Chrome.app/Contents/MacOS/Google Chrome'
-      })
+  const  browser = await puppeteer.launch({
+    args: minimalArgs,
+    headless: true,
+    ignoreHTTPSErrors: true,
+  })
 
   const page = await browser.newPage();
   await page.setRequestInterception(true);

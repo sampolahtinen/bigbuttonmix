@@ -1,13 +1,22 @@
 {
-    "name": "big-button-mix",
-    "version": "0.0.1",
-    "type": "module",
-    "private": "true",
-    "workspaces": ["api", "client"],
-    "scripts": {
-      "build:all": "yarn workspaces foreach run build"
-    },
-    "devDependencies": {},
-    "dependencies": {}
+  "name": "big-button-mix",
+  "version": "0.0.1",
+  "type": "module",
+  "private": "true",
+  "workspaces": [
+    "api",
+    "client"
+  ],
+  "scripts": {
+    "build:all": "yarn workspaces foreach run build",
+    "dev:api": "yarn workspace api run dev",
+    "dev:client": "yarn workspace client run dev",
+    "deploy:api": "git subtree push --prefix api heroku-api main",
+    "deploy:client": "git subtree push --prefix client heroku-client main",
+    "dev": "concurrently yarn:dev:*"
+  },
+  "devDependencies": {},
+  "dependencies": {
+    "concurrently": "^6.2.1"
   }
-  
+}

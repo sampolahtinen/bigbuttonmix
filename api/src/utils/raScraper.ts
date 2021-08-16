@@ -1,7 +1,7 @@
 import dotenv from 'dotenv'
 import axios from 'axios';
 import { isEmpty } from 'ramda';
-import puppeteer, { Page }  from 'puppeteer-core';
+import puppeteer, { Page }  from 'puppeteer';
 import { EventInfo, EventMetaInfo, RaEventInfo } from '../types';
 
 dotenv.config()
