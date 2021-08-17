@@ -5,7 +5,7 @@
   "private": true,
   "scripts": {
     "lint": "eslint .",
-    "dev": "NODE_ENV=development nodemon --watch '**/*' -e ts,tsx,js  --ignore 'src/**/*.spec.ts' --exec 'ts-node' src/server.ts",
+    "dev": "NODE_ENV=development nodemon --watch '**/*' -e ts,tsx,js  --ignore 'src/**/*.spec.ts' --exec 'ts-node --project ./tsconfig.json' src/server.ts",
     "start": "node ./dist/server.js",
     "build": "NODE_ENV=production tsc"
   },
@@ -30,7 +30,6 @@
   },
   "dependencies": {
     "axios": "^0.21.1",
-    "chrome-aws-lambda": "^10.1.0",
     "cookie": "^0.4.1",
     "cookie-parser": "^1.4.5",
     "cors": "^2.8.5",
@@ -39,7 +38,9 @@
     "express-async-router": "^0.1.15",
     "node-fetch": "^2.6.1",
     "puppeteer": "^10.2.0",
-    "puppeteer-core": "^10.2.0",
+    "puppeteer-extra": "^3.1.18",
+    "puppeteer-extra-plugin-adblocker": "^2.11.11",
+    "puppeteer-extra-plugin-stealth": "^2.7.8",
     "ramda": "^0.27.1",
     "redis": "^3.1.2",
     "user-agents": "^1.0.738"

@@ -1,6 +1,7 @@
-import puppeteer  from 'puppeteer';
-import chrome from 'chrome-aws-lambda'
-import UserAgent from 'user-agents';
+import puppeteer from 'puppeteer-extra';
+import StealthPlugin from 'puppeteer-extra-plugin-stealth'
+
+puppeteer.use(StealthPlugin());
 
 const blockedDomains = [
     "securepubads.g.doubleclick.net",
@@ -51,7 +52,6 @@ const blockedDomains = [
   
 
 export const createChromiumBrowser = async () => {
-  console.time('chromeInit')
   const  browser = await puppeteer.launch({
     args: minimalArgs,
     headless: true,
@@ -60,11 +60,9 @@ export const createChromiumBrowser = async () => {
 
   const page = await browser.newPage();
   await page.setRequestInterception(true);
-  const user = new UserAgent().toString()
-  await page.setUserAgent(user);
 
   page.on('request', (req) => {
-    if(
+    if (
       req.resourceType() === 'image'
       || req.resourceType() === 'stylesheet'
       || req.resourceType() === 'font'
@@ -76,6 +74,6 @@ export const createChromiumBrowser = async () => {
       req.continue();
     }
   })
-  console.timeEnd('chromeInit')
+
   return { browser, page }
 }

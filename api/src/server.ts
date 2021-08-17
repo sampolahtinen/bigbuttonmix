@@ -13,14 +13,12 @@ const app = express()
 
 const allowList = [
   'http://localhost:3000',
-  'http://localhost:5000',
   'https://bigbutton-mix.herokuapp.com'
 ]
 
-// change
 app.use(
   cors({
-    origin: '*',
+    origin: allowList,
   })
 )
 
