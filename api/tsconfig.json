@@ -1,23 +1,19 @@
 {
-    "compilerOptions": {
-      "esModuleInterop": true,
-      "noImplicitAny": false,
-      "moduleResolution": "node",
-      "allowJs": true,
-      "module": "commonjs",
-      "noImplicitReturns": false,
-      "noUnusedLocals": false,
-      "outDir": "./dist",
-      "sourceMap": true,
-      "strict": false,
-      "target": "es2017",
-      "rootDir": "./src",
-      "typeRoots": [
-        "../../node_modules/@types",
-        "./types"
-      ]
-    },
-    "include": ["src", "./types"],
-    "exclude": ["node_modules"]
-  }
-  
+  "compilerOptions": {
+    "esModuleInterop": true,
+    "noImplicitAny": false,
+    "moduleResolution": "node",
+    "allowJs": true,
+    "module": "commonjs",
+    "noImplicitReturns": false,
+    "noUnusedLocals": false,
+    "outDir": "./dist",
+    "sourceMap": true,
+    "strict": false,
+    "target": "es2017",
+    "rootDir": "./src",
+    "typeRoots": ["../../node_modules/@types", "./types"]
+  },
+  "include": ["src", "./types"],
+  "exclude": ["node_modules"]
+}

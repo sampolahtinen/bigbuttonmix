@@ -11,6 +11,7 @@
     "build:all": "yarn workspaces foreach run build",
     "build:client": "yarn workspace client run build",
     "build:api": "yarn workspace api run build",
+    "start:redis": "yarn workspace api run start:redis",
     "dev:api": "yarn workspace api run dev",
     "dev:client": "yarn workspace client run dev",
     "deploy:api": "git subtree push --prefix api heroku-api main",
