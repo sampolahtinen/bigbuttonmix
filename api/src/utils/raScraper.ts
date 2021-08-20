@@ -9,6 +9,7 @@ import {
 } from "../types";
 import { redisClient } from "../server";
 import { logError, logInfo, logWarning } from "./logger";
+import { isDev } from "./index";
 
 const generateRandomNumber = (max: number) => Math.floor(Math.random() * max);
 
@@ -30,12 +31,14 @@ const puppetRequest = async (
 
 // This function fetches event links from RA and throws and error if it is empty
 const getEventLinks = async (searchPageURL: string, page: Page) => {
-  const cachedEvents = ((await redisClient.get(
-    searchPageURL
-  )) as unknown) as any;
+  if (isDev) {
+    const cachedEvents = ((await redisClient.get(
+      searchPageURL
+    )) as unknown) as any;
 
-  if (cachedEvents) {
-    return JSON.parse(cachedEvents);
+    if (cachedEvents) {
+      return JSON.parse(cachedEvents);
+    }
   }
 
   const events = await puppetRequest(
@@ -54,7 +57,9 @@ const getEventLinks = async (searchPageURL: string, page: Page) => {
     throw message;
   }
 
-  await redisClient.set(searchPageURL, JSON.stringify(events));
+  if (isDev) {
+    await redisClient.set(searchPageURL, JSON.stringify(events));
+  }
   return events;
 };
 
