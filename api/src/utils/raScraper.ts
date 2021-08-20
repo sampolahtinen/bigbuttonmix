@@ -227,13 +227,16 @@ export const getRandomSoundcloudTrack = async (
   return tracks[generateRandomNumber(tracks.length)];
 };
 
-export const generateSoundcloudEmbed = async (scTrackUrl: string) => {
+export const generateSoundcloudEmbed = async (
+  scTrackUrl: string,
+  autoPlay: boolean
+) => {
   const soundcloudEmbedServiceUrl = "https://soundcloud.com/oembed";
   const soundcloudEmbedResponse = await axios.get(soundcloudEmbedServiceUrl, {
     params: {
       url: scTrackUrl,
       format: "json",
-      auto_play: false,
+      auto_play: autoPlay || false,
       show_teaser: false,
     },
   });

@@ -7,8 +7,7 @@ import {
 } from "../utils/raScraper";
 import { RETRY_LIMIT } from "../constants";
 import { Crawler } from "../utils/Crawler";
-import { Browser } from "puppeteer";
-import { logSuccess, logError } from "../utils/logger";
+import { logSuccess, logError, logWarning } from "../utils/logger";
 
 const crawler = new Crawler();
 crawler.init();
@@ -19,9 +18,9 @@ router.get(
   "/api/random-soundcloud-track",
   async (req: Request, res: Response) => {
     console.time("raFunction");
-    const { location, week } = req.query;
-    const page = crawler.getPage();
-    const browser = crawler.getBrowser() as Browser;
+    const { location, week, autoPlay } = req.query;
+
+    const page = await crawler.getPage();
 
     retryCount = 0;
 
@@ -40,7 +39,9 @@ router.get(
       logSuccess(`SOUNDCLOUD TRACK: ${randomSoundcloudTrack}`);
 
       const soundcloudOembed = await generateSoundcloudEmbed(
-        randomSoundcloudTrack
+        randomSoundcloudTrack,
+        // Should extendx Red.query type definitions
+        (autoPlay as unknown) as boolean
       );
 
       res.json({
@@ -48,7 +49,6 @@ router.get(
         ...randomRaEventDetails,
       });
     } catch (error) {
-      // await browser.close();
       if (retryCount < RETRY_LIMIT) {
         logError("GENERAL ERROR. RETRYING PREVIOUS REQUEST!");
         retryCount++;

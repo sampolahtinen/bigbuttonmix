@@ -5,6 +5,7 @@ import cors from "cors";
 import redis from "redis";
 import dotenv from "dotenv";
 import util from "util";
+import booleanParser from "express-query-boolean";
 import { randomSoundcloudTrackRoute } from "./routes";
 
 dotenv.config();
@@ -34,6 +35,7 @@ app.use(
 
 app.use(express.json());
 app.use(express.urlencoded({ extended: true }));
+app.use(booleanParser());
 app.use(cookieParser());
 app.use(randomSoundcloudTrackRoute);
 

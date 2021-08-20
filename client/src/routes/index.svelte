@@ -1,11 +1,11 @@
 <script context="module" lang="ts">
-	export const prerender = true;
+  export const prerender = true;
 </script>
 
 <script lang="typescript">
   // import { onMount } from "svelte";
   import BigButton from "../components/BigButton.svelte";
-  import { api } from '../api';
+  import { api } from "../api";
   // import Dropdown from "../components/Dropdown.svelte";
   // import { RaEventInfo } from '../types';
   // import { countryOptions } from '../constants";
@@ -14,41 +14,45 @@
   // let name: string;
   // let userCity: string;
   // let cityDropdownOptions = generateCityOptions(countryOptions as any);
-  let scEmbedCode = '';
+  let scEmbedCode = "";
   let raEventInformation;
   let isLoading = false;
-  let errorMessage = '';
+  let errorMessage = "";
   // let scEmbedCode: string = '';
   // let raEventInformation: any = '';
   // let isLoading: boolean = false;
   // let errorMessage: string = '';
 
+  const isStandalonePWARequest = () => {
+    const isPWAiOS =
+      "standalone" in window.navigator && window.navigator["standalone"];
+    const isPWAChrome = window.matchMedia("(display-mode: standalone)").matches;
+
+    return isPWAiOS || isPWAChrome;
+  };
+
   const getScEmbedCode = async () => {
     console.log("fetching");
     isLoading = true;
-    errorMessage = '';
+    errorMessage = "";
+    const isAutoPlayPossible = isStandalonePWARequest();
 
     try {
       const response = await api(
-      'GET', 
-      'random-soundcloud-track?location=berlin&week=2021-08-21'
-      )
+        "GET",
+        `random-soundcloud-track?location=berlin&week=2021-08-21&autoPlay=${isAutoPlayPossible}`
+      );
 
-      console.log(response.body)
-      const { html } = response.body;
-
-      scEmbedCode = html;
+      scEmbedCode = response.body.html;
       raEventInformation = response.body;
     } catch (error) {
       errorMessage = error;
     } finally {
       isLoading = false;
     }
-    
   };
 
   // const handleCitySelection = ({ detail }) => console.log(detail);
-
 </script>
 
 <main>
@@ -59,19 +63,28 @@
         <div class="event-info-container">
           <div class="column">
             <span class="event-info-heading">Event</span>
-            <a class="event-info-row" href={raEventInformation.eventLink} target="_blank">{raEventInformation.title}</a>
+            <a
+              class="event-info-row"
+              href={raEventInformation.eventLink}
+              target="_blank">{raEventInformation.title}</a
+            >
             <span class="event-info-heading">Venue</span>
-            <a class="event-info-row" href={raEventInformation.venue} target="_blank">{raEventInformation.venue}</a>
+            <a
+              class="event-info-row"
+              href={raEventInformation.venue}
+              target="_blank">{raEventInformation.venue}</a
+            >
           </div>
           <div class="column">
             <span class="event-info-heading">Date</span>
             <span class="event-info-row date">{raEventInformation.date}</span>
-            <span class="event-info-row">{raEventInformation.openingHours}</span>
+            <span class="event-info-row">{raEventInformation.openingHours}</span
+            >
           </div>
         </div>
       </div>
     {/if}
-    <BigButton on:click={getScEmbedCode} isSmall={!!scEmbedCode} isLoading={isLoading} />
+    <BigButton on:click={getScEmbedCode} isSmall={!!scEmbedCode} {isLoading} />
     {#if errorMessage}
       <span>{errorMessage}</span>
     {/if}
@@ -79,7 +92,7 @@
     <span class="copyright">(c) Andrew Moore & Sampo Lahtinen</span>
   </div>
 </main>
-  
+
 <style>
   :global(body) {
     padding: 0;
@@ -95,11 +108,22 @@
   }
 
   @font-face {
-    font-family: "FR73PixelW00-Regular"; src: url("//db.onlinewebfonts.com/t/7c2857cbd04acdf539eeb197ca8fd6c2.eot"); src: url("//db.onlinewebfonts.com/t/7c2857cbd04acdf539eeb197ca8fd6c2.eot?#iefix") format("embedded-opentype"), url("//db.onlinewebfonts.com/t/7c2857cbd04acdf539eeb197ca8fd6c2.woff2") format("woff2"), url("//db.onlinewebfonts.com/t/7c2857cbd04acdf539eeb197ca8fd6c2.woff") format("woff"), url("//db.onlinewebfonts.com/t/7c2857cbd04acdf539eeb197ca8fd6c2.ttf") format("truetype"), url("//db.onlinewebfonts.com/t/7c2857cbd04acdf539eeb197ca8fd6c2.svg#FR73PixelW00-Regular") format("svg");
+    font-family: "FR73PixelW00-Regular";
+    src: url("//db.onlinewebfonts.com/t/7c2857cbd04acdf539eeb197ca8fd6c2.eot");
+    src: url("//db.onlinewebfonts.com/t/7c2857cbd04acdf539eeb197ca8fd6c2.eot?#iefix")
+        format("embedded-opentype"),
+      url("//db.onlinewebfonts.com/t/7c2857cbd04acdf539eeb197ca8fd6c2.woff2")
+        format("woff2"),
+      url("//db.onlinewebfonts.com/t/7c2857cbd04acdf539eeb197ca8fd6c2.woff")
+        format("woff"),
+      url("//db.onlinewebfonts.com/t/7c2857cbd04acdf539eeb197ca8fd6c2.ttf")
+        format("truetype"),
+      url("//db.onlinewebfonts.com/t/7c2857cbd04acdf539eeb197ca8fd6c2.svg#FR73PixelW00-Regular")
+        format("svg");
   }
 
   :global(*) {
-    font-family: 'FR73PixelW00-Regular';
+    font-family: "FR73PixelW00-Regular";
   }
 
   main {
@@ -155,19 +179,17 @@
     display: flex;
     flex-direction: column;
     align-items: center;
-    /* justify-content: center; */
     width: 100vw;
     height: 100vh;
     max-width: 500px;
-    background-image: linear-gradient(to bottom, #12151f, #121521, #121524, #121526, #121528);
-    /* background-image: radial-gradient(
-      circle,
-      #f1e2e7,
-      #f1a9d2,
-      #de72ce,
-      #b43cd8,
-      #5c12eb
-    ); */
+    background-image: linear-gradient(
+      to bottom,
+      #12151f,
+      #121521,
+      #121524,
+      #121526,
+      #121528
+    );
   }
 
   .soundcloud-embedded-player {

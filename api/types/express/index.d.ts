@@ -1,5 +1,6 @@
 declare namespace Express {
-    export interface Request {
-       retryCount?: number
-    }
- }
+  export interface Request {
+    retryCount?: number;
+    query: boolean;
+  }
+}
