@@ -7,7 +7,7 @@ type RequestType = 'GET' | 'PATCH' | 'PUT' | 'POST'
 
 // const base = process.env.IS_SERVERLESS ? '/api' : 'http://localhost:5000/api'
 const base = process.env.NODE_ENV === 'production' 
-	? 'https://api-bigbutton-mix.herokuapp.com/api'
+	? 'https://big-button-api.herokuapp.com/api'
 	: 'http://localhost:5000/api'
 
 export const api = async function api(
