@@ -227,7 +227,7 @@ export const getRandomSoundcloudTrack = async (
 ): Promise<string> => {
   logInfo('Requesting page from Soundcloud')
   const scPageString = await axios.get(`${scArtistLink}/tracks/`);
-  logInfo(`First tracks page request status ${scPageString.status}`)
+  logInfo(`Tracks page request status ${scPageString.status}`)
   
   const scUserID = scPageString.data.match(/(?<=soundcloud:users:)\d+/g);
   logInfo(`scUserID ${scUserID}`)
@@ -240,7 +240,7 @@ export const getRandomSoundcloudTrack = async (
   const d = await axios.get(
     api_v2_url
   );
-  logInfo(`Second tracks page request status ${d.status}`)
+  logInfo(`Tracks api request status ${d.status}`)
   const tracks = d.data.collection.map((entry) => entry.permalink_url);
   return tracks[generateRandomNumber(tracks.length)];
 };
