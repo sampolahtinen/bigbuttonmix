@@ -10,8 +10,8 @@ import { Crawler } from "../utils/Crawler";
 import { logSuccess, logError, logWarning } from "../utils/logger";
 
 console.log('Starting crawler')
-const crawler = await new Crawler();
-await crawler.init();
+const crawler = new Crawler();
+crawler.init();
 
 
 let retryCount = 0;
@@ -20,7 +20,8 @@ router.get(
   "/api/random-soundcloud-track",
   async (req: Request, res: Response) => {
 
-
+    //const crawler = await new Crawler();
+    //await crawler.init();
 
 
     console.log("raFunction");
