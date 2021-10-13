@@ -9,6 +9,9 @@ import { RETRY_LIMIT } from "../constants";
 import { Crawler } from "../utils/Crawler";
 import { logSuccess, logError, logWarning } from "../utils/logger";
 
+console.log('Starting crawler')
+const crawler = await new Crawler();
+await crawler.init();
 
 
 let retryCount = 0;
@@ -18,9 +21,7 @@ router.get(
   async (req: Request, res: Response) => {
 
 
-    console.log('Starting crawler')
-    const crawler = await new Crawler();
-    await crawler.init();
+
 
     console.log("raFunction");
     
