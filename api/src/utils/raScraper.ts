@@ -53,7 +53,7 @@ const getEventLinks = async (searchPageURL: string, page: Page) => {
 
   if (events.length == 0) {
     const message = "Event list is empty";
-    logError(message);
+    console.log(message);
     throw message;
   }
 
@@ -118,7 +118,7 @@ const getRandomEventArtistScLink = async (
     return artistSoundcloudLink;
   } catch (error) {
     logError("fetchRandomEventArtistScLink failed");
-    logError(error);
+    console.log(error);
     return getRandomEventArtistScLink(page, eventArtists);
   }
 };
@@ -190,7 +190,7 @@ export const getRandomRaEventArtists = async (
     let eventDetails = await getRaEventDetails(page, randomEventPage);
 
     while (isEmpty(eventDetails.artists)) {
-      logInfo("artistLinks were empty, trying again...");
+      console.log("artistLinks were empty, trying again...");
       const randomEventPage = await getRandomEvent(eventLinks);
       eventDetails = await getRaEventDetails(page, randomEventPage);
     }

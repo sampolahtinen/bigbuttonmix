@@ -7,7 +7,7 @@ import {
 } from "../utils/raScraper";
 import { RETRY_LIMIT } from "../constants";
 import { Crawler } from "../utils/Crawler";
-import { logSuccess, logError, logWarning, logInfo } from "../utils/logger";
+import { logSuccess, logError, logWarning } from "../utils/logger";
 
 
 
@@ -18,11 +18,11 @@ router.get(
   async (req: Request, res: Response) => {
 
 
-    logInfo('Starting crawler')
+    console.log('Starting crawler')
     const crawler = await new Crawler();
     await crawler.init();
 
-    logInfo("raFunction");
+    console.log("raFunction");
     
     console.time("raFunction");
     const { location, week, autoPlay } = req.query;
@@ -38,7 +38,7 @@ router.get(
         page
       );
 
-      logSuccess(`SOUNDCLOUD ARTIST: ${randomRaEventDetails.randomEventScLink}`);
+      logSuccess(`SOUNDCLOUD LINK: ${randomRaEventDetails.randomEventScLink}`);
 
       const randomSoundcloudTrack = await getRandomSoundcloudTrack(
         randomRaEventDetails.randomEventScLink

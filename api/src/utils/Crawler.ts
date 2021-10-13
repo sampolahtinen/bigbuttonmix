@@ -64,7 +64,8 @@ export class Crawler {
     });
 
     this.browser;
-    
+    console.log(this.browser);
+
     const page = await this.browser.newPage();
     await page.setRequestInterception(true);
 
