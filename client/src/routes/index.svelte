@@ -58,7 +58,7 @@
         "GET",
         `random-soundcloud-track?location=${location}&week=${week}&autoPlay=${isAutoPlayPossible}`
       );
-
+      console.log(response)
       scEmbedCode = response.body.html;
       raEventInformation = response.body;
     } catch (error) {
