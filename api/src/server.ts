@@ -31,7 +31,7 @@ const allowList = [
   "http://localhost:3000",
   "http://localhost:5000",
   
-  "https://bigbutton-mix.herokuapp.com",
+  "https://big-button-mix.herokuapp.com",
 ];
 
 app.use(
