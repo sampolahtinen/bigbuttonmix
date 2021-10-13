@@ -31,16 +31,32 @@
     return isPWAiOS || isPWAChrome;
   };
 
+
+  const getCurrentWeek = () => {
+    //console.log('Getting current week')
+    const currentDate = new Date()
+    const year = currentDate.getFullYear()
+    const month = currentDate.getMonth()+1
+    const day = currentDate.getDate()
+    const week = `${year}-${month}-${day}`
+    return week
+  };
+
   const getScEmbedCode = async () => {
     console.log("fetching");
     isLoading = true;
     errorMessage = "";
     const isAutoPlayPossible = isStandalonePWARequest();
+    
+    // location is currently hard-coded
+    const location = 'berlin'
+    //const week = '2021-10-09'
+    const week = getCurrentWeek();
 
     try {
       const response = await api(
         "GET",
-        `random-soundcloud-track?location=berlin&week=2021-08-21&autoPlay=${isAutoPlayPossible}`
+        `random-soundcloud-track?location=${location}&week=${week}&autoPlay=${isAutoPlayPossible}`
       );
 
       scEmbedCode = response.body.html;

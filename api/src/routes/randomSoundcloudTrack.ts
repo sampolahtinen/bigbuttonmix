@@ -49,6 +49,7 @@ router.get(
         ...randomRaEventDetails,
       });
     } catch (error) {
+      logError(error)
       if (retryCount < RETRY_LIMIT) {
         logError("GENERAL ERROR. RETRYING PREVIOUS REQUEST!");
         retryCount++;

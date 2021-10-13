@@ -182,6 +182,7 @@ export const getRandomRaEventArtists = async (
     if (!location) location = "berlin";
 
     const raUrl = `https://ra.co/events/de/${location}?week=${date}`;
+    logInfo(`Searching events on ${raUrl}`)
     const eventLinks = await getEventLinks(raUrl, page);
 
     const randomEventPage = await getRandomEvent(eventLinks);
@@ -211,6 +212,7 @@ export const getRandomRaEventArtists = async (
       ...eventDetails,
     };
   } catch (error) {
+    logError(error)
     logError("There was an unknown general error. Fetching a new event.");
     logError(JSON.stringify(error));
     //getRandomRAEventArtistTrack(location)
@@ -223,11 +225,22 @@ export const getRandomRaEventArtists = async (
 export const getRandomSoundcloudTrack = async (
   scArtistLink: string
 ): Promise<string> => {
+  logInfo('Requesting page from Soundcloud')
   const scPageString = await axios.get(`${scArtistLink}/tracks/`);
+  logInfo(`First tracks page request status ${scPageString.status}`)
+  
   const scUserID = scPageString.data.match(/(?<=soundcloud:users:)\d+/g);
+  logInfo(`scUserID ${scUserID}`)
+
+  const client_id = 'o2BWXZ9TFWJtTjM1cF9OvS5BEYPk1hBS';
+  // We could look into a better way to manage client IDs. One option is to use the youtube api
+  
+  const api_v2_url = `https://api-v2.soundcloud.com/users/${scUserID[0]}/tracks?representation=&client_id=${client_id}&limit=20&offset=0&linked_partitioning=1&app_version=1628858614&app_locale=en`;
+
   const d = await axios.get(
-    `https://api-v2.soundcloud.com/users/${scUserID[0]}/tracks?representation=&client_id=fSSdm5yTnDka1g0Fz1CO5Yx6z0NbeHAj&limit=20&offset=0&linked_partitioning=1&app_version=1628858614&app_locale=en`
+    api_v2_url
   );
+  logInfo(`Second tracks page request status ${d.status}`)
   const tracks = d.data.collection.map((entry) => entry.permalink_url);
   return tracks[generateRandomNumber(tracks.length)];
 };
@@ -236,6 +249,7 @@ export const generateSoundcloudEmbed = async (
   scTrackUrl: string,
   autoPlay: boolean
 ) => {
+  logInfo('Generating soundcloud embed')
   const soundcloudEmbedServiceUrl = "https://soundcloud.com/oembed";
   const soundcloudEmbedResponse = await axios.get(soundcloudEmbedServiceUrl, {
     params: {
