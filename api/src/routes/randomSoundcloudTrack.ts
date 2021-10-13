@@ -9,14 +9,19 @@ import { RETRY_LIMIT } from "../constants";
 import { Crawler } from "../utils/Crawler";
 import { logSuccess, logError, logWarning } from "../utils/logger";
 
-const crawler = new Crawler();
-crawler.init();
+
 
 let retryCount = 0;
 // This is the endpoint for the client to interact with the server
 router.get(
   "/api/random-soundcloud-track",
   async (req: Request, res: Response) => {
+
+
+    console.log('Starting crawler')
+    const crawler = new Crawler();
+    crawler.init();
+
     console.time("raFunction");
     const { location, week, autoPlay } = req.query;
 
