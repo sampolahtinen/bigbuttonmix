@@ -19,9 +19,11 @@ router.get(
 
 
     console.log('Starting crawler')
-    const crawler = new Crawler();
-    crawler.init();
+    const crawler = await new Crawler();
+    await crawler.init();
 
+    console.log("raFunction");
+    
     console.time("raFunction");
     const { location, week, autoPlay } = req.query;
 
