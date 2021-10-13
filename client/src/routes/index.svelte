@@ -62,7 +62,8 @@
       scEmbedCode = response.body.html;
       raEventInformation = response.body;
     } catch (error) {
-      errorMessage = error;
+      errorMessage = error
+      console.log(errorMessage);
     } finally {
       isLoading = false;
     }
