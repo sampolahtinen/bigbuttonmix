@@ -37,6 +37,7 @@ const getEventLinks = async (searchPageURL: string, page: Page) => {
     )) as unknown) as any;
 
     if (cachedEvents) {
+      logInfo(`Using cached events for ${searchPageURL}`)
       return JSON.parse(cachedEvents);
     }
   }
@@ -71,6 +72,7 @@ const convertRSHreftoURL = async (href) => {
 };
 
 const getRandomEvent = async (eventLinks: string[]) => {
+  // Chooses a random item from the list and makes it into a URL
   const randomNumber = generateRandomNumber(eventLinks.length);
   const eventUrl = await convertRSHreftoURL(eventLinks[randomNumber]);
   return eventUrl;
@@ -78,12 +80,35 @@ const getRandomEvent = async (eventLinks: string[]) => {
 
 const getSoundCloudLinkFromArtist = async (page: Page, artistUrl: string) => {
   // Reads soundcloud link from artist's RA page
+  if (isDev) {
+    const cachedEvents = ((await redisClient.get(
+      artistUrl
+    )) as unknown) as any;
+
+    if (cachedEvents) {
+      logInfo(`Using cached events for ${artistUrl}`)
+      return JSON.parse(cachedEvents);
+    }
+  }
+
+
   const soundCloudLinks = await puppetRequest(
     page,
     artistUrl,
     'a[href^="https://www.soundcloud.com"]',
     (elements) => elements.map((elem) => elem.getAttribute("href"))
   );
+  
+  if (soundCloudLinks.length == 0) {
+    const message = `No soundclound link for artist ${artistUrl}`;
+    console.log(message);
+    throw message;
+  }
+
+  if (isDev) {
+    await redisClient.set(artistUrl, soundCloudLinks[0]);
+    logInfo(`Writing log entry for ${artistUrl}`)
+  }
   return soundCloudLinks[0];
 };
 
@@ -127,7 +152,7 @@ const getRaEventDetails = async (
   page: Page,
   url: string
 ): Promise<EventDetails> => {
-  // This function searches for artist links on an event page
+  // This function searches for artist links, as well as the page title, and other metadata on an event page
   const artists = (await puppetRequest(
     page,
     url,
