@@ -10,19 +10,20 @@ import {
 import { redisClient } from "../server";
 import { logError, logInfo, logWarning } from "./logger";
 import { isDev } from "./index";
+import { json } from "body-parser";
 
 const generateRandomNumber = (max: number) => Math.floor(Math.random() * max);
 
 const puppetRequest = async (
   page: Page,
-  url: string,
+  eventUrl: string,
   cssSelector: string,
   cb: (args: Element[]) => string[] | Record<string, string>[]
 ) => {
-  logInfo(`Puppeteer scraping: ${url}`);
+  logInfo(`Puppeteer scraping: ${eventUrl}`);
   logInfo(`Using selector: ${cssSelector}`);
 
-  await page.goto(url);
+  await page.goto(eventUrl);
 
   const elements = await page.$$eval(cssSelector, cb);
 
@@ -81,13 +82,13 @@ const getRandomEvent = async (eventLinks: string[]) => {
 const getSoundCloudLinkFromArtist = async (page: Page, artistUrl: string) => {
   // Reads soundcloud link from artist's RA page
   if (isDev) {
-    const cachedEvents = ((await redisClient.get(
+    const cachedSoundCloud = ((await redisClient.get(
       artistUrl
     )) as unknown) as any;
 
-    if (cachedEvents) {
-      logInfo(`Using cached events for ${artistUrl}`)
-      return JSON.parse(cachedEvents);
+    if (cachedSoundCloud) {
+      logInfo(`Using cached soundcloud link for ${artistUrl}`)
+      return cachedSoundCloud;
     }
   }
 
@@ -144,18 +145,21 @@ const getRandomEventArtistScLink = async (
   } catch (error) {
     logError("fetchRandomEventArtistScLink failed");
     console.log(error);
-    return getRandomEventArtistScLink(page, eventArtists);
+    const reducedEventArtists = eventArtists.filter(
+      (artist) => artist.profileLink !== randomArtist
+    );
+    return getRandomEventArtistScLink(page, reducedEventArtists);
   }
 };
 
 const getRaEventDetails = async (
   page: Page,
-  url: string
+  eventUrl: string
 ): Promise<EventDetails> => {
-  // This function searches for artist links, as well as the page title, and other metadata on an event page
+  // Read event page and get artist links and other details
   const artists = (await puppetRequest(
     page,
-    url,
+    eventUrl,
     'a > span[href^="/dj"]',
     (elements) =>
       elements.map((elem) => ({
@@ -190,9 +194,14 @@ const getRaEventDetails = async (
   }
 
   if (artists.length == 0) {
-    const message = "No artists found in event page: " + url;
+    const message = "No artists found in event page: " + eventUrl;
     logWarning(message);
     //throw message
+  }
+
+  if (isDev){
+    logInfo(`Caching data for ${eventUrl}`)
+    await redisClient.set(`${eventUrl}:title`,title);
   }
 
   return { title, artists, ...metaInfo };
@@ -274,6 +283,17 @@ export const generateSoundcloudEmbed = async (
   scTrackUrl: string,
   autoPlay: boolean
 ) => {
+  if (isDev){
+    const cachedEmbed = ((await redisClient.get(
+      `${scTrackUrl}:embed`
+      )) as unknown) as any;
+    
+    if (cachedEmbed) {
+      logInfo(`Using cached soundcloud embed for ${scTrackUrl}`)
+      return JSON.parse(cachedEmbed);
+    }
+  }
+
   logInfo('Generating soundcloud embed')
   const soundcloudEmbedServiceUrl = "https://soundcloud.com/oembed";
   const soundcloudEmbedResponse = await axios.get(soundcloudEmbedServiceUrl, {
@@ -284,6 +304,10 @@ export const generateSoundcloudEmbed = async (
       show_teaser: false,
     },
   });
+
+  if (isDev){
+    await redisClient.set(`${scTrackUrl}:embed`,JSON.stringify(soundcloudEmbedResponse.data))
+  }
 
   return soundcloudEmbedResponse.data;
 };

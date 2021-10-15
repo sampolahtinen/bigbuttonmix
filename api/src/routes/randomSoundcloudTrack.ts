@@ -8,6 +8,7 @@ import {
 import { RETRY_LIMIT } from "../constants";
 import { Crawler } from "../utils/Crawler";
 import { logSuccess, logError, logWarning } from "../utils/logger";
+import { isDev } from "../utils";
 
 console.log('Starting crawler')
 const crawler = new Crawler();
@@ -27,7 +28,11 @@ router.get(
     console.log("raFunction");
     
     console.time("raFunction");
-    const { location, week, autoPlay } = req.query;
+    let { location, week, autoPlay } = req.query;
+
+    if (isDev){
+      location = 'aberdeen'
+    }
 
     const page = await crawler.getPage();
 
