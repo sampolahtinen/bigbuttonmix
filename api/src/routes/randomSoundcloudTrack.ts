@@ -9,6 +9,8 @@ import { RETRY_LIMIT } from "../constants";
 import { Crawler } from "../utils/Crawler";
 import { logSuccess, logError, logWarning } from "../utils/logger";
 import { isDev } from "../utils";
+import { redisFlag } from "../utils";
+
 
 console.log('Starting crawler')
 const crawler = new Crawler();
