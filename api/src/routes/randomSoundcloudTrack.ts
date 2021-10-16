@@ -38,6 +38,7 @@ router.get(
 
     const page = await crawler.getPage();
 
+    
     retryCount = 0;
 
     try {
