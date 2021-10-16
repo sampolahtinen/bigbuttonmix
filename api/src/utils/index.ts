@@ -1,2 +1,2 @@
 export const isDev = process.env.NODE_ENV === "development";
-export const redisFlag = isDev;
+export const redisFlag = true;

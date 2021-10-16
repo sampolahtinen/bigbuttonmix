@@ -110,7 +110,7 @@ const getSoundCloudLinkFromArtist = async (page: Page, artistUrl: string) => {
 
   if (redisFlag) {
     await redisClient.set(artistUrl, soundCloudLinks[0]);
-    logInfo(`Writing log entry for ${artistUrl}`)
+    logInfo(`Caching entry for ${artistUrl}`)
   }
   return soundCloudLinks[0];
 };
@@ -261,6 +261,19 @@ export const getRandomRaEventArtists = async (
 export const getSoundcloudTracks = async (
   scArtistLink: string
 ): Promise<string[]> => {
+
+  if(redisFlag){
+    const cachedTrackLinks = ((await redisClient.get(
+      `${scArtistLink}:tracks`
+    )) as unknown) as any;
+
+    if (cachedTrackLinks){
+      logInfo(`Using cached tracks for ${scArtistLink}`)
+      return JSON.parse(cachedTrackLinks);
+    }
+  }
+
+
   logInfo('Requesting page from Soundcloud')
   const scPageString = await axios.get(`${scArtistLink}/tracks/`);
   logInfo(`Tracks page request status ${scPageString.status}`)
@@ -278,9 +291,18 @@ export const getSoundcloudTracks = async (
   );
   logInfo(`Tracks api request status ${d.status}`)
   const tracks = d.data.collection.map((entry) => entry.permalink_url);
-  return tracks
-}
+  
 
+  if (redisFlag){
+    logInfo(`Caching entry ${tracks} for ${scArtistLink}:tracks`)
+    await redisClient.set(`${scArtistLink}:tracks`,JSON.stringify(tracks));
+
+  }
+  return tracks
+
+
+}
+  
 export const getRandomSoundcloudTrack = async (
   scArtistLink: string
 ): Promise<string> => {

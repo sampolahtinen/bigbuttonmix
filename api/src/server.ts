@@ -7,14 +7,14 @@ import dotenv from "dotenv";
 import util from "util";
 import booleanParser from "express-query-boolean";
 import { randomSoundcloudTrackRoute } from "./routes";
-import { isDev } from "./utils/index";
+import { isDev, redisFlag } from "./utils/index";
 
 dotenv.config();
 console.log(process.env.NODE_ENV);
 let redisClient;
 
-if (isDev) {
-  redisClient = redis.createClient({
+if (redisFlag){
+    redisClient = redis.createClient({
     url: process.env.REDIS_URL || "redis://localhost:6379",
   });
   //@ts-ignore
@@ -22,6 +22,7 @@ if (isDev) {
   //@ts-ignore
   redisClient.set = util.promisify(redisClient.set);
 }
+
 
 export { redisClient };
 
