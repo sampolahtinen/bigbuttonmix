@@ -3449,6 +3449,11 @@ svelte-hmr@^0.14.7:
   resolved "https://registry.yarnpkg.com/svelte-hmr/-/svelte-hmr-0.14.7.tgz#7fa8261c7b225d9409f0a86f3b9ea5c3ca6f6607"
   integrity sha512-pDrzgcWSoMaK6AJkBWkmgIsecW0GChxYZSZieIYfCP0v2oPyx2CYU/zm7TBIcjLVUPP714WxmViE9Thht4etog==
 
+svelte-kit@^1.0.0:
+  version "1.0.0"
+  resolved "https://registry.yarnpkg.com/svelte-kit/-/svelte-kit-1.0.0.tgz#bd23e5429cf6a8b7d33a2016f5e7b19f01e9ce38"
+  integrity sha512-pIY5PHrdpqt5Py4nkv3BCqbrTyYH61pgCVykPf3JuCeryvn/pO88ltDGFZq0cRkrSmfKHlpC+uM018SZ8I2h4A==
+
 svelte-preprocess@^4.0.0:
   version "4.7.4"
   resolved "https://registry.yarnpkg.com/svelte-preprocess/-/svelte-preprocess-4.7.4.tgz#e4d5208ab25c2aaaf19e837f7d7bbf7930e61d2b"
@@ -3906,6 +3911,11 @@ yargs@^16.2.0:
     string-width "^4.2.0"
     y18n "^5.0.5"
     yargs-parser "^20.2.2"
+
+yarn@^1.22.15:
+  version "1.22.17"
+  resolved "https://registry.yarnpkg.com/yarn/-/yarn-1.22.17.tgz#bf910747d22497b573131f7341c0e1d15c74036c"
+  integrity sha512-H0p241BXaH0UN9IeH//RT82tl5PfNraVpSpEoW+ET7lmopNC61eZ+A+IDvU8FM6Go5vx162SncDL8J1ZjRBriQ==
 
 yauzl@^2.10.0:
   version "2.10.0"
