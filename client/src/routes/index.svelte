@@ -5,6 +5,7 @@
 <script lang="typescript">
   // import { onMount } from "svelte";
   import BigButton from "../components/BigButton.svelte";
+  import { format } from 'date-fns'
   import { api } from "../api";
   // import Dropdown from "../components/Dropdown.svelte";
   // import { RaEventInfo } from '../types';
@@ -32,15 +33,7 @@
   };
 
 
-  const getCurrentWeek = () => {
-    //console.log('Getting current week')
-    const currentDate = new Date()
-    const year = currentDate.getFullYear()
-    const month = currentDate.getMonth()+1
-    const day = currentDate.getDate()
-    const week = `${year}-${month}-${day}`
-    return week
-  };
+  const getCurrentDate = () => format(new Date(), 'yyyy-MM-dd')
 
   const getScEmbedCode = async () => {
     console.log("fetching");
@@ -50,13 +43,13 @@
     
     // location is currently hard-coded
     const location = 'berlin'
-    //const week = '2021-10-09'
-    const week = getCurrentWeek();
+    const date = getCurrentDate();
 
     try {
+      console.log('getting')
       const response = await api(
         "GET",
-        `random-soundcloud-track?location=${location}&week=${week}&autoPlay=${isAutoPlayPossible}`
+        `random-soundcloud-track?location=${location}&date=${date}&autoPlay=${isAutoPlayPossible}`
       );
       console.log(response)
       scEmbedCode = response.body.html;

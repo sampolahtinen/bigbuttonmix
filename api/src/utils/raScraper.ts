@@ -9,10 +9,7 @@ import {
 } from "../types";
 import { redisClient } from "../server";
 import { logError, logInfo, logWarning } from "./logger";
-import { isDev } from "./index";
-import { redisFlag } from "./index";
-
-import { json } from "body-parser";
+import { REDIS_ENABLED } from "../constants";
 
 const generateRandomNumber = (max: number) => Math.floor(Math.random() * max);
 
@@ -34,11 +31,11 @@ const puppetRequest = async (
 
 // This function fetches event links from RA and throws and error if it is empty
 const getEventLinks = async (searchPageURL: string, page: Page) => {
-  if (redisFlag) {
+  if (REDIS_ENABLED) {
     const cachedEvents = ((await redisClient.get(
       searchPageURL
     )) as unknown) as any;
-
+    
     if (cachedEvents) {
       logInfo(`Using cached events for ${searchPageURL}`)
       return JSON.parse(cachedEvents);
@@ -61,7 +58,7 @@ const getEventLinks = async (searchPageURL: string, page: Page) => {
     throw message;
   }
 
-  if (redisFlag) {
+  if (REDIS_ENABLED) {
     await redisClient.set(searchPageURL, JSON.stringify(events));
   }
   return events;
@@ -83,7 +80,7 @@ const getRandomEvent = async (eventLinks: string[]) => {
 
 const getSoundCloudLinkFromArtist = async (page: Page, artistUrl: string) => {
   // Reads soundcloud link from artist's RA page
-  if (redisFlag) {
+  if (REDIS_ENABLED) {
     const cachedSoundCloud = ((await redisClient.get(
       artistUrl
     )) as unknown) as any;
@@ -108,7 +105,7 @@ const getSoundCloudLinkFromArtist = async (page: Page, artistUrl: string) => {
     throw message;
   }
 
-  if (redisFlag) {
+  if (REDIS_ENABLED) {
     await redisClient.set(artistUrl, soundCloudLinks[0]);
     logInfo(`Caching entry for ${artistUrl}`)
   }
@@ -201,7 +198,7 @@ const getRaEventDetails = async (
     //throw message
   }
 
-  if (redisFlag){
+  if (REDIS_ENABLED){
     logInfo(`Caching data for ${eventUrl}`)
     await redisClient.set(`${eventUrl}:title`,title);
   }
@@ -262,7 +259,7 @@ export const getSoundcloudTracks = async (
   scArtistLink: string
 ): Promise<string[]> => {
 
-  if(redisFlag){
+  if(REDIS_ENABLED){
     const cachedTrackLinks = ((await redisClient.get(
       `${scArtistLink}:tracks`
     )) as unknown) as any;
@@ -293,7 +290,7 @@ export const getSoundcloudTracks = async (
   const tracks = d.data.collection.map((entry) => entry.permalink_url);
   
 
-  if (redisFlag){
+  if (REDIS_ENABLED){
     logInfo(`Caching entry ${tracks} for ${scArtistLink}:tracks`)
     await redisClient.set(`${scArtistLink}:tracks`,JSON.stringify(tracks));
 
@@ -316,7 +313,7 @@ export const generateSoundcloudEmbed = async (
   scTrackUrl: string,
   autoPlay: boolean
 ) => {
-  if (redisFlag){
+  if (REDIS_ENABLED){
     const cachedEmbed = ((await redisClient.get(
       `${scTrackUrl}:embed`
       )) as unknown) as any;
@@ -338,7 +335,7 @@ export const generateSoundcloudEmbed = async (
     },
   });
 
-  if (redisFlag){
+  if (REDIS_ENABLED){
     await redisClient.set(`${scTrackUrl}:embed`,JSON.stringify(soundcloudEmbedResponse.data))
   }
 

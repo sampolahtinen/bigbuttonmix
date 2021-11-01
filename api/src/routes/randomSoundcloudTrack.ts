@@ -9,8 +9,6 @@ import { RETRY_LIMIT } from "../constants";
 import { Crawler } from "../utils/Crawler";
 import { logSuccess, logError, logWarning } from "../utils/logger";
 import { isDev } from "../utils";
-import { redisFlag } from "../utils";
-
 
 console.log('Starting crawler')
 const crawler = new Crawler();
@@ -22,18 +20,13 @@ let retryCount = 0;
 router.get(
   "/api/random-soundcloud-track",
   async (req: Request, res: Response) => {
-
-    //const crawler = await new Crawler();
-    //await crawler.init();
-
-
     console.log("raFunction");
-    
     console.time("raFunction");
-    let { location, week, autoPlay } = req.query;
+
+    let { location, date, autoPlay } = req.query;
 
     if (isDev){
-      location = 'aberdeen'
+      location = 'berlin'
     }
 
     const page = await crawler.getPage();
@@ -44,7 +37,7 @@ router.get(
     try {
       const randomRaEventDetails = await getRandomRaEventArtists(
         location as string,
-        week as string,
+        date as string,
         page
       );
 
