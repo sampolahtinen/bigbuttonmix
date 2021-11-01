@@ -1,4 +1,4 @@
-import { PORT } from "./constants";
+import { PORT, REDIS_ENABLED } from "./constants";
 import express from "express";
 import cookieParser from "cookie-parser";
 import cors from "cors";
@@ -7,13 +7,13 @@ import dotenv from "dotenv";
 import util from "util";
 import booleanParser from "express-query-boolean";
 import { randomSoundcloudTrackRoute } from "./routes";
-import { isDev, redisFlag } from "./utils/index";
+import { isDev } from "./utils/index";
 
 dotenv.config();
 console.log(process.env.NODE_ENV);
 let redisClient;
 
-if (redisFlag){
+if (REDIS_ENABLED){
     redisClient = redis.createClient({
     url: process.env.REDIS_URL || "redis://localhost:6379",
   });
