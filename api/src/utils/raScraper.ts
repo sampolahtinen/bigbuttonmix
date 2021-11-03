@@ -38,6 +38,7 @@ const getEventLinks = async (searchPageURL: string, page: Page) => {
     
     if (cachedEvents) {
       logInfo(`Using cached events for ${searchPageURL}`)
+      logInfo(`Total events: ${JSON.parse(cachedEvents).length}`)
       return JSON.parse(cachedEvents);
     }
   }
@@ -61,6 +62,7 @@ const getEventLinks = async (searchPageURL: string, page: Page) => {
   if (REDIS_ENABLED) {
     await redisClient.set(searchPageURL, JSON.stringify(events));
   }
+  logInfo(`Total events: ${events.length}`)
   return events;
 };
 
@@ -156,6 +158,25 @@ const getRaEventDetails = async (
   eventUrl: string
 ): Promise<EventDetails> => {
   // Read event page and get artist links and other details
+
+  if(REDIS_ENABLED){
+    const title = ((await redisClient.get(
+      `${eventUrl}:title`
+    )) as unknown) as any;
+
+    if (title){
+      // to do: put an error catching in here so it goes to an external request
+      logInfo(`Using cached eventDetails for ${eventUrl}`)
+      const artistsString = await redisClient.get(`${eventUrl}:artists`);
+      const artists = JSON.parse(artistsString) 
+
+      const metaInfoString = await redisClient.get(`${eventUrl}:meta`);
+      const metaInfo = JSON.parse(metaInfoString) 
+      
+      return {title, artists, ... metaInfo };
+    }      
+  }
+
   const artists = (await puppetRequest(
     page,
     eventUrl,
@@ -165,7 +186,7 @@ const getRaEventDetails = async (
         name: elem.textContent,
         profileLink: elem.getAttribute("href"),
       }))
-  )) as EventArtist[];
+  )) as EventArtist[]; 
 
   const title = await page.title();
 
@@ -199,8 +220,13 @@ const getRaEventDetails = async (
   }
 
   if (REDIS_ENABLED){
-    logInfo(`Caching data for ${eventUrl}`)
+    logInfo(`Caching data for event: ${eventUrl}`)
+    //logInfo('Title')
     await redisClient.set(`${eventUrl}:title`,title);
+    //logInfo('Artists')
+    await redisClient.set(`${eventUrl}:artists`,JSON.stringify(artists));
+    //logInfo('Meta')
+    await redisClient.set(`${eventUrl}:meta`,JSON.stringify(metaInfo));
   }
 
   return { title, artists, ...metaInfo };
@@ -272,8 +298,10 @@ export const getSoundcloudTracks = async (
 
 
   logInfo('Requesting page from Soundcloud')
+  console.time('SC tracks page')
   const scPageString = await axios.get(`${scArtistLink}/tracks/`);
   logInfo(`Tracks page request status ${scPageString.status}`)
+  console.timeEnd('SC tracks page')
   
   const scUserID = scPageString.data.match(/(?<=soundcloud:users:)\d+/g);
   logInfo(`scUserID ${scUserID}`)
@@ -291,7 +319,7 @@ export const getSoundcloudTracks = async (
   
 
   if (REDIS_ENABLED){
-    logInfo(`Caching entry ${tracks} for ${scArtistLink}:tracks`)
+    logInfo(`Caching track URLs for ${scArtistLink}:tracks`)
     await redisClient.set(`${scArtistLink}:tracks`,JSON.stringify(tracks));
 
   }
