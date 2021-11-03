@@ -26,7 +26,7 @@ router.get(
     let { location, date, autoPlay } = req.query;
 
     if (isDev){
-      location = 'berlin'
+      location = 'aberdeen'
     }
 
     const page = await crawler.getPage();
