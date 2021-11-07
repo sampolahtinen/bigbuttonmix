@@ -37,9 +37,7 @@ const webpackConfig = env => {
         },
         {
           test: /\.svg$/,
-          issuer: [/\.(ts|tsx|js|jsx|md|mdx)$/],
-          type: 'asset/inline',
-          use: 'svgo-loader'
+          use: '@svgr/webpack'
         },
         {
           test: /\.(jpg|jpeg|png|webp|avif)$/i,

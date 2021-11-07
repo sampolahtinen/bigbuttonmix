@@ -1,6 +1,7 @@
 import React from 'react';
-import { Global } from '@emotion/react'
-import { ThemeProvider} from 'theme-ui';
+import { Routes, Route } from 'react-router-dom';
+import { Global } from '@emotion/react';
+import { ThemeProvider } from 'theme-ui';
 import { theme } from '../styles/theme';
 import { globalStyles } from '../styles/globalStyles';
 import { MainView } from '../pages';
@@ -10,7 +11,9 @@ const App = () => {
     <>
       <ThemeProvider theme={theme}>
         <Global styles={globalStyles} />
-        <MainView />
+        <Routes>
+          <Route path="/" element={<MainView />} />
+        </Routes>
       </ThemeProvider>
     </>
   );

@@ -1,25 +1,22 @@
 {
-  "short_name": "React Starter",
-  "name": "React Starter",
-  "icons": [
-    {
-      "src": "favicon.ico",
-      "sizes": "64x64 32x32 24x24 16x16",
-      "type": "image/x-icon"
-    },
-    {
-      "src": "logo192.png",
-      "type": "image/png",
-      "sizes": "192x192"
-    },
-    {
-      "src": "logo512.png",
-      "type": "image/png",
-      "sizes": "512x512"
-    }
-  ],
-  "start_url": ".",
+  "name": "Big Button Mix",
+  "short_name": "BigButtonMix",
+  "start_url": "/",
+  "scope": "/",
   "display": "standalone",
-  "theme_color": "#000000",
-  "background_color": "#ffffff"
+  "background_color": "#12151f",
+  "theme_color": "#12151f",
+  "description": "Get a random soundcloud track of a RA event close to you.",
+  "icons": [
+      {
+          "src": "pwa-icon-192.png",
+          "sizes": "192x192",
+          "type": "image/png"
+      },
+      {
+          "src": "pwa-icon-512.png",
+          "sizes": "512x512",
+          "type": "image/png"
+      }
+  ]
 }

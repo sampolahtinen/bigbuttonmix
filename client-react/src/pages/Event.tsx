@@ -1,11 +1,8 @@
-/** @jsx jsx */
-import { jsx } from '@emotion/react';
 import React, { useState } from 'react';
 import { BigButton } from '../components/BigButton';
 import { format } from 'date-fns';
 import { api } from '../api';
 import styled from '@emotion/styled';
-import { Box } from '@theme-ui/components';
 
 const wait = (time = 100) =>
   new Promise(resolve => {
@@ -58,11 +55,12 @@ export const MainView = () => {
     const date = getCurrentDate();
 
     try {
+      console.log('getting');
       const response = await api(
         'GET',
         `random-soundcloud-track?location=${location}&date=${date}&autoPlay=${isAutoPlayPossible}`
       );
-
+      await wait(1000);
       setScEmbedCode(response.body.html);
       setRaEventInformation(response.body);
     } catch (error) {
@@ -73,16 +71,16 @@ export const MainView = () => {
   };
   return (
     <Container>
-      {scEmbedCode && (
-        <div className="soundcloud-embedded-player">
-          <div
-            className="player"
-            dangerouslySetInnerHTML={{ __html: scEmbedCode }}
-          />
-          {raEventInformation && (
-            <div className="event-info-container">
-              <div className="column" css={{ marginRight: '1rem' }}>
-                <Row className="row">
+      <div className="full-width-container">
+        {scEmbedCode && (
+          <div className="soundcloud-embedded-player">
+            <div
+              className="player"
+              dangerouslySetInnerHTML={{ __html: scEmbedCode }}
+            />
+            {raEventInformation && (
+              <div className="event-info-container">
+                <div className="column">
                   <span className="event-info-heading">Event</span>
                   <a
                     className="event-info-row"
@@ -91,8 +89,6 @@ export const MainView = () => {
                   >
                     {raEventInformation.title}
                   </a>
-                </Row>
-                <Row>
                   <span className="event-info-heading">Venue</span>
                   <a
                     className="event-info-row"
@@ -101,58 +97,34 @@ export const MainView = () => {
                   >
                     {raEventInformation.venue}
                   </a>
-                </Row>
-              </div>
-              <div className="column">
-                <Row>
+                </div>
+                <div className="column">
                   <span className="event-info-heading">Date</span>
                   <span className="event-info-row date">
                     {raEventInformation.date}
                   </span>
-                </Row>
-                <Row>
                   <span className="event-info-row">
                     {raEventInformation.openingHours}
                   </span>
-                </Row>
+                </div>
               </div>
-            </div>
-          )}
-        </div>
-      )}
-      <BigButton
-        css={{ paddingTop: !!scEmbedCode ? '3rem' : '' }}
-        onClick={getScEmbedCode}
-        isSmall={!!scEmbedCode}
-        isLoading={isLoading}
-      />
-      {errorMessage && <span>{errorMessage}</span>}
-      <span className="copyright">(c) Andrew Moore & Sampo Lahtinen</span>
+            )}
+          </div>
+        )}
+        <BigButton
+          onClick={getScEmbedCode}
+          isSmall={!!scEmbedCode}
+          isLoading={isLoading}
+        />
+        {errorMessage && <span>{errorMessage}</span>}
+        <span className="copyright">(c) Andrew Moore & Sampo Lahtinen</span>
+      </div>
     </Container>
   );
 };
 
-const Row = styled.div`
-  margin-bottom: 1rem;
-`;
-
 const Container = styled.div`
   overflow: hidden;
-  display: flex;
-  flex-direction: column;
-  align-items: center;
-  justify-content: center;
-  width: 100vw;
-  height: 100vh;
-  max-width: 500px;
-  background-image: linear-gradient(
-    to bottom,
-    #12151f,
-    #121521,
-    #121524,
-    #121526,
-    #121528
-  );
 
   .event-info-container {
     display: flex;
@@ -163,9 +135,9 @@ const Container = styled.div`
 
   .event-info-heading {
     display: block;
-    color: #e8e5e5;
-    opacity: 0.8;
-    font-size: 10px;
+    color: white;
+    opacity: 0.7;
+    font-size: 8px;
     font-weight: 200;
   }
   .event-info-row {
@@ -173,7 +145,7 @@ const Container = styled.div`
     color: white;
     font-size: 10px;
     text-align: left;
-    margin-bottom: 32px;
+    margin-bottom: 16px;
   }
 
   .event-info-row.date {
@@ -191,6 +163,24 @@ const Container = styled.div`
     color: white;
     opacity: 0.6;
     white-space: nowrap;
+  }
+
+  .full-width-container {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    width: 100vw;
+    height: 100vh;
+    max-width: 500px;
+    background-image: linear-gradient(
+      to bottom,
+      #12151f,
+      #121521,
+      #121524,
+      #121526,
+      #121528
+    );
   }
 
   .soundcloud-embedded-player {
