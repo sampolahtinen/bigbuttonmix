@@ -5,7 +5,8 @@
   "private": "true",
   "workspaces": [
     "api",
-    "client"
+    "client",
+    "client-react"
   ],
   "scripts": {
     "build:all": "yarn workspaces foreach run build",
@@ -14,6 +15,7 @@
     "start:redis": "yarn workspace api run start:redis",
     "dev:api": "yarn workspace api run dev",
     "dev:client": "yarn workspace client run dev",
+    "dev:react": "yarn workspace client-react run dev",
     "deploy:api": "git subtree push --prefix api heroku-api main",
     "deploy:client": "git subtree push --prefix client heroku-client main",
     "dev": "concurrently yarn:dev:*"
