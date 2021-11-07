@@ -1,16 +1,16 @@
 /** @jsx jsx */
 import { jsx } from '@emotion/react';
-import React, { useState } from 'react';
+import React, { useEffect, useState } from 'react';
 import { BigButton } from '../components/BigButton';
 import { format } from 'date-fns';
 import { api } from '../api';
 import styled from '@emotion/styled';
-import { Box } from '@theme-ui/components';
-
-const wait = (time = 100) =>
-  new Promise(resolve => {
-    setTimeout(() => resolve('ok'), time);
-  });
+import { Select } from '../components/Select/Select';
+import { locationOptions } from '../locationOptions';
+import {
+  generateCityOptions,
+  DropdownOption
+} from '../utils/generateCityOptions';
 
 declare global {
   interface Window {
@@ -32,9 +32,20 @@ export const MainView = () => {
   const [errorMessage, setErrorMessage] = useState<string>('');
   const [isLoading, setIsLoading] = useState(false);
   const [scEmbedCode, setScEmbedCode] = useState('');
+  const [searchLocation, setSearchLocation] = useState<
+    DropdownOption | undefined
+  >(undefined);
   const [raEventInformation, setRaEventInformation] = useState<
     EventInformation | undefined
   >(undefined);
+
+  useEffect(() => {
+    const storedSearchLocation = localStorage.getItem('search-location');
+
+    if (storedSearchLocation) {
+      setSearchLocation(JSON.parse(storedSearchLocation));
+    }
+  }, []);
 
   const isStandalonePWARequest = () => {
     const isPWAiOS =
@@ -52,15 +63,12 @@ export const MainView = () => {
     setErrorMessage('');
 
     const isAutoPlayPossible = isStandalonePWARequest();
-
-    // location is currently hard-coded
-    const location = 'berlin';
     const date = getCurrentDate();
 
     try {
       const response = await api(
         'GET',
-        `random-soundcloud-track?location=${location}&date=${date}&autoPlay=${isAutoPlayPossible}`
+        `random-soundcloud-track?country=${searchLocation?.country.urlCode.toLowerCase()}&city=${searchLocation?.value.toLowerCase()}&date=${date}&autoPlay=${isAutoPlayPossible}`
       );
 
       setScEmbedCode(response.body.html);
@@ -71,6 +79,18 @@ export const MainView = () => {
       setIsLoading(false);
     }
   };
+
+  const handleCitySelection = (selectedLocation: DropdownOption) => {
+    localStorage.setItem('search-location', JSON.stringify(selectedLocation));
+    setSearchLocation(selectedLocation);
+  };
+
+  const cityOptions = generateCityOptions(locationOptions);
+
+  const deviceLocation = cityOptions.find(
+    city => city.label.toLowerCase() === 'berlin'
+  );
+
   return (
     <Container>
       {scEmbedCode && (
@@ -119,6 +139,13 @@ export const MainView = () => {
             </div>
           )}
         </div>
+      )}
+      {scEmbedCode && (
+        <Select
+          options={cityOptions}
+          onChange={handleCitySelection}
+          defaultValue={searchLocation || deviceLocation}
+        />
       )}
       <BigButton
         css={{ paddingTop: !!scEmbedCode ? '3rem' : '' }}
