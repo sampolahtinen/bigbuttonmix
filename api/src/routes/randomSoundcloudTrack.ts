@@ -1,42 +1,53 @@
-import router from "./router";
-import { Request, Response } from "express-async-router";
+import router from './router';
+import { Request, Response } from 'express-async-router';
 import {
   getRandomRaEventArtists,
   getRandomSoundcloudTrack,
-  generateSoundcloudEmbed,
-} from "../utils/raScraper";
-import { RETRY_LIMIT } from "../constants";
-import { Crawler } from "../utils/Crawler";
-import { logSuccess, logError, logWarning } from "../utils/logger";
-import { isDev } from "../utils";
+  generateSoundcloudEmbed
+} from '../utils/raScraper';
+import { RETRY_LIMIT } from '../constants';
+import { Crawler } from '../utils/Crawler';
+import { logSuccess, logError, logWarning } from '../utils/logger';
+import { isDev } from '../utils';
 
-console.log('Starting crawler')
+console.log('Starting crawler');
 const crawler = new Crawler();
 crawler.init();
 
-
 let retryCount = 0;
+
+type Location = {
+  country: string;
+  city: string;
+};
 // This is the endpoint for the client to interact with the server
 router.get(
-  "/api/random-soundcloud-track",
+  '/api/random-soundcloud-track',
   async (req: Request, res: Response) => {
-    console.log("raFunction");
-    console.time("raFunction");
+    console.log('raFunction');
+    console.time('raFunction');
 
-    let { location, date, autoPlay } = req.query;
+    let { country, city, date, autoPlay } = req.query;
 
-    if (isDev){
-      location = 'dusseldorf'
-    }
+    let location = {
+      country,
+      city
+    };
+
+    // if (isDev) {
+    //   location = {
+    //     country: 'de',
+    //     city: 'berlin'
+    //   };
+    // }
 
     const page = await crawler.getPage();
 
-    
     retryCount = 0;
 
     try {
       const randomRaEventDetails = await getRandomRaEventArtists(
-        location as string,
+        location as Location,
         date as string,
         page
       );
@@ -56,20 +67,20 @@ router.get(
 
       res.json({
         ...soundcloudOembed,
-        ...randomRaEventDetails,
+        ...randomRaEventDetails
       });
     } catch (error) {
-      logError(error)
+      logError(error);
       if (retryCount < RETRY_LIMIT) {
-        logError("GENERAL ERROR. RETRYING PREVIOUS REQUEST!");
+        logError('GENERAL ERROR. RETRYING PREVIOUS REQUEST!');
         retryCount++;
         res.redirect(req.originalUrl);
       } else {
-        res.status(408).json("Request Timeout");
+        res.status(408).json('Request Timeout');
       }
     }
 
-    console.timeEnd("raFunction");
+    console.timeEnd('raFunction');
   }
 );
 
