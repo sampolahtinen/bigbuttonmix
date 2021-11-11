@@ -24,25 +24,33 @@ declare global {
 }
 
 export const Initial = () => {
-  const deviceLocation = cityOptions.find(
-    city => city.label.toLowerCase() === 'berlin'
-  );
-
   const [errorMessage, setErrorMessage] = useState<string>('');
   const [isLoading, setIsLoading] = useState(false);
+  const [isMounting, setIsMounting] = useState(true);
 
   const [searchLocation, setSearchLocation] = useState<
     DropdownOption | undefined
-  >(deviceLocation);
+  >(undefined);
 
   const navigate = useNavigate();
 
   useEffect(() => {
     const storedSearchLocation = localStorage.getItem('search-location');
+    const deviceLocation = localStorage.getItem('device-location');
+    console.log(deviceLocation);
 
-    if (storedSearchLocation) {
-      setSearchLocation(JSON.parse(storedSearchLocation));
+    if (deviceLocation) {
+      const deviceLocationDropdownOption = cityOptions.find(
+        city => city.label.toLowerCase() === JSON.parse(deviceLocation).city
+      );
+      console.log(deviceLocationDropdownOption);
+
+      setSearchLocation(deviceLocationDropdownOption);
     }
+    setIsMounting(false);
+    // if (storedSearchLocation) {
+    //   setSearchLocation(JSON.parse(storedSearchLocation));
+    // }
   }, []);
 
   const getScEmbedCode = async () => {
@@ -141,12 +149,14 @@ export const Initial = () => {
       />
       <Flex css={{ alignItems: 'center' }}>
         <Text css={{ fontSize: theme.fontSizes[0] }}>Raving in</Text>
-        <Select
-          options={cityOptions}
-          onChange={handleCitySelection}
-          defaultValue={searchLocation || deviceLocation}
-          style={selectStyles}
-        />
+        {!isMounting && (
+          <Select
+            options={cityOptions}
+            onChange={handleCitySelection}
+            defaultValue={searchLocation}
+            style={selectStyles}
+          />
+        )}
       </Flex>
       {errorMessage && <span>{errorMessage}</span>}
       <Footer />

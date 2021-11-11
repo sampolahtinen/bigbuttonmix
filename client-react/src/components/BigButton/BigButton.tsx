@@ -87,7 +87,7 @@ export const BigButton = ({
           x2="89"
           y2="299"
           stroke="#FF5555"
-          stroke-width="4"
+          strokeWidth="4"
         />
         <line
           x1="81"
@@ -95,7 +95,7 @@ export const BigButton = ({
           x2="81"
           y2="299"
           stroke="#FF5555"
-          stroke-width="4"
+          strokeWidth="4"
         />
         <line
           x1="73"
@@ -103,7 +103,7 @@ export const BigButton = ({
           x2="73"
           y2="291"
           stroke="#FF5555"
-          stroke-width="4"
+          strokeWidth="4"
         />
         <line
           x1="65"
@@ -111,7 +111,7 @@ export const BigButton = ({
           x2="65"
           y2="291"
           stroke="#FF5555"
-          stroke-width="4"
+          strokeWidth="4"
         />
         <line
           x1="57"
@@ -119,7 +119,7 @@ export const BigButton = ({
           x2="57"
           y2="276"
           stroke="#FF5555"
-          stroke-width="4"
+          strokeWidth="4"
         />
         <line
           x1="49"
@@ -127,7 +127,7 @@ export const BigButton = ({
           x2="49"
           y2="276"
           stroke="#FF5555"
-          stroke-width="4"
+          strokeWidth="4"
         />
         <line
           x1="383"
@@ -135,7 +135,7 @@ export const BigButton = ({
           x2="383"
           y2="185"
           stroke="#FF5555"
-          stroke-width="4"
+          strokeWidth="4"
         />
         <line
           x1="391"
@@ -143,7 +143,7 @@ export const BigButton = ({
           x2="391"
           y2="185"
           stroke="#FF5555"
-          stroke-width="4"
+          strokeWidth="4"
         />
         <line
           x1="399"
@@ -151,7 +151,7 @@ export const BigButton = ({
           x2="399"
           y2="193"
           stroke="#FF5555"
-          stroke-width="4"
+          strokeWidth="4"
         />
         <line
           x1="407"
@@ -159,7 +159,7 @@ export const BigButton = ({
           x2="407"
           y2="193"
           stroke="#FF5555"
-          stroke-width="4"
+          strokeWidth="4"
         />
         <line
           x1="415"
@@ -167,7 +167,7 @@ export const BigButton = ({
           x2="415"
           y2="208"
           stroke="#FF5555"
-          stroke-width="4"
+          strokeWidth="4"
         />
         <line
           x1="423"
@@ -175,7 +175,7 @@ export const BigButton = ({
           x2="423"
           y2="208"
           stroke="#FF5555"
-          stroke-width="4"
+          strokeWidth="4"
         />
       </animated.svg>
     </Button>
