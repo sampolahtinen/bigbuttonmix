@@ -1,14 +1,16 @@
 import React from 'react';
-import ReactSelect, { Options } from 'react-select';
+import ReactSelect, { Options, StylesConfig } from 'react-select';
 import { DropdownOption } from '../../utils/generateCityOptions';
+import { mergeDeepRight } from 'ramda';
 
 type SelectProps = {
   options: DropdownOption[];
   onChange: any;
   defaultValue?: DropdownOption;
+  style?: StylesConfig;
 };
 
-const selectStyles = {
+const defaultStyles = {
   control: (provided: any) => ({
     ...provided,
     backgroundColor: 'transparent',
@@ -34,12 +36,18 @@ const selectStyles = {
   })
 };
 
-export const Select = ({ options, onChange, defaultValue }: SelectProps) => {
+export const Select = ({
+  options,
+  onChange,
+  defaultValue,
+  style = {}
+}: SelectProps) => {
+  const styles = mergeDeepRight(defaultStyles, style) as StylesConfig;
   return (
     <ReactSelect
       options={options}
       onChange={onChange}
-      styles={selectStyles}
+      styles={styles}
       defaultValue={defaultValue}
     />
   );

@@ -1,13 +1,13 @@
-import React, { useState } from 'react';
-import { BigButton } from '../components/BigButton';
+/** @jsx jsx */
+import { jsx } from '@emotion/react';
+import React, { useEffect, useState } from 'react';
+import { BigButton } from '../../components/BigButton';
 import { format } from 'date-fns';
-import { api } from '../api';
+import { api } from '../../api';
 import styled from '@emotion/styled';
-
-const wait = (time = 100) =>
-  new Promise(resolve => {
-    setTimeout(() => resolve('ok'), time);
-  });
+import { Select } from '../../components/Select/Select';
+import { cityOptions } from '../../constants/cityOptions';
+import { DropdownOption } from '../../utils/generateCityOptions';
 
 declare global {
   interface Window {
@@ -25,13 +25,24 @@ type EventInformation = {
   openingHours: string;
 };
 
-export const MainView = () => {
+export const Results = () => {
   const [errorMessage, setErrorMessage] = useState<string>('');
   const [isLoading, setIsLoading] = useState(false);
   const [scEmbedCode, setScEmbedCode] = useState('');
+  const [searchLocation, setSearchLocation] = useState<
+    DropdownOption | undefined
+  >(undefined);
   const [raEventInformation, setRaEventInformation] = useState<
     EventInformation | undefined
   >(undefined);
+
+  useEffect(() => {
+    const storedSearchLocation = localStorage.getItem('search-location');
+
+    if (storedSearchLocation) {
+      setSearchLocation(JSON.parse(storedSearchLocation));
+    }
+  }, []);
 
   const isStandalonePWARequest = () => {
     const isPWAiOS =
@@ -49,18 +60,14 @@ export const MainView = () => {
     setErrorMessage('');
 
     const isAutoPlayPossible = isStandalonePWARequest();
-
-    // location is currently hard-coded
-    const location = 'berlin';
     const date = getCurrentDate();
 
     try {
-      console.log('getting');
       const response = await api(
         'GET',
-        `random-soundcloud-track?location=${location}&date=${date}&autoPlay=${isAutoPlayPossible}`
+        `random-soundcloud-track?country=${searchLocation?.country.urlCode.toLowerCase()}&city=${searchLocation?.value.toLowerCase()}&date=${date}&autoPlay=${isAutoPlayPossible}`
       );
-      await wait(1000);
+
       setScEmbedCode(response.body.html);
       setRaEventInformation(response.body);
     } catch (error) {
@@ -69,18 +76,28 @@ export const MainView = () => {
       setIsLoading(false);
     }
   };
+
+  const handleCitySelection = (selectedLocation: DropdownOption) => {
+    localStorage.setItem('search-location', JSON.stringify(selectedLocation));
+    setSearchLocation(selectedLocation);
+  };
+
+  const deviceLocation = cityOptions.find(
+    city => city.label.toLowerCase() === 'berlin'
+  );
+
   return (
     <Container>
-      <div className="full-width-container">
-        {scEmbedCode && (
-          <div className="soundcloud-embedded-player">
-            <div
-              className="player"
-              dangerouslySetInnerHTML={{ __html: scEmbedCode }}
-            />
-            {raEventInformation && (
-              <div className="event-info-container">
-                <div className="column">
+      {scEmbedCode && (
+        <div className="soundcloud-embedded-player">
+          <div
+            className="player"
+            dangerouslySetInnerHTML={{ __html: scEmbedCode }}
+          />
+          {raEventInformation && (
+            <div className="event-info-container">
+              <div className="column" css={{ marginRight: '1rem' }}>
+                <Row className="row">
                   <span className="event-info-heading">Event</span>
                   <a
                     className="event-info-row"
@@ -89,6 +106,8 @@ export const MainView = () => {
                   >
                     {raEventInformation.title}
                   </a>
+                </Row>
+                <Row>
                   <span className="event-info-heading">Venue</span>
                   <a
                     className="event-info-row"
@@ -97,34 +116,65 @@ export const MainView = () => {
                   >
                     {raEventInformation.venue}
                   </a>
-                </div>
-                <div className="column">
+                </Row>
+              </div>
+              <div className="column">
+                <Row>
                   <span className="event-info-heading">Date</span>
                   <span className="event-info-row date">
                     {raEventInformation.date}
                   </span>
+                </Row>
+                <Row>
                   <span className="event-info-row">
                     {raEventInformation.openingHours}
                   </span>
-                </div>
+                </Row>
               </div>
-            )}
-          </div>
-        )}
-        <BigButton
-          onClick={getScEmbedCode}
-          isSmall={!!scEmbedCode}
-          isLoading={isLoading}
+            </div>
+          )}
+        </div>
+      )}
+      {scEmbedCode && (
+        <Select
+          options={cityOptions}
+          onChange={handleCitySelection}
+          defaultValue={searchLocation || deviceLocation}
         />
-        {errorMessage && <span>{errorMessage}</span>}
-        <span className="copyright">(c) Andrew Moore & Sampo Lahtinen</span>
-      </div>
+      )}
+      <BigButton
+        css={{ paddingTop: !!scEmbedCode ? '3rem' : '' }}
+        onClick={getScEmbedCode}
+        isSmall={!!scEmbedCode}
+        isLoading={isLoading}
+      />
+      {errorMessage && <span>{errorMessage}</span>}
+      <span className="copyright">(c) Andrew Moore & Sampo Lahtinen</span>
     </Container>
   );
 };
 
+const Row = styled.div`
+  margin-bottom: 1rem;
+`;
+
 const Container = styled.div`
   overflow: hidden;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  width: 100vw;
+  height: 100vh;
+  max-width: 500px;
+  background-image: linear-gradient(
+    to bottom,
+    #12151f,
+    #121521,
+    #121524,
+    #121526,
+    #121528
+  );
 
   .event-info-container {
     display: flex;
@@ -135,9 +185,9 @@ const Container = styled.div`
 
   .event-info-heading {
     display: block;
-    color: white;
-    opacity: 0.7;
-    font-size: 8px;
+    color: #e8e5e5;
+    opacity: 0.8;
+    font-size: 10px;
     font-weight: 200;
   }
   .event-info-row {
@@ -145,7 +195,7 @@ const Container = styled.div`
     color: white;
     font-size: 10px;
     text-align: left;
-    margin-bottom: 16px;
+    margin-bottom: 32px;
   }
 
   .event-info-row.date {
@@ -163,24 +213,6 @@ const Container = styled.div`
     color: white;
     opacity: 0.6;
     white-space: nowrap;
-  }
-
-  .full-width-container {
-    display: flex;
-    flex-direction: column;
-    align-items: center;
-    justify-content: center;
-    width: 100vw;
-    height: 100vh;
-    max-width: 500px;
-    background-image: linear-gradient(
-      to bottom,
-      #12151f,
-      #121521,
-      #121524,
-      #121526,
-      #121528
-    );
   }
 
   .soundcloud-embedded-player {

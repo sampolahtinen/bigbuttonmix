@@ -42,7 +42,7 @@ BigButtonProps) => {
         xmlns="http://www.w3.org/2000/svg"
         style={{
           transform: isSmall ? 'scale(0.3)' : 'scale(0.5)',
-          transformOrigin: 'top',
+          transformOrigin: 'center 0',
           overflow: 'visible'
         }}
       >

@@ -4,7 +4,8 @@ import { Global } from '@emotion/react';
 import { ThemeProvider } from 'theme-ui';
 import { theme } from '../styles/theme';
 import { globalStyles } from '../styles/globalStyles';
-import { MainView } from '../pages';
+import { Initial } from '../pages/index';
+import { Results } from '../pages/results';
 
 const App = () => {
   return (
@@ -12,7 +13,8 @@ const App = () => {
       <ThemeProvider theme={theme}>
         <Global styles={globalStyles} />
         <Routes>
-          <Route path="/" element={<MainView />} />
+          <Route path="/" element={<Initial />} />
+          <Route path="/results" element={<Results />} />
         </Routes>
       </ThemeProvider>
     </>
