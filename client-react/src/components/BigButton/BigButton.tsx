@@ -8,6 +8,7 @@ type BigButtonProps = {
   onClick: (event: React.MouseEvent<HTMLButtonElement>) => void;
   isLoading?: boolean;
   isSmall?: boolean;
+  isBreathingEnabled?: boolean;
   className?: string;
 };
 
@@ -15,9 +16,9 @@ export const BigButton = ({
   onClick,
   isLoading,
   isSmall,
+  isBreathingEnabled,
   className
-}: // css
-BigButtonProps) => {
+}: BigButtonProps) => {
   const animatedShadow = useSpring({
     from: {
       filter: 'drop-shadow(2px 7px 43px #683ab7ea)'
@@ -31,6 +32,22 @@ BigButtonProps) => {
       duration: 1500
     }
   });
+
+  const breathingShadow = useSpring({
+    from: {
+      filter: 'drop-shadow(2px 7px 43px #683ab7ea)'
+    },
+    to: {
+      filter: 'drop-shadow(2px 7px 35px #e8a6fcea)'
+    },
+    loop: { reverse: true },
+    delay: 300,
+    config: {
+      duration: 2000
+    }
+  });
+
+  const staticShadow = { filter: 'drop-shadow(2px 7px 43px #683ab7ea)' };
 
   return (
     <Button className={className} onClick={onClick} isSmall={isSmall}>
@@ -54,7 +71,9 @@ BigButtonProps) => {
           style={
             isLoading
               ? animatedShadow
-              : { filter: 'drop-shadow(2px 7px 43px #683ab7ea)' }
+              : isBreathingEnabled
+              ? breathingShadow
+              : staticShadow
           }
         />
         <circle cx="236" cy="236" r="128" fill="#FF5555" />

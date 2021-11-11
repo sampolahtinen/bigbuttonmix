@@ -87,7 +87,7 @@ export const Initial = () => {
 
   const animatedTextElements = [
     <Title>Tap!</Title>,
-    <Title css={{ fontSize: '1rem' }}>and break free from algorithm!</Title>
+    <Title>to break free from the algorithm!</Title>
   ];
 
   const [index, setIndex] = useState(0);
@@ -95,18 +95,28 @@ export const Initial = () => {
   const transitions = useTransition(index, {
     from: {
       opacity: 0.5,
+      // innerHeight: 0,
       transform: 'translate3d(0, 50%, 0) scale(0.8)'
     },
     enter: {
       opacity: 1,
-      transform: 'translate3d(0, 0, 0) scale(1)'
+      // innerHeight: 50,
+      transform: 'translate3d(0, 0%, 0) scale(1)'
     },
     leave: {
       opacity: 0,
-      transform: 'translate3d(0, -100%, 0) scale(0.8)'
+      // innerHeight: 0,
+      transform: 'translate3d(0, -100%, 0) scale(0)'
     },
-    delay: 200,
-    config: config.gentle
+    // config: {
+    //   duration: 3000
+    // }
+    config: {
+      ...config.default,
+      mass: 1,
+      tension: 150,
+      friction: 25
+    }
   });
 
   useEffect(() => {
@@ -121,27 +131,28 @@ export const Initial = () => {
     <Container>
       <Box
         css={{
-          height: '100px',
+          height: '50px',
           overflow: 'hidden',
           position: 'relative',
           width: '100%'
         }}
       >
         {/* {animatedTextElements[0]} */}
-        {transitions((style, index) => (
+        {transitions((style, item) => (
           <animated.div
             style={style}
             css={{ position: 'absolute', textAlign: 'center', width: '100%' }}
           >
-            {animatedTextElements[0]}
+            {animatedTextElements[item]}
           </animated.div>
         ))}
       </Box>
       <BigButton
-        css={{ marginBottom: '3rem' }}
+        css={{ margin: '6rem 0' }}
         onClick={getScEmbedCode}
         isSmall={!!scEmbedCode}
         isLoading={isLoading}
+        isBreathingEnabled
       />
       <Flex css={{ alignItems: 'center' }}>
         <Text css={{ fontSize: theme.fontSizes[0] }}>Raving in</Text>
@@ -159,7 +170,7 @@ export const Initial = () => {
 };
 
 const Title = styled.h1`
-  /* font-size: 1rem; */
+  font-size: 1.2rem;
   margin: 0;
   color: 'white';
   font-family: 'bold';
