@@ -20,13 +20,11 @@ export const globalStyles = css`
 
   @font-face {
     font-family: 'regular';
-    font-size: 16px;
     src: url(${latoRegularPath});
   }
 
   @font-face {
     font-family: 'bold';
-    font-size: 16px;
     src: url(${latoBoldPath});
   }
 
@@ -35,11 +33,17 @@ export const globalStyles = css`
     /* font-family: 'FR73PixelW00-Regular'; */
   }
 
+  html {
+    font-size: 62.5%;
+  }
+
   body {
     padding: 0;
     margin: 0;
     overflow-x: hidden;
     overflow-y: auto;
+    font-size: 16px;
+    font-size: 1.6rem;
   }
 
   div {

@@ -6,6 +6,7 @@ import { theme } from '../styles/theme';
 import { globalStyles } from '../styles/globalStyles';
 import { Initial } from '../pages/index';
 import { Results } from '../pages/results';
+import { Routes as RoutePaths } from '../constants/routes';
 
 const App = () => {
   return (
@@ -13,8 +14,8 @@ const App = () => {
       <ThemeProvider theme={theme}>
         <Global styles={globalStyles} />
         <Routes>
-          <Route path="/" element={<Initial />} />
-          <Route path="/results" element={<Results />} />
+          <Route path={RoutePaths.Index} element={<Initial />} />
+          <Route path={RoutePaths.Results} element={<Results />} />
         </Routes>
       </ThemeProvider>
     </>

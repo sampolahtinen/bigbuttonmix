@@ -8,9 +8,12 @@ import { Select } from '../../components/Select/Select';
 import { isStandalonePWARequest, getCurrentDate } from '../../utils/index';
 import { cityOptions } from '../../constants/cityOptions';
 import { DropdownOption } from '../../utils/generateCityOptions';
-import { Box, Flex, Heading, Text } from 'theme-ui';
+import { Box, Flex, Text } from 'theme-ui';
 import { theme } from '../../styles/theme';
 import { animated, config, useTransition } from 'react-spring';
+import { useNavigate } from 'react-router';
+import { Routes } from '../../constants/routes';
+import { Footer } from '../../components/Footer/Footer';
 
 declare global {
   interface Window {
@@ -20,14 +23,6 @@ declare global {
   }
 }
 
-type EventInformation = {
-  eventLink: string;
-  venue: string;
-  title: string;
-  date: string;
-  openingHours: string;
-};
-
 export const Initial = () => {
   const deviceLocation = cityOptions.find(
     city => city.label.toLowerCase() === 'berlin'
@@ -35,13 +30,12 @@ export const Initial = () => {
 
   const [errorMessage, setErrorMessage] = useState<string>('');
   const [isLoading, setIsLoading] = useState(false);
-  const [scEmbedCode, setScEmbedCode] = useState('');
+
   const [searchLocation, setSearchLocation] = useState<
     DropdownOption | undefined
   >(deviceLocation);
-  const [raEventInformation, setRaEventInformation] = useState<
-    EventInformation | undefined
-  >(undefined);
+
+  const navigate = useNavigate();
 
   useEffect(() => {
     const storedSearchLocation = localStorage.getItem('search-location');
@@ -63,8 +57,7 @@ export const Initial = () => {
         date: getCurrentDate()
       });
 
-      setScEmbedCode(response.data.html);
-      setRaEventInformation(response.data);
+      navigate(Routes.Results, { state: response.data });
     } catch (error) {
       setErrorMessage(error as string);
     } finally {
@@ -95,22 +88,16 @@ export const Initial = () => {
   const transitions = useTransition(index, {
     from: {
       opacity: 0.5,
-      // innerHeight: 0,
       transform: 'translate3d(0, 50%, 0) scale(0.8)'
     },
     enter: {
       opacity: 1,
-      // innerHeight: 50,
       transform: 'translate3d(0, 0%, 0) scale(1)'
     },
     leave: {
       opacity: 0,
-      // innerHeight: 0,
       transform: 'translate3d(0, -100%, 0) scale(0)'
     },
-    // config: {
-    //   duration: 3000
-    // }
     config: {
       ...config.default,
       mass: 1,
@@ -137,7 +124,6 @@ export const Initial = () => {
           width: '100%'
         }}
       >
-        {/* {animatedTextElements[0]} */}
         {transitions((style, item) => (
           <animated.div
             style={style}
@@ -148,9 +134,8 @@ export const Initial = () => {
         ))}
       </Box>
       <BigButton
-        css={{ margin: '6rem 0' }}
+        css={{ margin: '8rem 0' }}
         onClick={getScEmbedCode}
-        isSmall={!!scEmbedCode}
         isLoading={isLoading}
         isBreathingEnabled
       />
@@ -164,20 +149,16 @@ export const Initial = () => {
         />
       </Flex>
       {errorMessage && <span>{errorMessage}</span>}
-      <span className="copyright">(c) Andrew Moore & Sampo Lahtinen</span>
+      <Footer />
     </Container>
   );
 };
 
 const Title = styled.h1`
-  font-size: 1.2rem;
+  font-size: 1.6rem;
   margin: 0;
   color: 'white';
   font-family: 'bold';
-`;
-
-const Row = styled.div`
-  margin-bottom: 1rem;
 `;
 
 const Container = styled.div`
@@ -197,50 +178,6 @@ const Container = styled.div`
     #121526,
     #121528
   );
-
-  .event-info-container {
-    display: flex;
-    padding: 16px;
-    background-color: hsl(231deg 24% 15%);
-    text-align: left;
-  }
-
-  .event-info-heading {
-    display: block;
-    color: #e8e5e5;
-    opacity: 0.8;
-    font-size: 10px;
-    font-weight: 200;
-  }
-  .event-info-row {
-    text-decoration: none;
-    color: white;
-    font-size: 10px;
-    text-align: left;
-    margin-bottom: 32px;
-  }
-
-  .event-info-row.date {
-    display: block;
-    white-space: nowrap;
-    margin-bottom: 0;
-  }
-
-  .copyright {
-    font-size: 8px;
-    align-self: flex-end;
-    position: absolute;
-    bottom: 0;
-    right: 0;
-    color: white;
-    opacity: 0.6;
-    white-space: nowrap;
-  }
-
-  .soundcloud-embedded-player {
-    width: 100%;
-    margin-bottom: 1rem;
-  }
 
   @media (min-width: 640px) {
     main {

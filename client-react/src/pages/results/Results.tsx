@@ -8,6 +8,8 @@ import styled from '@emotion/styled';
 import { Select } from '../../components/Select/Select';
 import { cityOptions } from '../../constants/cityOptions';
 import { DropdownOption } from '../../utils/generateCityOptions';
+import { useLocation } from 'react-router';
+import { Footer } from '../../components/Footer/Footer';
 
 declare global {
   interface Window {
@@ -27,11 +29,14 @@ type EventInformation = {
 
 export const Results = () => {
   const [errorMessage, setErrorMessage] = useState<string>('');
-  const [isLoading, setIsLoading] = useState(false);
+  const [isLoading, setIsLoading] = useState(true);
   const [scEmbedCode, setScEmbedCode] = useState('');
+  const location = useLocation();
+
   const [searchLocation, setSearchLocation] = useState<
     DropdownOption | undefined
   >(undefined);
+
   const [raEventInformation, setRaEventInformation] = useState<
     EventInformation | undefined
   >(undefined);
@@ -43,6 +48,14 @@ export const Results = () => {
       setSearchLocation(JSON.parse(storedSearchLocation));
     }
   }, []);
+
+  useEffect(() => {
+    if (location.state) {
+      setScEmbedCode(location.state.html);
+      setRaEventInformation(location.state);
+      setIsLoading(false);
+    }
+  }, [location]);
 
   const isStandalonePWARequest = () => {
     const isPWAiOS =
@@ -90,48 +103,41 @@ export const Results = () => {
     <Container>
       {scEmbedCode && (
         <div className="soundcloud-embedded-player">
-          <div
+          <Player
             className="player"
             dangerouslySetInnerHTML={{ __html: scEmbedCode }}
           />
           {raEventInformation && (
-            <div className="event-info-container">
+            <EventInfoContainer className="event-info-container">
               <div className="column" css={{ marginRight: '1rem' }}>
                 <Row className="row">
-                  <span className="event-info-heading">Event</span>
-                  <a
+                  <Heading>Event</Heading>
+                  <Anchor
+                    as="a"
                     className="event-info-row"
                     href={raEventInformation.eventLink}
                     target="_blank"
                   >
                     {raEventInformation.title}
-                  </a>
+                  </Anchor>
                 </Row>
                 <Row>
-                  <span className="event-info-heading">Venue</span>
-                  <a
-                    className="event-info-row"
-                    href={raEventInformation.venue}
-                    target="_blank"
-                  >
+                  <Heading>Venue</Heading>
+                  <Text className="event-info-row">
                     {raEventInformation.venue}
-                  </a>
+                  </Text>
                 </Row>
               </div>
               <div className="column">
                 <Row>
-                  <span className="event-info-heading">Date</span>
-                  <span className="event-info-row date">
-                    {raEventInformation.date}
-                  </span>
+                  <Heading>Date</Heading>
+                  <DateText>{raEventInformation.date}</DateText>
                 </Row>
                 <Row>
-                  <span className="event-info-row">
-                    {raEventInformation.openingHours}
-                  </span>
+                  <Text>{raEventInformation.openingHours}</Text>
                 </Row>
               </div>
-            </div>
+            </EventInfoContainer>
           )}
         </div>
       )}
@@ -143,19 +149,65 @@ export const Results = () => {
         />
       )}
       <BigButton
-        css={{ paddingTop: !!scEmbedCode ? '3rem' : '' }}
+        css={{ paddingTop: '3rem', margin: 0 }}
         onClick={getScEmbedCode}
-        isSmall={!!scEmbedCode}
+        isSmall
         isLoading={isLoading}
       />
       {errorMessage && <span>{errorMessage}</span>}
-      <span className="copyright">(c) Andrew Moore & Sampo Lahtinen</span>
+      <Footer />
     </Container>
   );
 };
 
+const Player = styled.div`
+  height: 400px;
+`;
+
 const Row = styled.div`
   margin-bottom: 1rem;
+`;
+
+const Heading = styled.span`
+  display: block;
+  color: #e8e5e5;
+  opacity: 0.8;
+  font-size: 1.2rem;
+  font-weight: 200;
+`;
+
+const Text = styled.span`
+  font-family: 'bold';
+  text-decoration: none;
+  color: white;
+  font-size: 1.2rem;
+  text-align: left;
+  margin-bottom: 32px;
+`;
+
+const Anchor = styled.a`
+  color: ${props => props.theme.colors.orange};
+  font-size: 1.2rem;
+  text-align: left;
+  margin-bottom: 32px;
+  font-family: 'bold';
+  text-decoration: none;
+`;
+
+const DateText = styled(Text)`
+  display: block;
+  white-space: nowrap;
+  margin-bottom: 0;
+`;
+
+const EventInfoContainer = styled.div`
+  display: flex;
+  padding: 16px;
+  background-color: hsl(231deg 24% 15%);
+  text-align: left;
+  border-bottom-right-radius: 32px;
+  border-bottom-left-radius: 32px;
+  box-shadow: rgb(0 0 0 / 0%) 0px 14px 28px, rgb(0 0 0 / 14%) 0px 10px 16px;
 `;
 
 const Container = styled.div`
@@ -175,45 +227,6 @@ const Container = styled.div`
     #121526,
     #121528
   );
-
-  .event-info-container {
-    display: flex;
-    padding: 16px;
-    background-color: hsl(231deg 24% 15%);
-    text-align: left;
-  }
-
-  .event-info-heading {
-    display: block;
-    color: #e8e5e5;
-    opacity: 0.8;
-    font-size: 10px;
-    font-weight: 200;
-  }
-  .event-info-row {
-    text-decoration: none;
-    color: white;
-    font-size: 10px;
-    text-align: left;
-    margin-bottom: 32px;
-  }
-
-  .event-info-row.date {
-    display: block;
-    white-space: nowrap;
-    margin-bottom: 0;
-  }
-
-  .copyright {
-    font-size: 8px;
-    align-self: flex-end;
-    position: absolute;
-    bottom: 0;
-    right: 0;
-    color: white;
-    opacity: 0.6;
-    white-space: nowrap;
-  }
 
   .soundcloud-embedded-player {
     width: 100%;

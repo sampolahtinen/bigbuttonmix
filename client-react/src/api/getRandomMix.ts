@@ -9,7 +9,7 @@ type GetRandomMixParams = {
 };
 
 export const getRandomMix = (params: GetRandomMixParams) => {
-  const url = apiUrl + 'random-soundcloud-track';
+  const url = apiUrl + '/random-soundcloud-track';
   return axios.get(url, {
     params
   });
