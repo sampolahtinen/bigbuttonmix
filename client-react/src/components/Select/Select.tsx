@@ -2,6 +2,7 @@ import React from 'react';
 import ReactSelect, { Options, StylesConfig } from 'react-select';
 import { DropdownOption } from '../../utils/generateCityOptions';
 import { mergeDeepRight } from 'ramda';
+import { BiCurrentLocation } from 'react-icons/bi';
 
 type SelectProps = {
   options: DropdownOption[];
