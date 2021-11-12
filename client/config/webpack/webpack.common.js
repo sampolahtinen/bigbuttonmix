@@ -1,4 +1,3 @@
-const { DefinePlugin } = require('webpack');
 const path = require('path');
 const { CleanWebpackPlugin } = require('clean-webpack-plugin');
 const DotenvPlugin = require('dotenv-webpack');
@@ -48,7 +47,7 @@ const webpackConfig = env => {
       ]
     },
     plugins: [
-      new DotenvPlugin({ path: '../.env' }),
+      env.development && new DotenvPlugin({ path: '../.env' }),
       new HtmlWebpackPlugin({
         template: paths.appHtml,
         filename: 'index.html',
@@ -64,7 +63,7 @@ const webpackConfig = env => {
       new CleanWebpackPlugin(),
       new NodePolyfillPlugin(),
       new GenerateSW()
-    ],
+    ].filter(Boolean),
     resolve: {
       alias: {
         '@styles': path.resolve(__dirname, '../src/scss'),

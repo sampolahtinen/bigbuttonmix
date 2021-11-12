@@ -1,7 +1,11 @@
 const { merge } = require('webpack-merge');
+const { DefinePlugin } = require('webpack');
 const common = require('./webpack.common');
-const BundleAnalyzerPlugin = require('webpack-bundle-analyzer').BundleAnalyzerPlugin;
+const BundleAnalyzerPlugin = require('webpack-bundle-analyzer')
+  .BundleAnalyzerPlugin;
 const paths = require('../paths');
+
+require('dotenv').config();
 
 const webpackProdConfig = env => {
   return merge(common(env), {
@@ -12,7 +16,15 @@ const webpackProdConfig = env => {
       publicPath: '/'
     },
     stats: 'normal',
-    plugins: [env.analyze && new BundleAnalyzerPlugin()].filter(Boolean),
+    plugins: [
+      env.analyze && new BundleAnalyzerPlugin(),
+      env.production &&
+        new webpack.DefinePlugin({
+          'process.env': {
+            MAPBOX_TOKEN: JSON.stringify(process.env.MAPBOX_TOKEN)
+          }
+        })
+    ].filter(Boolean),
     optimization: {
       minimize: true,
       splitChunks: {
