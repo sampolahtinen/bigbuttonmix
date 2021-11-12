@@ -6,6 +6,8 @@ const HtmlWebpackPlugin = require('html-webpack-plugin');
 const NodePolyfillPlugin = require('node-polyfill-webpack-plugin');
 const { GenerateSW } = require('workbox-webpack-plugin');
 
+console.log(process.env.TEST);
+
 const chalk = require('chalk');
 const paths = require('../paths');
 
@@ -46,7 +48,7 @@ const webpackConfig = env => {
       ]
     },
     plugins: [
-      new DotenvPlugin(),
+      new DotenvPlugin({ path: '../.env' }),
       new HtmlWebpackPlugin({
         template: paths.appHtml,
         filename: 'index.html',
