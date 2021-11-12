@@ -7,6 +7,7 @@
   "scripts": {
     "dev": "webpack serve --env development --config ./config/webpack/webpack.dev.js",
     "build": "webpack --env production --config ./config/webpack/webpack.prod.js",
+    "start": "serve -s dist",
     "test": "jest"
   },
   "keywords": [],
@@ -68,6 +69,7 @@
     "react-spring": "^9.3.0",
     "react-test-renderer": "^16.7.0",
     "regenerator-runtime": "^0.13.1",
+    "serve": "^13.0.2",
     "theme-ui": "^0.12.0",
     "typescript": "^4.4.4",
     "webpack": "^5.61.0",
