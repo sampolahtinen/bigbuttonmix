@@ -19,7 +19,7 @@ const webpackProdConfig = env => {
     plugins: [
       env.analyze && new BundleAnalyzerPlugin(),
       env.production &&
-        new webpack.DefinePlugin({
+        new DefinePlugin({
           'process.env': {
             MAPBOX_TOKEN: JSON.stringify(process.env.MAPBOX_TOKEN)
           }
