@@ -1,20 +1,6 @@
-# React Starter Kit
+# BigButton Mix client
 
-Bells and whistles for easily kick-starting your next React project.
-
-## Core:
-
-- React v18
-- Webpack v5 w/ esbuild
-- Service worker
-- Theme UI
-- Emotion CSS-in-JS
-
-## Testing:
-
-- Jest
-- Enzyme
-- React testing library
+The UI for the great app.
 
 ### Getting Started
 
@@ -33,3 +19,17 @@ Bells and whistles for easily kick-starting your next React project.
 ### Build
 
 `yarn build` - creates a static dist folder
+
+### Enabling Mobile remote debugging:
+
+Be sure that the project is running on your laptop! Both the client and the server. Then:
+
+1. Enable USB Debugging on your Android
+2. Enable ADB Over WiFi on your android (might be optional)
+3. Connect your phone with USB cable to the laptop
+4. On phone, verify access when prompted
+5. On your computer go to `chrome://inspect/#devices`
+6. Click `Port Forwarding`
+7. Choose a port and expose local address, in our case `localhost:3000`
+8. Tick the `Enable port forwarding`
+9. On your phone you can now navigate to `localhost:PORT_CHOSEN_IN_STEP_7`
