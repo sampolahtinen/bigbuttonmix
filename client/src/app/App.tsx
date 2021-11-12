@@ -4,7 +4,7 @@ import { Global } from '@emotion/react';
 import { ThemeProvider } from 'theme-ui';
 import { theme } from '../styles/theme';
 import { globalStyles } from '../styles/globalStyles';
-import { Initial } from '../pages/index';
+import { Initial } from '../pages/index/index';
 import { Results } from '../pages/results';
 import { Routes as RoutePaths } from '../constants/routes';
 import { getMapboxLocation } from '../api/getMapboxLocation';

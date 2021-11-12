@@ -1,0 +1,54 @@
+{
+  "name": "client-svelte",
+  "version": "0.0.1",
+  "type": "module",
+  "private": "true",
+  "engines": {
+    "node": "14.x"
+  },
+  "scripts": {
+    "dev": "svelte-kit dev",
+    "build": "svelte-kit build",
+    "build:serer": "cd api && yarn build",
+    "start": "serve -s build",
+    "preview": "svelte-kit preview",
+    "dev:server": "cd api && yarn dev",
+    "start:server": "cd api && yarn start",
+    "check": "svelte-check --tsconfig ./tsconfig.json",
+    "check:watch": "svelte-check --tsconfig ./tsconfig.json --watch",
+    "lint": "prettier --ignore-path .gitignore  --check --plugin-search-dir=. . && eslint --ignore-path .gitignore .",
+    "format": "prettier --ignore-path .gitignore --write --plugin-search-dir=. ."
+  },
+  "devDependencies": {
+    "@sveltejs/adapter-static": "^1.0.0-next.16",
+    "@sveltejs/kit": "next",
+    "@types/cookie": "^0.4.0",
+    "@types/date-fns": "^2.6.0",
+    "@typescript-eslint/eslint-plugin": "^4.19.0",
+    "@typescript-eslint/parser": "^4.19.0",
+    "date-fns": "^2.25.0",
+    "dotenv": "^10.0.0",
+    "eslint": "^7.22.0",
+    "eslint-config-prettier": "^8.1.0",
+    "eslint-plugin-svelte3": "^3.2.0",
+    "prettier": "~2.2.1",
+    "prettier-plugin-svelte": "^2.2.0",
+    "svelte": "^3.34.0",
+    "svelte-check": "^2.0.0",
+    "svelte-preprocess": "^4.0.0",
+    "tslib": "^2.0.0",
+    "typescript": "^4.0.0"
+  },
+  "dependencies": {
+    "@fontsource/fira-mono": "^4.2.2",
+    "@lukeed/uuid": "^2.0.0",
+    "@sveltejs/adapter-vercel": "next",
+    "@types/puppeteer": "^5.4.4",
+    "@types/ramda": "^0.27.44",
+    "@types/user-agents": "^1.0.2",
+    "cookie": "^0.4.1",
+    "ramda": "^0.27.1",
+    "serve": "^12.0.0",
+    "svelte-select": "^4.3.0"
+  }
+}

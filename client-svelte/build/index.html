@@ -1,0 +1,69 @@
+<!DOCTYPE html>
+<html lang="en">
+	<head>
+		<meta charset="utf-8" />
+		<link rel="icon" href="/favicon.png" />
+		<link rel="manifest" href="manifest.json">
+		<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover" />
+		<meta name="mobile-web-app-capable" content="yes" />
+		<meta name="apple-mobile-web-app-capable" content="yes" />
+		<meta name="apple-mobile-web-app-status-bar-style" content="black-translucent" />
+		<meta name="theme-color" content="#12151f">
+
+		
+
+		
+
+		<link rel="modulepreload" href="/_app/start-991f068e.js">
+		<link rel="modulepreload" href="/_app/chunks/vendor-090a366a.js">
+		<link rel="modulepreload" href="/_app/layout.svelte-e7d7747d.js">
+		<link rel="modulepreload" href="/_app/pages/index.svelte-d6a1cc74.js">
+		<link rel="stylesheet" href="/_app/assets/start-a8cd1609.css">
+		<link rel="stylesheet" href="/_app/assets/pages/index.svelte-70fa9189.css">
+
+		<script type="module">
+			import { start } from "/_app/start-991f068e.js";
+			start({
+				target: document.querySelector("#svelte"),
+				paths: {"base":"","assets":""},
+				session: {},
+				host: location.host,
+				route: true,
+				spa: false,
+				trailing_slash: "never",
+				hydrate: {
+					status: 200,
+					error: null,
+					nodes: [
+						import("/_app/layout.svelte-e7d7747d.js"),
+						import("/_app/pages/index.svelte-d6a1cc74.js")
+					],
+					page: {
+						host: location.host, // TODO this is redundant
+						path: "/",
+						query: new URLSearchParams(""),
+						params: {}
+					}
+				}
+			});
+		</script>
+	</head>
+	<body>
+		<div id="svelte">
+
+
+<main class="svelte-1zt652"><div class="full-width-container svelte-1zt652">
+    <button class="big-button svelte-1g7tjcg"><div class="circle svelte-1g7tjcg"></div>
+  <span class="svelte-1g7tjcg">GO!</span>
+</button>
+    
+    
+    <span class="copyright svelte-1zt652">(c) Andrew Moore &amp; Sampo Lahtinen</span></div>
+</main>
+
+
+
+	
+</div>
+	</body>
+</html>
