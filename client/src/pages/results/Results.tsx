@@ -5,14 +5,12 @@ import { BigButton } from '../../components/BigButton';
 import { format } from 'date-fns';
 import { api } from '../../api';
 import styled from '@emotion/styled';
-import { Select } from '../../components/Select/Select';
 import { cityOptions } from '../../constants/cityOptions';
 import { DropdownOption } from '../../utils/generateCityOptions';
 import { useLocation } from 'react-router';
 import { Footer } from '../../components/Footer/Footer';
 import { LocationSelector } from '../../components/LocationSelector/LocationSelector';
 import { getDeviceLocation } from '../../app/App';
-import { FLATTENABLE_KEYS } from '@babel/types';
 
 declare global {
   interface Window {
