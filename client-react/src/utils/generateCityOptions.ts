@@ -17,7 +17,9 @@ import {
   props,
   reduce,
   reduceBy,
-  reject
+  reject,
+  sort,
+  sortBy
 } from 'ramda';
 
 type Subregion = {
@@ -81,7 +83,8 @@ const locationsToCities = (acc: DropdownOption[], country: Country) =>
     })),
     append(acc),
     flatten,
-    reject(propEq('label', 'All'))
+    reject(propEq('label', 'All')),
+    sortBy(prop('label'))
     //@ts-ignore
   )(country);
 

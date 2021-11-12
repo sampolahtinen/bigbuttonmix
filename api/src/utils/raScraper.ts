@@ -301,11 +301,14 @@ export const getSoundcloudTracks = async (
   const scUserID = scPageString.data.match(/(?<=soundcloud:users:)\d+/g);
   logInfo(`scUserID ${scUserID}`);
 
-  const client_id = 'o2BWXZ9TFWJtTjM1cF9OvS5BEYPk1hBS';
+  const client_id = 'iZIs9mchVcX5lhVRyQGGAYlNPVldzAoX';
+  // const client_id = 'o2BWXZ9TFWJtTjM1cF9OvS5BEYPk1hBS';
   // We could look into a better way to manage client IDs. One option is to use the youtube api
 
   const api_v2_url = `https://api-v2.soundcloud.com/users/${scUserID[0]}/tracks?representation=&client_id=${client_id}&limit=20&offset=0&linked_partitioning=1&app_version=1628858614&app_locale=en`;
 
+  const d2 = await axios.get('https://m.soundcloud.com/loyd/tracks');
+  console.log(d2);
   const d = await axios.get(api_v2_url);
   logInfo(`Tracks api request status ${d.status}`);
   const tracks = d.data.collection.map(entry => entry.permalink_url);

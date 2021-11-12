@@ -9,43 +9,108 @@ import { Results } from '../pages/results';
 import { Routes as RoutePaths } from '../constants/routes';
 import { getMapboxLocation } from '../api/getMapboxLocation';
 
+type DeviceLocation = {
+  countryCode: string;
+  city: string;
+  error?: string;
+};
+
+export const getDeviceLocation = () => {
+  return new Promise<DeviceLocation>((resolve, reject) => {
+    if (navigator && navigator.geolocation) {
+      navigator.geolocation.getCurrentPosition(async ({ coords }) => {
+        const { latitude, longitude } = coords;
+
+        try {
+          const response = await getMapboxLocation(latitude, longitude);
+
+          /**
+           * Parsing of response to get the short code for the country and a city name
+           */
+          const deviceLocation = response.data.features.reduce<{
+            countryCode: string;
+            city: string;
+          }>(
+            (acc, currentValue) => {
+              if (currentValue.id.includes('place')) {
+                const city = currentValue.place_name
+                  .split(',')[0]
+                  .toLowerCase();
+                return { ...acc, city };
+              }
+
+              if (currentValue.id.includes('country')) {
+                const countryCode = currentValue.properties.short_code ?? '';
+                return { ...acc, countryCode };
+              }
+
+              return acc;
+            },
+            { countryCode: '', city: '' }
+          );
+
+          localStorage.setItem(
+            'device-location',
+            JSON.stringify(deviceLocation)
+          );
+          console.log(deviceLocation);
+
+          resolve(deviceLocation);
+        } catch (error) {
+          reject({
+            country: '',
+            city: '',
+            error: 'geolocation not available.'
+          });
+        }
+      });
+    } else {
+      reject({
+        country: '',
+        city: '',
+        error: 'geolocation not available.'
+      });
+    }
+  });
+};
+
 const App = () => {
-  // useEffect(() => {
-  //   if (navigator && navigator.geolocation) {
-  //     navigator.geolocation.getCurrentPosition(async ({ coords }) => {
-  //       const { latitude, longitude } = coords;
+  useEffect(() => {
+    if (navigator && navigator.geolocation) {
+      navigator.geolocation.getCurrentPosition(async ({ coords }) => {
+        const { latitude, longitude } = coords;
 
-  //       const response = await getMapboxLocation(latitude, longitude);
+        const response = await getMapboxLocation(latitude, longitude);
 
-  //       /**
-  //        * Parsing of response to get the short code for the country and a city name
-  //        */
-  //       const deviceLocation = response.data.features.reduce<{
-  //         countryCode: string;
-  //         city: string;
-  //       }>(
-  //         (acc, currentValue) => {
-  //           if (currentValue.id.includes('place')) {
-  //             const city = currentValue.place_name.split(',')[0].toLowerCase();
-  //             return { ...acc, city };
-  //           }
+        /**
+         * Parsing of response to get the short code for the country and a city name
+         */
+        const deviceLocation = response.data.features.reduce<{
+          countryCode: string;
+          city: string;
+        }>(
+          (acc, currentValue) => {
+            if (currentValue.id.includes('place')) {
+              const city = currentValue.place_name.split(',')[0].toLowerCase();
+              return { ...acc, city };
+            }
 
-  //           if (currentValue.id.includes('country')) {
-  //             const countryCode = currentValue.properties.short_code ?? '';
-  //             return { ...acc, countryCode };
-  //           }
+            if (currentValue.id.includes('country')) {
+              const countryCode = currentValue.properties.short_code ?? '';
+              return { ...acc, countryCode };
+            }
 
-  //           return acc;
-  //         },
-  //         { countryCode: '', city: '' }
-  //       );
+            return acc;
+          },
+          { countryCode: '', city: '' }
+        );
 
-  //       localStorage.setItem('device-location', JSON.stringify(deviceLocation));
+        localStorage.setItem('device-location', JSON.stringify(deviceLocation));
 
-  //       console.log(deviceLocation);
-  //     });
-  //   }
-  // }, []);
+        console.log(deviceLocation);
+      });
+    }
+  }, []);
 
   return (
     <>

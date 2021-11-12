@@ -1,19 +1,21 @@
 /** @jsx jsx */
 import { css, jsx } from '@emotion/react';
 import React, { useEffect, useState } from 'react';
+import styled from '@emotion/styled';
+import { BiCurrentLocation } from 'react-icons/bi';
+import { Select } from '../../components/Select/Select';
 import { BigButton } from '../../components/BigButton';
 import api from '../../api';
-import styled from '@emotion/styled';
-import { Select } from '../../components/Select/Select';
 import { isStandalonePWARequest, getCurrentDate } from '../../utils/index';
 import { cityOptions } from '../../constants/cityOptions';
 import { DropdownOption } from '../../utils/generateCityOptions';
-import { Box, Flex, Text } from 'theme-ui';
+import { Box, Flex, Text, Divider } from 'theme-ui';
 import { theme } from '../../styles/theme';
 import { animated, config, useTransition } from 'react-spring';
 import { useNavigate } from 'react-router';
 import { Routes } from '../../constants/routes';
 import { Footer } from '../../components/Footer/Footer';
+import { getDeviceLocation } from '../../app/App';
 
 declare global {
   interface Window {
@@ -37,20 +39,21 @@ export const Initial = () => {
   useEffect(() => {
     const storedSearchLocation = localStorage.getItem('search-location');
     const deviceLocation = localStorage.getItem('device-location');
-    console.log(deviceLocation);
 
     if (deviceLocation) {
       const deviceLocationDropdownOption = cityOptions.find(
         city => city.label.toLowerCase() === JSON.parse(deviceLocation).city
       );
-      console.log(deviceLocationDropdownOption);
 
-      setSearchLocation(deviceLocationDropdownOption);
+      setIsMounting(false);
+
+      return setSearchLocation(deviceLocationDropdownOption);
     }
-    setIsMounting(false);
-    // if (storedSearchLocation) {
-    //   setSearchLocation(JSON.parse(storedSearchLocation));
-    // }
+
+    if (storedSearchLocation) {
+      setSearchLocation(JSON.parse(storedSearchLocation));
+      setIsMounting(false);
+    }
   }, []);
 
   const getScEmbedCode = async () => {
@@ -122,6 +125,28 @@ export const Initial = () => {
     return () => clearInterval(interval);
   }, []);
 
+  const [isGettingLocation, setIsGettingLocation] = useState(false);
+  const handleDeviceLocationRequest = async () => {
+    setIsGettingLocation(true);
+
+    try {
+      const deviceLocation = await getDeviceLocation();
+
+      if (deviceLocation && deviceLocation.city) {
+        const nextSearchLocation = cityOptions.find(
+          city => city.label.toLowerCase() === deviceLocation.city
+        );
+
+        setSearchLocation(nextSearchLocation);
+
+        setIsGettingLocation(false);
+      }
+    } catch (error) {
+      setErrorMessage('Could not determine device location');
+      setIsGettingLocation(false);
+    }
+  };
+
   return (
     <Container>
       <Box
@@ -153,10 +178,23 @@ export const Initial = () => {
           <Select
             options={cityOptions}
             onChange={handleCitySelection}
-            defaultValue={searchLocation}
+            value={searchLocation}
             style={selectStyles}
+            isLoading={isGettingLocation}
           />
         )}
+        <Divider
+          css={{
+            width: '1px',
+            height: '16px',
+            backgroundColor: 'white',
+            margin: '0 1rem'
+          }}
+        />
+        <BiCurrentLocation
+          onClick={handleDeviceLocationRequest}
+          transform="scale(1)"
+        />
       </Flex>
       {errorMessage && <span>{errorMessage}</span>}
       <Footer />

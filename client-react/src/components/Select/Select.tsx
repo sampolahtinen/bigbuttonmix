@@ -7,24 +7,27 @@ import { BiCurrentLocation } from 'react-icons/bi';
 type SelectProps = {
   options: DropdownOption[];
   onChange: any;
-  defaultValue?: DropdownOption;
+  value?: DropdownOption;
   style?: StylesConfig;
+  isLoading?: boolean;
 };
 
 const defaultStyles = {
   control: (provided: any) => ({
     ...provided,
     backgroundColor: 'transparent',
+    // width: '100px',
     border: 'none'
   }),
   menu: (provided: any) => ({
     ...provided,
-    backgroundColor: '#1e202f'
+    backgroundColor: '#1e202f',
+    width: '150px'
   }),
   option: (provided: any) => ({
     ...provided,
     color: 'white',
-    fontSize: '14px'
+    fontSize: '10px'
   }),
   singleValue: (provided: any) => ({
     ...provided,
@@ -40,8 +43,9 @@ const defaultStyles = {
 export const Select = ({
   options,
   onChange,
-  defaultValue,
-  style = {}
+  value,
+  style = {},
+  isLoading
 }: SelectProps) => {
   const styles = mergeDeepRight(defaultStyles, style) as StylesConfig;
   return (
@@ -49,7 +53,9 @@ export const Select = ({
       options={options}
       onChange={onChange}
       styles={styles}
-      defaultValue={defaultValue}
+      isSearchable={false}
+      value={value}
+      isLoading={isLoading}
     />
   );
 };

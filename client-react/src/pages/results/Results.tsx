@@ -10,6 +10,9 @@ import { cityOptions } from '../../constants/cityOptions';
 import { DropdownOption } from '../../utils/generateCityOptions';
 import { useLocation } from 'react-router';
 import { Footer } from '../../components/Footer/Footer';
+import { LocationSelector } from '../../components/LocationSelector/LocationSelector';
+import { getDeviceLocation } from '../../app/App';
+import { FLATTENABLE_KEYS } from '@babel/types';
 
 declare global {
   interface Window {
@@ -95,9 +98,25 @@ export const Results = () => {
     setSearchLocation(selectedLocation);
   };
 
-  const deviceLocation = cityOptions.find(
-    city => city.label.toLowerCase() === 'berlin'
-  );
+  const [isGettingLocation, setIsGettingLocation] = useState(false);
+  const handleSearchLocationChange = async () => {
+    setIsGettingLocation(true);
+    try {
+      const deviceLocation = await getDeviceLocation();
+
+      if (deviceLocation && deviceLocation.city) {
+        const nextSearchLocation = cityOptions.find(
+          city => city.label.toLowerCase() === deviceLocation.city
+        );
+
+        setSearchLocation(nextSearchLocation);
+        setIsGettingLocation(false);
+      }
+    } catch (error) {
+      setErrorMessage('Could not determine device location');
+      setIsGettingLocation(false);
+    }
+  };
 
   return (
     <Container>
@@ -142,10 +161,12 @@ export const Results = () => {
         </div>
       )}
       {scEmbedCode && (
-        <Select
+        <LocationSelector
           options={cityOptions}
           onChange={handleCitySelection}
-          defaultValue={searchLocation || deviceLocation}
+          onCurrentLocationClick={handleSearchLocationChange}
+          selectedValue={searchLocation}
+          isLoading={isGettingLocation}
         />
       )}
       <BigButton

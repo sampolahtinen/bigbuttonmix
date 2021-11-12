@@ -3,31 +3,45 @@ import { StylesConfig } from 'react-select';
 import { DropdownOption } from '../../utils/generateCityOptions';
 import { BiCurrentLocation } from 'react-icons/bi';
 import { Select } from '../Select';
-import { Flex } from 'theme-ui';
+import { Flex, Divider } from 'theme-ui';
 
-type SelectProps = {
+type LocationSelectorProps = {
   options: DropdownOption[];
   onChange: any;
-  defaultValue?: DropdownOption;
+  selectedValue?: DropdownOption;
   styles?: StylesConfig;
+  onCurrentLocationClick: () => void;
+  isLoading?: boolean;
 };
 
 export const LocationSelector = ({
   options,
   onChange,
-  defaultValue,
-  styles = {}
-}: SelectProps) => {
-  const handleClick = () => {};
-
+  selectedValue,
+  onCurrentLocationClick,
+  styles = {},
+  isLoading
+}: LocationSelectorProps) => {
   return (
     <Flex css={{ alignItems: 'center' }}>
-      <BiCurrentLocation onClick={handleClick} />
+      <BiCurrentLocation onClick={onCurrentLocationClick} />
+      <Divider
+        css={{
+          width: '1px',
+          height: '16px',
+          backgroundColor: 'white',
+          margin: '0 1rem'
+        }}
+      />
       <Select
         options={options}
         onChange={onChange}
-        style={styles}
-        defaultValue={defaultValue}
+        style={{
+          ...styles,
+          valueContainer: provided => ({ ...provided, paddingTop: 0 })
+        }}
+        value={selectedValue}
+        isLoading={isLoading}
       />
     </Flex>
   );
