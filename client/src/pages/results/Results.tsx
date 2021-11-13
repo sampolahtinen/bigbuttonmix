@@ -117,9 +117,12 @@ export const Results = () => {
   };
 
   return (
-    <Container>
+    <React.Fragment>
       {scEmbedCode && (
-        <div className="soundcloud-embedded-player">
+        <div
+          className="soundcloud-embedded-player"
+          css={{ paddingBottom: '1rem' }}
+        >
           <Player
             className="player"
             dangerouslySetInnerHTML={{ __html: scEmbedCode }}
@@ -174,8 +177,7 @@ export const Results = () => {
         isLoading={isLoading}
       />
       {errorMessage && <span>{errorMessage}</span>}
-      <Footer />
-    </Container>
+    </React.Fragment>
   );
 };
 
@@ -227,39 +229,4 @@ const EventInfoContainer = styled.div`
   border-bottom-right-radius: 32px;
   border-bottom-left-radius: 32px;
   box-shadow: rgb(0 0 0 / 0%) 0px 14px 28px, rgb(0 0 0 / 14%) 0px 10px 16px;
-`;
-
-const Container = styled.div`
-  overflow: hidden;
-  display: flex;
-  flex-direction: column;
-  align-items: center;
-  justify-content: center;
-  width: 100vw;
-  height: 100vh;
-  max-width: 500px;
-  background-image: linear-gradient(
-    to bottom,
-    #12151f,
-    #121521,
-    #121524,
-    #121526,
-    #121528
-  );
-
-  .soundcloud-embedded-player {
-    width: 100%;
-    margin-bottom: 1rem;
-  }
-
-  @media (min-width: 640px) {
-    main {
-      max-width: none;
-    }
-
-    .full-width-container {
-      margin: auto;
-      max-width: 500px;
-    }
-  }
 `;

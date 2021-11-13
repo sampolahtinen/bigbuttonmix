@@ -8,6 +8,7 @@ import { Initial } from '../pages/index/index';
 import { Results } from '../pages/results';
 import { Routes as RoutePaths } from '../constants/routes';
 import { getMapboxLocation } from '../api/getMapboxLocation';
+import { Layout } from '../components/Layout/Layout';
 
 type DeviceLocation = {
   countryCode: string;
@@ -116,10 +117,12 @@ const App = () => {
     <>
       <ThemeProvider theme={theme}>
         <Global styles={globalStyles} />
-        <Routes>
-          <Route path={RoutePaths.Index} element={<Initial />} />
-          <Route path={RoutePaths.Results} element={<Results />} />
-        </Routes>
+        <Layout>
+          <Routes>
+            <Route path={RoutePaths.Index} element={<Initial />} />
+            <Route path={RoutePaths.Results} element={<Results />} />
+          </Routes>
+        </Layout>
       </ThemeProvider>
     </>
   );

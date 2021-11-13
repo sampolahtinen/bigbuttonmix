@@ -14,6 +14,6 @@ export const theme = mergeDeepRight(deep, {
   },
   fontSizes: [12, 14, 16, 20, 24, 32, 48, 64],
   footer: {
-    height: '50px'
+    height: '32px'
   }
 });

@@ -4,8 +4,7 @@ const DotenvPlugin = require('dotenv-webpack');
 const HtmlWebpackPlugin = require('html-webpack-plugin');
 const NodePolyfillPlugin = require('node-polyfill-webpack-plugin');
 const { GenerateSW } = require('workbox-webpack-plugin');
-
-console.log(process.env.TEST);
+const CopyPlugin = require('copy-webpack-plugin');
 
 const chalk = require('chalk');
 const paths = require('../paths');
@@ -47,6 +46,9 @@ const webpackConfig = env => {
       ]
     },
     plugins: [
+      new CopyPlugin({
+        patterns: [{ from: paths.publicPath, to: paths.distPath }]
+      }),
       env.development && new DotenvPlugin({ path: '../.env' }),
       new HtmlWebpackPlugin({
         template: paths.appHtml,
