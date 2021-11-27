@@ -3,14 +3,13 @@ import { jsx } from '@emotion/react';
 import React, { useEffect, useState } from 'react';
 import { BigButton } from '../../components/BigButton';
 import { format } from 'date-fns';
-import { api } from '../../api';
 import styled from '@emotion/styled';
 import { cityOptions } from '../../constants/cityOptions';
 import { DropdownOption } from '../../utils/generateCityOptions';
 import { useLocation } from 'react-router';
-import { Footer } from '../../components/Footer/Footer';
 import { LocationSelector } from '../../components/LocationSelector/LocationSelector';
 import { getDeviceLocation } from '../../app/App';
+import api from '../../api';
 
 declare global {
   interface Window {
@@ -73,17 +72,16 @@ export const Results = () => {
     setIsLoading(true);
     setErrorMessage('');
 
-    const isAutoPlayPossible = isStandalonePWARequest();
-    const date = getCurrentDate();
-
     try {
-      const response = await api(
-        'GET',
-        `random-soundcloud-track?country=${searchLocation?.country.urlCode.toLowerCase()}&city=${searchLocation?.value.toLowerCase()}&date=${date}&autoPlay=${isAutoPlayPossible}`
-      );
+      const response = await api.getRandomMix({
+        country: searchLocation?.country.urlCode.toLowerCase(),
+        city: searchLocation?.value.toLowerCase().replace(/\s+/g, ''),
+        autoPlay: isStandalonePWARequest(),
+        date: getCurrentDate()
+      });
 
-      setScEmbedCode(response.body.html);
-      setRaEventInformation(response.body);
+      setScEmbedCode(response.data.html);
+      setRaEventInformation(response.data);
     } catch (error) {
       setErrorMessage(error as string);
     } finally {
@@ -107,6 +105,10 @@ export const Results = () => {
           city => city.label.toLowerCase() === deviceLocation.city
         );
 
+        localStorage.setItem(
+          'search-location',
+          JSON.stringify(nextSearchLocation)
+        );
         setSearchLocation(nextSearchLocation);
         setIsGettingLocation(false);
       }
