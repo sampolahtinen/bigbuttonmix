@@ -1,18 +1,19 @@
 /** @jsx jsx */
-import { css, jsx } from '@emotion/react';
 import React, { useEffect, useState } from 'react';
+import { css, jsx } from '@emotion/react';
+import { Box, Flex, Text, Divider } from 'theme-ui';
 import styled from '@emotion/styled';
 import { BiCurrentLocation } from 'react-icons/bi';
+import { useNavigate } from 'react-router';
+import { animated, config, useTransition } from 'react-spring';
+
+import api from '../../api';
 import { Select } from '../../components/Select/Select';
 import { BigButton } from '../../components/BigButton';
-import api from '../../api';
 import { isStandalonePWARequest, getCurrentDate } from '../../utils/index';
 import { cityOptions } from '../../constants/cityOptions';
 import { DropdownOption } from '../../utils/generateCityOptions';
-import { Box, Flex, Text, Divider } from 'theme-ui';
 import { theme } from '../../styles/theme';
-import { animated, config, useTransition } from 'react-spring';
-import { useNavigate } from 'react-router';
 import { Routes } from '../../constants/routes';
 import { Footer } from '../../components/Footer/Footer';
 import { getDeviceLocation } from '../../app/App';
@@ -25,7 +26,7 @@ declare global {
   }
 }
 
-export const Initial = () => {
+export const InitialView = () => {
   const [errorMessage, setErrorMessage] = useState<string>('');
   const [isLoading, setIsLoading] = useState(false);
   const [isMounting, setIsMounting] = useState(true);
@@ -40,19 +41,28 @@ export const Initial = () => {
     const storedSearchLocation = localStorage.getItem('search-location');
     const deviceLocation = localStorage.getItem('device-location');
 
-    if (deviceLocation) {
+    /**
+     * When the view mounts, we first check if user have previously chosen a search location from the dropdown.
+     * If yes, then we use this search location againPropTypes.
+     * If there is no stored search-location, we take the device location and set it to be the search location.
+     *
+     * Local storage search-location will always be favored before device location
+     */
+    if (storedSearchLocation) {
+      setSearchLocation(JSON.parse(storedSearchLocation));
+      setIsMounting(false);
+    } else if (deviceLocation) {
       const deviceLocationDropdownOption = cityOptions.find(
         city => city.label.toLowerCase() === JSON.parse(deviceLocation).city
       );
 
-      setIsMounting(false);
+      localStorage.setItem(
+        'search-location',
+        JSON.stringify(deviceLocationDropdownOption)
+      );
 
-      return setSearchLocation(deviceLocationDropdownOption);
-    }
-
-    if (storedSearchLocation) {
-      setSearchLocation(JSON.parse(storedSearchLocation));
       setIsMounting(false);
+      setSearchLocation(deviceLocationDropdownOption);
     }
   }, []);
 
@@ -63,7 +73,7 @@ export const Initial = () => {
     try {
       const response = await api.getRandomMix({
         country: searchLocation?.country.urlCode.toLowerCase(),
-        city: searchLocation?.value.toLowerCase(),
+        city: searchLocation?.value.toLowerCase().replace(/\s+/g, ''),
         autoPlay: isStandalonePWARequest(),
         date: getCurrentDate()
       });
@@ -137,6 +147,10 @@ export const Initial = () => {
           city => city.label.toLowerCase() === deviceLocation.city
         );
 
+        localStorage.setItem(
+          'search-location',
+          JSON.stringify(nextSearchLocation)
+        );
         setSearchLocation(nextSearchLocation);
 
         setIsGettingLocation(false);
