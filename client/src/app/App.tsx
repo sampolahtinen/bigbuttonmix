@@ -54,7 +54,6 @@ export const getDeviceLocation = () => {
             'device-location',
             JSON.stringify(deviceLocation)
           );
-          console.log(deviceLocation);
 
           resolve(deviceLocation);
         } catch (error) {
@@ -107,8 +106,6 @@ const App = () => {
         );
 
         localStorage.setItem('device-location', JSON.stringify(deviceLocation));
-
-        console.log(deviceLocation);
       });
     }
   }, []);
