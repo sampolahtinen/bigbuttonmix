@@ -76,6 +76,7 @@ export const getDeviceLocation = () => {
 
 const App = () => {
   useEffect(() => {
+    console.log('am i working')
     if (navigator && navigator.geolocation) {
       navigator.geolocation.getCurrentPosition(async ({ coords }) => {
         const { latitude, longitude } = coords;
