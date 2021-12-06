@@ -28,12 +28,12 @@ export { redisClient };
 
 const app = express();
 
-const allowList = [
-  "http://localhost:3000",
-  "http://localhost:5000",
+// const allowList = [
+//   "http://localhost:3000",
+//   "http://localhost:5000",
   
-  "https://big-button-mix.herokuapp.com",
-];
+//   "https://big-button-mix.herokuapp.com",
+// ];
 
 app.use(
   cors()
