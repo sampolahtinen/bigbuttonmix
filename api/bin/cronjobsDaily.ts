@@ -31,8 +31,14 @@ const pushButton = async ()=>{
 }
 
 const runJobs = async()=>{
-    await pushButton()
-    process.exit()
+    try {
+        await pushButton()
+        process.exit()
+    } catch (error) {
+        logError(JSON.stringify(error))
+        process.exit()
+    }
+    
 
 }
 
