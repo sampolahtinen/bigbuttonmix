@@ -307,8 +307,12 @@ export const getSoundcloudTracks = async (
 
   const api_v2_url = `https://api-v2.soundcloud.com/users/${scUserID[0]}/tracks?representation=&client_id=${client_id}&limit=20&offset=0&linked_partitioning=1&app_version=1628858614&app_locale=en`;
 
-  const d2 = await axios.get('https://m.soundcloud.com/loyd/tracks');
-  console.log(d2);
+  /**
+   * Testing of fetching soundcloud tracks via axios
+   */
+  // const d2 = await axios.get('https://m.soundcloud.com/loyd/tracks');
+  // console.log(d2);
+
   const d = await axios.get(api_v2_url);
   logInfo(`Tracks api request status ${d.status}`);
   const tracks = d.data.collection.map(entry => entry.permalink_url);

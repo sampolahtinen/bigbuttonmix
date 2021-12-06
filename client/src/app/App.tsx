@@ -4,7 +4,7 @@ import { Global } from '@emotion/react';
 import { ThemeProvider } from 'theme-ui';
 import { theme } from '../styles/theme';
 import { globalStyles } from '../styles/globalStyles';
-import { Initial } from '../pages/index/index';
+import { InitialView } from '../pages/index/InitialView';
 import { Results } from '../pages/results';
 import { Routes as RoutePaths } from '../constants/routes';
 import { getMapboxLocation } from '../api/getMapboxLocation';
@@ -54,7 +54,6 @@ export const getDeviceLocation = () => {
             'device-location',
             JSON.stringify(deviceLocation)
           );
-          console.log(deviceLocation);
 
           resolve(deviceLocation);
         } catch (error) {
@@ -107,8 +106,6 @@ const App = () => {
         );
 
         localStorage.setItem('device-location', JSON.stringify(deviceLocation));
-
-        console.log(deviceLocation);
       });
     }
   }, []);
@@ -119,7 +116,7 @@ const App = () => {
         <Global styles={globalStyles} />
         <Layout>
           <Routes>
-            <Route path={RoutePaths.Index} element={<Initial />} />
+            <Route path={RoutePaths.Index} element={<InitialView />} />
             <Route path={RoutePaths.Results} element={<Results />} />
           </Routes>
         </Layout>
