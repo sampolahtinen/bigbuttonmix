@@ -3,10 +3,15 @@ import ReactDOM from 'react-dom';
 import { BrowserRouter } from 'react-router-dom';
 import App from './app/App';
 import ReactGA from 'react-ga';
+import {TRACKING_ID} from './constants'
 
-const TRACKING_ID = "UA-213321254-1"; 
-ReactGA.initialize(TRACKING_ID);
-ReactGA.pageview(window.location.pathname);
+
+console.log('LOGGING')
+console.log(TRACKING_ID)
+
+
+//ReactGA.initialize(TRACKING_ID); //UA-213321254-1
+//ReactGA.pageview(window.location.pathname);
 
 
 const rootContainer = document.getElementById('root');
