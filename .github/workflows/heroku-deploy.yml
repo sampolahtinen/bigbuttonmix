@@ -48,8 +48,8 @@ jobs:
       # Runs a single command using the runners shell
       - name: Deploy API
         run:
-          git subtree push --prefix api heroku-api main --force
+          git push heroku-api `git subtree split --prefix api main`:main --force
       
       - name: Deploy Client
         run:
-          git subtree push --prefix api heroku-client main --force
+          git push heroku-client `git subtree split --prefix client main`:main --force
