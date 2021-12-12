@@ -7,7 +7,6 @@ import dotenv from "dotenv";
 import util from "util";
 import booleanParser from "express-query-boolean";
 import { randomSoundcloudTrackRoute } from "./routes";
-import { isDev } from "./utils/index";
 
 dotenv.config();
 console.log(process.env.NODE_ENV);
@@ -27,13 +26,6 @@ if (REDIS_ENABLED){
 export { redisClient };
 
 const app = express();
-
-// const allowList = [
-//   "http://localhost:3000",
-//   "http://localhost:5000",
-  
-//   "https://big-button-mix.herokuapp.com",
-// ];
 
 app.use(
   cors()
