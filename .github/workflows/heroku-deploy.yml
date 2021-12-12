@@ -1,0 +1,55 @@
+# This is a basic workflow to help you get started with Actions
+
+name: CI
+
+# Controls when the workflow will run
+on:
+  # Triggers the workflow on push or pull request events but only for the main branch
+  push:
+    branches: [ main ]
+
+  # Allows you to run this workflow manually from the Actions tab
+  workflow_dispatch:
+
+# A workflow run is made up of one or more jobs that can run sequentially or in parallel
+jobs:
+  # This workflow contains a single job called "build"
+  heroku-deploy:
+    # The type of runner that the job will run on
+    runs-on: ubuntu-latest
+
+    # Steps represent a sequence of tasks that will be executed as part of the job
+    steps:
+      # Checks-out your repository under $GITHUB_WORKSPACE, so your job can access it
+      - name: Checkout repository
+        uses: actions/checkout@v2
+        with:
+          fetch-depth: 0
+
+      - name: Heroku login
+        run: |
+          cat > ~/.netrc <<EOF
+            machine api.heroku.com
+              login $HEROKU_EMAIL
+              password $HEROKU_API_KEY
+            machine git.heroku.com
+              login $HEROKU_EMAIL
+              password $HEROKU_API_KEY
+          EOF
+        env:
+          HEROKU_API_KEY: ${{ secrets.HEROKU_API_KEY }}
+          HEROKU_EMAIL: ${{ secrets.HEROKU_EMAIL }}
+
+      - name: Add heroku remotes
+        run: |
+          git remote add heroku-api https://git.heroku.com/big-button-api.git
+          git remote add heroku-client https://git.heroku.com/big-button-mix.git
+
+      # Runs a single command using the runners shell
+      - name: Deploy API
+        run:
+          git subtree push --prefix api heroku-api main
+      
+      - name: Deploy Client
+        run:
+          git subtree push --prefix api heroku-client main
