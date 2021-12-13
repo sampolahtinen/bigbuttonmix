@@ -5,6 +5,8 @@ import App from './app/App';
 import ReactGA from 'react-ga';
 
 const ANALYTICS_ID = process.env.REACT_APP_ANALYTICS_ID||"";
+
+
 ReactGA.initialize(ANALYTICS_ID);
 ReactGA.pageview(window.location.pathname);
 
