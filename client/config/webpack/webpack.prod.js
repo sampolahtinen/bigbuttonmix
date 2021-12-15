@@ -21,7 +21,8 @@ const webpackProdConfig = env => {
       env.production &&
         new DefinePlugin({
           'process.env': {
-            MAPBOX_TOKEN: JSON.stringify(process.env.MAPBOX_TOKEN)
+            MAPBOX_TOKEN: JSON.stringify(process.env.MAPBOX_TOKEN),
+            GOOGLE_ANALYTICS_ID: JSON.stringify(process.env.GOOGLE_ANALYTICS_ID),
           }
         })
     ].filter(Boolean),
