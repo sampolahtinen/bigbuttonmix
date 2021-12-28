@@ -20,6 +20,11 @@ if (REDIS_ENABLED){
   redisClient.get = util.promisify(redisClient.get);
   //@ts-ignore
   redisClient.set = util.promisify(redisClient.set);
+
+  redisClient.flushdb = util.promisify(redisClient.flushdb)
+
+  redisClient.info = util.promisify(redisClient.info);
+
 }
 
 
