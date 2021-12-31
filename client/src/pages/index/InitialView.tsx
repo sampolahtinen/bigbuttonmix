@@ -18,6 +18,7 @@ import { theme } from '../../styles/theme';
 import { Routes } from '../../constants/routes';
 import { Footer } from '../../components/Footer/Footer';
 import { getDeviceLocation } from '../../app/App';
+import { Message, MessageType } from '../../components/Message/Message';
 
 declare global {
   interface Window {
@@ -213,7 +214,15 @@ export const InitialView = () => {
           transform="scale(1)"
         />
       </Flex>
-      {errorMessage && <span>{errorMessage}</span>}
+      {errorMessage && (
+        <Message
+          type={MessageType.Error}
+          size="small"
+          css={{ padding: '2rem' }}
+        >
+          {errorMessage}
+        </Message>
+      )}
       <Footer />
     </Container>
   );
