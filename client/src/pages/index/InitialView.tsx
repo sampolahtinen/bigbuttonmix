@@ -3,6 +3,7 @@ import React, { useEffect, useState } from 'react';
 import { css, jsx } from '@emotion/react';
 import { Box, Flex, Text, Divider } from 'theme-ui';
 import styled from '@emotion/styled';
+import axios from 'axios';
 import { BiCurrentLocation } from 'react-icons/bi';
 import { useNavigate } from 'react-router';
 import { animated, config, useTransition } from 'react-spring';
@@ -80,7 +81,9 @@ export const InitialView = () => {
 
       navigate(Routes.Results, { state: response.data });
     } catch (error) {
-      setErrorMessage(error as string);
+      if (axios.isAxiosError(error) && error.response?.status === 404) {
+        setErrorMessage('No events found for given location. Try another one!');
+      }
     } finally {
       setIsLoading(false);
     }

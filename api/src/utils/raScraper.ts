@@ -9,7 +9,7 @@ import {
 } from '../types';
 import { redisClient } from '../server';
 import { logError, logInfo, logWarning } from './logger';
-import { REDIS_ENABLED } from '../constants';
+import { REDIS_ENABLED, ErrorMessages } from '../constants';
 
 const generateRandomNumber = (max: number) => Math.floor(Math.random() * max);
 
@@ -53,16 +53,12 @@ const getEventLinks = async (searchPageURL: string, page: Page) => {
   logInfo('Number of events found:');
   logInfo(events.length);
 
-  if (events.length == 0) {
-    const message = 'Event list is empty';
-    console.log(message);
-    throw message;
-  }
-
   if (REDIS_ENABLED) {
     await redisClient.set(searchPageURL, JSON.stringify(events));
   }
+  
   logInfo(`Total events: ${events.length}`);
+
   return events;
 };
 
@@ -238,8 +234,14 @@ export const getRandomRaEventArtists = async (
 ): Promise<RaEventDetails> => {
   try {
     const raUrl = `https://ra.co/events/${location.country}/${location.city}?week=${date}`;
+    
     logInfo(`Searching events on ${raUrl}`);
+
     const eventLinks = await getEventLinks(raUrl, page);
+
+    if (isEmpty(eventLinks)) {
+      throw new Error(ErrorMessages.NoEvents)
+    }
 
     const randomEventPage = await getRandomEvent(eventLinks);
 
@@ -268,10 +270,11 @@ export const getRandomRaEventArtists = async (
       ...eventDetails
     };
   } catch (error) {
-    logError(error);
+    if (error.message === ErrorMessages.NoEvents) {
+      throw error
+    }
     logError('There was an unknown general error. Fetching a new event.');
     logError(JSON.stringify(error));
-    //getRandomRAEventArtistTrack(location)
   }
 };
 
