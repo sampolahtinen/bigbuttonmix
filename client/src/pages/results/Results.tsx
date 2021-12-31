@@ -95,9 +95,12 @@ export const Results = () => {
     }
   };
 
-  const handleCitySelection = (selectedLocation: DropdownOption) => {
-    localStorage.setItem('search-location', JSON.stringify(selectedLocation));
-    setSearchLocation(selectedLocation);
+  const handleCitySelection = (selectedLocation: string) => {
+    const cityOption = cityOptions.find(
+      city => city.label.toLowerCase() === selectedLocation.toLowerCase()
+    );
+    localStorage.setItem('search-location', JSON.stringify(cityOption));
+    setSearchLocation(cityOption);
   };
 
   const [isGettingLocation, setIsGettingLocation] = useState(false);

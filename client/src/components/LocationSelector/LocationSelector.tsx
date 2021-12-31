@@ -23,7 +23,7 @@ export const LocationSelector = ({
   isLoading
 }: LocationSelectorProps) => {
   return (
-    <Flex css={{ alignItems: 'center' }}>
+    <Flex css={{ alignItems: 'center', margin: '1rem 0' }}>
       <BiCurrentLocation onClick={onCurrentLocationClick} />
       <Divider
         css={{
@@ -36,10 +36,6 @@ export const LocationSelector = ({
       <Select
         options={options}
         onChange={onChange}
-        style={{
-          ...styles,
-          valueContainer: provided => ({ ...provided, paddingTop: 0 })
-        }}
         value={selectedValue}
         isLoading={isLoading}
       />

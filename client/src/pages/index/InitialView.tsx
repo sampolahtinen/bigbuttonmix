@@ -90,9 +90,12 @@ export const InitialView = () => {
     }
   };
 
-  const handleCitySelection = (selectedLocation: DropdownOption) => {
-    localStorage.setItem('search-location', JSON.stringify(selectedLocation));
-    setSearchLocation(selectedLocation);
+  const handleCitySelection = (selectedLocation: string) => {
+    const cityOption = cityOptions.find(
+      city => city.label.toLowerCase() === selectedLocation.toLowerCase()
+    );
+    localStorage.setItem('search-location', JSON.stringify(cityOption));
+    setSearchLocation(cityOption);
   };
 
   const selectStyles = {
@@ -191,13 +194,14 @@ export const InitialView = () => {
         isBreathingEnabled
       />
       <Flex css={{ alignItems: 'center' }}>
-        <Text css={{ fontSize: theme.fontSizes[0] }}>Raving in</Text>
+        <Text css={{ fontSize: theme.fontSizes[1], marginRight: '0.8rem' }}>
+          Raving in
+        </Text>
         {!isMounting && (
           <Select
             options={cityOptions}
             onChange={handleCitySelection}
             value={searchLocation}
-            style={selectStyles}
             isLoading={isGettingLocation}
           />
         )}
