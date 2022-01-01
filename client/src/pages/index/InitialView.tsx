@@ -3,6 +3,7 @@ import React, { useEffect, useState } from 'react';
 import { css, jsx } from '@emotion/react';
 import { Box, Flex, Text, Divider } from 'theme-ui';
 import styled from '@emotion/styled';
+import axios from 'axios';
 import { BiCurrentLocation } from 'react-icons/bi';
 import { useNavigate } from 'react-router';
 import { animated, config, useTransition } from 'react-spring';
@@ -17,6 +18,7 @@ import { theme } from '../../styles/theme';
 import { Routes } from '../../constants/routes';
 import { Footer } from '../../components/Footer/Footer';
 import { getDeviceLocation } from '../../app/App';
+import { Message, MessageType } from '../../components/Message/Message';
 
 declare global {
   interface Window {
@@ -80,15 +82,20 @@ export const InitialView = () => {
 
       navigate(Routes.Results, { state: response.data });
     } catch (error) {
-      setErrorMessage(error as string);
+      if (axios.isAxiosError(error) && error.response?.status === 404) {
+        setErrorMessage('No events found for given location. Try another one!');
+      }
     } finally {
       setIsLoading(false);
     }
   };
 
-  const handleCitySelection = (selectedLocation: DropdownOption) => {
-    localStorage.setItem('search-location', JSON.stringify(selectedLocation));
-    setSearchLocation(selectedLocation);
+  const handleCitySelection = (selectedLocation: string) => {
+    const cityOption = cityOptions.find(
+      city => city.label.toLowerCase() === selectedLocation.toLowerCase()
+    );
+    localStorage.setItem('search-location', JSON.stringify(cityOption));
+    setSearchLocation(cityOption);
   };
 
   const selectStyles = {
@@ -187,13 +194,14 @@ export const InitialView = () => {
         isBreathingEnabled
       />
       <Flex css={{ alignItems: 'center' }}>
-        <Text css={{ fontSize: theme.fontSizes[0] }}>Raving in</Text>
+        <Text css={{ fontSize: theme.fontSizes[1], marginRight: '0.8rem' }}>
+          Raving in
+        </Text>
         {!isMounting && (
           <Select
             options={cityOptions}
             onChange={handleCitySelection}
             value={searchLocation}
-            style={selectStyles}
             isLoading={isGettingLocation}
           />
         )}
@@ -210,7 +218,15 @@ export const InitialView = () => {
           transform="scale(1)"
         />
       </Flex>
-      {errorMessage && <span>{errorMessage}</span>}
+      {errorMessage && (
+        <Message
+          type={MessageType.Error}
+          size="small"
+          css={{ padding: '2rem' }}
+        >
+          {errorMessage}
+        </Message>
+      )}
       <Footer />
     </Container>
   );

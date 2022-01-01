@@ -23,7 +23,7 @@ const LayoutContainer = styled.div`
   display: flex;
   flex-direction: column;
   align-items: center;
-  justify-content: center;
+  justify-content: flex-start;
   width: 100vw;
   max-width: 500px;
   background-image: linear-gradient(

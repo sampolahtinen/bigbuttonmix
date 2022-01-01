@@ -52,14 +52,13 @@ export const BigButton = ({
   return (
     <Button className={className} onClick={onClick} isSmall={isSmall}>
       <animated.svg
-        width="475"
-        height="475"
-        viewBox="0 0 475 475"
+        width="auto"
+        viewBox="0 0 471 471"
         fill="none"
         xmlns="http://www.w3.org/2000/svg"
         style={{
-          transform: isSmall ? 'scale(0.3)' : 'scale(0.5)',
-          transformOrigin: 'center 0',
+          // transform: isSmall ? 'scale(0.3)' : 'scale(1)',
+          // transformOrigin: 'center 0',
           overflow: 'visible'
         }}
       >
@@ -184,8 +183,8 @@ export const BigButton = ({
 
 const Button = styled.button<BigButtonProps>`
   position: relative;
-  width: auto;
-  height: 240px;
+  width: ${props => props.isSmall ? '120px' : '240px'};
+  height: ${props => props.isSmall ? '120px' : '240px'};
   border-radius: 50%;
   border: none;
   cursor: pointer;

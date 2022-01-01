@@ -5,7 +5,7 @@ import {
   getRandomSoundcloudTrack,
   generateSoundcloudEmbed
 } from '../utils/raScraper';
-import { RETRY_LIMIT } from '../constants';
+import { RETRY_LIMIT, ErrorMessages } from '../constants';
 import { Crawler } from '../utils/Crawler';
 import { logSuccess, logError, logWarning } from '../utils/logger';
 import { isDev } from '../utils';
@@ -70,7 +70,13 @@ router.get(
         ...randomRaEventDetails
       });
     } catch (error) {
+      console.trace()
       logError(error);
+
+      if (error.message === ErrorMessages.NoEvents) {
+        res.status(404).json({ message: ErrorMessages.NoEvents})
+      }
+
       if (retryCount < RETRY_LIMIT) {
         logError('GENERAL ERROR. RETRYING PREVIOUS REQUEST!');
         retryCount++;

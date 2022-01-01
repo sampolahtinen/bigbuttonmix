@@ -1,4 +1,6 @@
 /** @jsx jsx */
+/** @jsxImportSource theme-ui */
+
 import { jsx } from '@emotion/react';
 import React, { useEffect, useState } from 'react';
 import { BigButton } from '../../components/BigButton';
@@ -10,6 +12,8 @@ import { useLocation } from 'react-router';
 import { LocationSelector } from '../../components/LocationSelector/LocationSelector';
 import { getDeviceLocation } from '../../app/App';
 import api from '../../api';
+import axios from 'axios';
+import { Message, MessageType } from '../../components/Message/Message';
 
 declare global {
   interface Window {
@@ -83,15 +87,20 @@ export const Results = () => {
       setScEmbedCode(response.data.html);
       setRaEventInformation(response.data);
     } catch (error) {
-      setErrorMessage(error as string);
+      if (axios.isAxiosError(error) && error.response?.status === 404) {
+        setErrorMessage('No events found for given location. Try another one!');
+      }
     } finally {
       setIsLoading(false);
     }
   };
 
-  const handleCitySelection = (selectedLocation: DropdownOption) => {
-    localStorage.setItem('search-location', JSON.stringify(selectedLocation));
-    setSearchLocation(selectedLocation);
+  const handleCitySelection = (selectedLocation: string) => {
+    const cityOption = cityOptions.find(
+      city => city.label.toLowerCase() === selectedLocation.toLowerCase()
+    );
+    localStorage.setItem('search-location', JSON.stringify(cityOption));
+    setSearchLocation(cityOption);
   };
 
   const [isGettingLocation, setIsGettingLocation] = useState(false);
@@ -123,7 +132,7 @@ export const Results = () => {
       {scEmbedCode && (
         <div
           className="soundcloud-embedded-player"
-          css={{ paddingBottom: '1rem' }}
+          css={{ paddingBottom: '1rem', width: '100%' }}
         >
           <Player
             className="player"
@@ -173,12 +182,16 @@ export const Results = () => {
         />
       )}
       <BigButton
-        css={{ paddingTop: '3rem', margin: 0 }}
+        css={{ margin: '2rem 0' }}
         onClick={getScEmbedCode}
         isSmall
         isLoading={isLoading}
       />
-      {errorMessage && <span>{errorMessage}</span>}
+      {errorMessage && (
+        <Message type={MessageType.Error} size="small">
+          {errorMessage}
+        </Message>
+      )}
     </React.Fragment>
   );
 };

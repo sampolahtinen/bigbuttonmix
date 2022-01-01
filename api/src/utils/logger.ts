@@ -12,7 +12,7 @@ export enum LogType {
 const logger = curry((type: keyof typeof LogType, message: string | number) => {
   switch (type) {
     case LogType.ERROR:
-      console.log(chalk.red(`${LogType.ERROR}: `) + chalk.white(`${message}`));
+      console.error(chalk.red(`${LogType.ERROR}: `) + chalk.white(`${message}`));
       break;
     case LogType.INFO:
       console.log(chalk.blue(`${LogType.INFO}: `) + chalk.white(`${message}`));
