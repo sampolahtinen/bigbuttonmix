@@ -1,25 +1,16 @@
+import { LocationOptions } from '../constants/locationOptions';
 import {
   append,
-  assoc,
-  complement,
-  evolve,
-  filter,
+  descend,
   flatten,
-  groupBy,
-  groupWith,
-  isEmpty,
   map,
-  path,
-  pick,
   pipe,
   prop,
   propEq,
-  props,
   reduce,
-  reduceBy,
   reject,
-  sort,
-  sortBy
+  sortBy,
+  sortWith
 } from 'ramda';
 
 type Subregion = {
@@ -46,6 +37,7 @@ type Area = {
     urlCode: string;
   };
   isCountry: boolean;
+  isTopCity?: boolean;
   urlName: string;
   parentId: number;
   subregion: Subregion[];
@@ -67,9 +59,8 @@ export type DropdownOption = {
   label: string;
   group?: string;
   country: Country;
+  isTopCity?: boolean;
 };
-
-const isNotEmpty = complement(isEmpty);
 
 const locationsToCities = (acc: DropdownOption[], country: Country) =>
   pipe(
@@ -79,7 +70,8 @@ const locationsToCities = (acc: DropdownOption[], country: Country) =>
       label: area.name,
       value: area.name,
       country: area.country,
-      group: area.country.name
+      group: area.country.name,
+      isTopCity: area.isTopCity
     })),
     append(acc),
     flatten,
@@ -88,7 +80,7 @@ const locationsToCities = (acc: DropdownOption[], country: Country) =>
     //@ts-ignore
   )(country);
 
-export const generateCityOptions = (locations: any) =>
+export const generateCityOptions = (locations: LocationOptions) =>
   reduce<Country, DropdownOption[]>(
     //@ts-ignore
     locationsToCities,

@@ -1,8 +1,6 @@
 /** @jsx jsx */
-/** @jsxImportSource theme-ui */
-
-import { jsx } from '@emotion/react';
 import React, { useEffect, useState } from 'react';
+import { css, jsx } from '@emotion/react';
 import { BigButton } from '../../components/BigButton';
 import { format } from 'date-fns';
 import styled from '@emotion/styled';
@@ -174,7 +172,7 @@ export const Results = () => {
       )}
       {scEmbedCode && (
         <LocationSelector
-          options={cityOptions}
+          // options={cityOptions}
           onChange={handleCitySelection}
           onCurrentLocationClick={handleSearchLocationChange}
           selectedValue={searchLocation}
