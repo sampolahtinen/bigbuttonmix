@@ -4,12 +4,10 @@ import { css, jsx } from '@emotion/react';
 import { Box, Flex, Text, Divider } from 'theme-ui';
 import styled from '@emotion/styled';
 import axios from 'axios';
-import { BiCurrentLocation } from 'react-icons/bi';
 import { useNavigate } from 'react-router';
 import { animated, config, useTransition } from 'react-spring';
 
 import api from '../../api';
-import { Select } from '../../components/Select/Select';
 import { BigButton } from '../../components/BigButton';
 import { isStandalonePWARequest, getCurrentDate } from '../../utils/index';
 import { cityOptions } from '../../constants/cityOptions';
@@ -19,6 +17,7 @@ import { Routes } from '../../constants/routes';
 import { Footer } from '../../components/Footer/Footer';
 import { getDeviceLocation } from '../../app/App';
 import { Message, MessageType } from '../../components/Message/Message';
+import { LocationSelector } from '../../components/LocationSelector/LocationSelector';
 
 declare global {
   interface Window {
@@ -198,25 +197,17 @@ export const InitialView = () => {
           Raving in
         </Text>
         {!isMounting && (
-          <Select
-            options={cityOptions}
+          <LocationSelector
             onChange={handleCitySelection}
-            value={searchLocation}
+            onCurrentLocationClick={handleDeviceLocationRequest}
+            selectedValue={searchLocation}
             isLoading={isGettingLocation}
+            locatorIconPosition="end"
+            css={{
+              fontSize: theme.fontSizes[1]
+            }}
           />
         )}
-        <Divider
-          css={{
-            width: '1px',
-            height: '16px',
-            backgroundColor: 'white',
-            margin: '0 1rem'
-          }}
-        />
-        <BiCurrentLocation
-          onClick={handleDeviceLocationRequest}
-          transform="scale(1)"
-        />
       </Flex>
       {errorMessage && (
         <Message
