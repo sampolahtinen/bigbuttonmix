@@ -56,7 +56,7 @@ const getEventLinks = async (searchPageURL: string, page: Page) => {
   if (REDIS_ENABLED) {
     await redisClient.set(searchPageURL, JSON.stringify(events));
   }
-  
+
   logInfo(`Total events: ${events.length}`);
 
   return events;
@@ -234,13 +234,13 @@ export const getRandomRaEventArtists = async (
 ): Promise<RaEventDetails> => {
   try {
     const raUrl = `https://ra.co/events/${location.country}/${location.city}?week=${date}`;
-    
+
     logInfo(`Searching events on ${raUrl}`);
 
     const eventLinks = await getEventLinks(raUrl, page);
 
     if (isEmpty(eventLinks)) {
-      throw new Error(ErrorMessages.NoEvents)
+      throw new Error(ErrorMessages.NoEvents);
     }
 
     const randomEventPage = await getRandomEvent(eventLinks);
@@ -271,7 +271,7 @@ export const getRandomRaEventArtists = async (
     };
   } catch (error) {
     if (error.message === ErrorMessages.NoEvents) {
-      throw error
+      throw error;
     }
     logError('There was an unknown general error. Fetching a new event.');
     logError(JSON.stringify(error));
@@ -331,6 +331,7 @@ export const getRandomSoundcloudTrack = async (
   scArtistLink: string
 ): Promise<string> => {
   const tracks = await getSoundcloudTracks(scArtistLink);
+
   return tracks[generateRandomNumber(tracks.length)];
 };
 

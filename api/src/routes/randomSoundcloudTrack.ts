@@ -34,13 +34,6 @@ router.get(
       city
     };
 
-    // if (isDev) {
-    //   location = {
-    //     country: 'de',
-    //     city: 'berlin'
-    //   };
-    // }
-
     const page = await crawler.getPage();
 
     retryCount = 0;
@@ -57,6 +50,7 @@ router.get(
       const randomSoundcloudTrack = await getRandomSoundcloudTrack(
         randomRaEventDetails.randomEventScLink
       );
+
       logSuccess(`SOUNDCLOUD TRACK: ${randomSoundcloudTrack}`);
 
       const soundcloudOembed = await generateSoundcloudEmbed(
@@ -70,11 +64,11 @@ router.get(
         ...randomRaEventDetails
       });
     } catch (error) {
-      console.trace()
+      console.trace();
       logError(error);
 
       if (error.message === ErrorMessages.NoEvents) {
-        res.status(404).json({ message: ErrorMessages.NoEvents})
+        res.status(404).json({ message: ErrorMessages.NoEvents });
       }
 
       if (retryCount < RETRY_LIMIT) {
