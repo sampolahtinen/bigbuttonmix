@@ -53,7 +53,14 @@ export const Results = () => {
 
   useEffect(() => {
     if (location.state) {
-      setScEmbedCode(location.state.html);
+      const soundcloudSrc = location.state.html
+        // .replace('<iframe', '<iframe allow="autoplay"')
+        .replace('show_artwork=true', 'show_artwork=true&auto_play=true')
+        .split('src=')[1]
+        .replace('></iframe>', '')
+        .replaceAll('"', '');
+
+      setScEmbedCode(soundcloudSrc);
       setRaEventInformation(location.state);
       setIsLoading(false);
     }
@@ -78,11 +85,23 @@ export const Results = () => {
       const response = await api.getRandomMix({
         country: searchLocation?.country.urlCode.toLowerCase(),
         city: searchLocation?.value.toLowerCase().replace(/\s+/g, ''),
-        autoPlay: isStandalonePWARequest(),
+        // autoPlay: isStandalonePWARequest(),
+        autoPlay: true,
         date: getCurrentDate()
       });
 
-      setScEmbedCode(response.data.html);
+      const soundcloudSrc = response.data.html
+        // .replace('<iframe', '<iframe allow="autoplay"')
+        .replace(
+          'show_artwork=true',
+          'show_artwork=false&show_teaser=false&auto_play=true'
+        )
+        .split('src=')[1]
+        .replace('></iframe>', '')
+        .replaceAll('"', '');
+
+      setScEmbedCode(soundcloudSrc);
+
       setRaEventInformation(response.data);
     } catch (error) {
       if (axios.isAxiosError(error) && error.response?.status === 404) {
@@ -134,8 +153,20 @@ export const Results = () => {
         >
           <Player
             className="player"
-            dangerouslySetInnerHTML={{ __html: scEmbedCode }}
-          />
+            // dangerouslySetInnerHTML={{ __html: scEmbedCode }}
+          >
+            <iframe
+              width="100%"
+              height="300"
+              scrolling="no"
+              frameBorder="no"
+              allow="autoplay"
+              src={scEmbedCode}
+              // "https://w.soundcloud.com/player/?visual=true&url=https%3A%2F%2Fapi.soundcloud.com%2Ftracks%2F801893308&show_artwork=true"
+              // src="https://w.soundcloud.com/player/?url=https%3A//api.soundcloud.com/tracks/898463638&color=%23ff5500e&hide_related=true&show_comments=false&show_user=true&show_reposts=false&show_teaser=false&visual=false"
+              // src="https://w.soundcloud.com/player/?url=https%3A//api.soundcloud.com/tracks/898463638&color=%23ff5500&auto_play=true&hide_related=true&show_comments=false&show_user=true&show_reposts=false&show_teaser=false&visual=false"
+            ></iframe>
+          </Player>
           {raEventInformation && (
             <EventInfoContainer className="event-info-container">
               <div className="column" css={{ marginRight: '1rem' }}>
@@ -194,10 +225,6 @@ export const Results = () => {
   );
 };
 
-const Player = styled.div`
-  height: 400px;
-`;
-
 const Row = styled.div`
   margin-bottom: 1rem;
 `;
@@ -242,4 +269,8 @@ const EventInfoContainer = styled.div`
   border-bottom-right-radius: 32px;
   border-bottom-left-radius: 32px;
   box-shadow: rgb(0 0 0 / 0%) 0px 14px 28px, rgb(0 0 0 / 14%) 0px 10px 16px;
+`;
+
+const Player = styled.div`
+  height: 400px;
 `;
