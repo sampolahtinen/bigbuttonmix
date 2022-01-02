@@ -12,6 +12,7 @@
     "build:client": "yarn workspace client run build",
     "build:api": "yarn workspace api run build",
     "start:redis": "yarn workspace api run start:redis",
+    "start:client": "yarn workspace client run build && yarn workspace client run start",
     "dev:api": "yarn workspace api run dev",
     "dev:client": "yarn workspace client run dev",
     "dev:svelte": "yarn workspace client-svelte run dev",

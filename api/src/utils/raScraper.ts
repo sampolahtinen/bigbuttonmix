@@ -356,7 +356,8 @@ export const generateSoundcloudEmbed = async (
     params: {
       url: scTrackUrl,
       format: 'json',
-      auto_play: autoPlay || false,
+      auto_play: true,
+      // auto_play: autoPlay || true,
       show_teaser: false
     }
   });
@@ -367,6 +368,6 @@ export const generateSoundcloudEmbed = async (
       JSON.stringify(soundcloudEmbedResponse.data)
     );
   }
-
+  console.log(soundcloudEmbedResponse.data);
   return soundcloudEmbedResponse.data;
 };
