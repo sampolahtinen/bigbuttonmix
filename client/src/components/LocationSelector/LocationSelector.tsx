@@ -5,7 +5,7 @@ import { BiCurrentLocation } from 'react-icons/bi';
 import { Select } from '../Select';
 import { Flex, Divider } from 'theme-ui';
 import { cityOptions } from '../../constants/cityOptions';
-import { uniq, uniqBy, prop } from 'ramda';
+import { uniqBy, prop } from 'ramda';
 
 type LocationSelectorProps = {
   onChange: any;
