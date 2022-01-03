@@ -53,6 +53,8 @@ router.get(
 
       logSuccess(`SOUNDCLOUD TRACK: ${randomSoundcloudTrack}`);
 
+      console.log(randomSoundcloudTrack);
+
       const soundcloudOembed = await generateSoundcloudEmbed(
         randomSoundcloudTrack,
         // Should extendx Red.query type definitions

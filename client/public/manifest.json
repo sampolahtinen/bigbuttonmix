@@ -2,7 +2,7 @@
   "name": "Big Button Mix",
   "short_name": "BigButtonMix",
   "start_url": "/",
-  "scope": ".",
+  "scope": "/",
   "display": "standalone",
   "background_color": "#121527",
   "theme_color": "#121527",

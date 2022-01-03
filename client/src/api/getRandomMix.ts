@@ -21,7 +21,8 @@ export type SoundcloudOembedResponse = {
   html: string;
   author_name: string;
   author_url: string;
-  widgetSrc: string;
+  widget_src: string;
+  track_url: string;
 };
 
 export const getRandomMix = (params: GetRandomMixParams) => {
