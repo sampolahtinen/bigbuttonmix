@@ -11,7 +11,7 @@
     "build": "NODE_ENV=production tsc"
   },
   "engines": {
-    "node": "14.15.5",
+    "node": "16.13.1",
     "npm": "6.14.11"
   },
   "license": "MIT",

@@ -10,7 +10,8 @@
     "outDir": "./dist",
     "sourceMap": true,
     "strict": false,
-    "target": "es2017",
+    "target": "es6",
+    "lib": ["dom", "dom.iterable", "esnext"],
     "rootDir": "./src",
     "typeRoots": ["../../node_modules/@types", "./types"],
     "skipLibCheck": true

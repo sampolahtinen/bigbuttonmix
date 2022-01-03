@@ -2,7 +2,7 @@
   "name": "Big Button Mix",
   "short_name": "BigButtonMix",
   "start_url": "/",
-  "scope": "https://big-button-mix.herokuapp.com/",
+  "scope": ".",
   "display": "standalone",
   "background_color": "#121527",
   "theme_color": "#121527",

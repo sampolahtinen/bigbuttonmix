@@ -12,6 +12,7 @@ import { getDeviceLocation } from '../../app/App';
 import api from '../../api';
 import axios from 'axios';
 import { Message, MessageType } from '../../components/Message/Message';
+import { SoundcloudOembedResponse } from '../../api/getRandomMix';
 
 declare global {
   interface Window {
@@ -32,7 +33,7 @@ type EventInformation = {
 export const Results = () => {
   const [errorMessage, setErrorMessage] = useState<string>('');
   const [isLoading, setIsLoading] = useState(true);
-  const [scEmbedCode, setScEmbedCode] = useState('');
+  const [scEmbedCode, setScEmbedCode] = useState<SoundcloudOembedResponse>();
   const location = useLocation();
 
   const [searchLocation, setSearchLocation] = useState<
@@ -53,27 +54,13 @@ export const Results = () => {
 
   useEffect(() => {
     if (location.state) {
-      const soundcloudSrc = location.state.html
-        // .replace('<iframe', '<iframe allow="autoplay"')
-        .replace('show_artwork=true', 'show_artwork=true&auto_play=true')
-        .split('src=')[1]
-        .replace('></iframe>', '')
-        .replaceAll('"', '');
+      const soundcloudSrc = location.state;
 
       setScEmbedCode(soundcloudSrc);
       setRaEventInformation(location.state);
       setIsLoading(false);
     }
   }, [location]);
-
-  const isStandalonePWARequest = () => {
-    const isPWAiOS =
-      //@ts-ignore
-      'standalone' in window.navigator && window.navigator['standalone'];
-    const isPWAChrome = window.matchMedia('(display-mode: standalone)').matches;
-
-    return isPWAiOS || isPWAChrome;
-  };
 
   const getCurrentDate = () => format(new Date(), 'yyyy-MM-dd');
 
@@ -85,22 +72,11 @@ export const Results = () => {
       const response = await api.getRandomMix({
         country: searchLocation?.country.urlCode.toLowerCase(),
         city: searchLocation?.value.toLowerCase().replace(/\s+/g, ''),
-        // autoPlay: isStandalonePWARequest(),
         autoPlay: true,
         date: getCurrentDate()
       });
 
-      const soundcloudSrc = response.data.html
-        // .replace('<iframe', '<iframe allow="autoplay"')
-        .replace(
-          'show_artwork=true',
-          'show_artwork=false&show_teaser=false&auto_play=true'
-        )
-        .split('src=')[1]
-        .replace('></iframe>', '')
-        .replaceAll('"', '');
-
-      setScEmbedCode(soundcloudSrc);
+      setScEmbedCode(response.data);
 
       setRaEventInformation(response.data);
     } catch (error) {
@@ -157,14 +133,11 @@ export const Results = () => {
           >
             <iframe
               width="100%"
-              height="300"
+              height="100%"
               scrolling="no"
               frameBorder="no"
               allow="autoplay"
-              src={scEmbedCode}
-              // "https://w.soundcloud.com/player/?visual=true&url=https%3A%2F%2Fapi.soundcloud.com%2Ftracks%2F801893308&show_artwork=true"
-              // src="https://w.soundcloud.com/player/?url=https%3A//api.soundcloud.com/tracks/898463638&color=%23ff5500e&hide_related=true&show_comments=false&show_user=true&show_reposts=false&show_teaser=false&visual=false"
-              // src="https://w.soundcloud.com/player/?url=https%3A//api.soundcloud.com/tracks/898463638&color=%23ff5500&auto_play=true&hide_related=true&show_comments=false&show_user=true&show_reposts=false&show_teaser=false&visual=false"
+              src={scEmbedCode.widgetSrc}
             ></iframe>
           </Player>
           {raEventInformation && (
@@ -203,7 +176,6 @@ export const Results = () => {
       )}
       {scEmbedCode && (
         <LocationSelector
-          // options={cityOptions}
           onChange={handleCitySelection}
           onCurrentLocationClick={handleSearchLocationChange}
           selectedValue={searchLocation}
@@ -272,5 +244,5 @@ const EventInfoContainer = styled.div`
 `;
 
 const Player = styled.div`
-  height: 400px;
+  height: 45vh;
 `;

@@ -9,7 +9,7 @@ import { animated, config, useTransition } from 'react-spring';
 
 import api from '../../api';
 import { BigButton } from '../../components/BigButton';
-import { isStandalonePWARequest, getCurrentDate } from '../../utils/index';
+import { getCurrentDate } from '../../utils/index';
 import { cityOptions } from '../../constants/cityOptions';
 import { DropdownOption } from '../../utils/generateCityOptions';
 import { theme } from '../../styles/theme';
@@ -75,7 +75,7 @@ export const InitialView = () => {
       const response = await api.getRandomMix({
         country: searchLocation?.country.urlCode.toLowerCase(),
         city: searchLocation?.value.toLowerCase().replace(/\s+/g, ''),
-        autoPlay: isStandalonePWARequest(),
+        autoPlay: true,
         date: getCurrentDate()
       });
 
