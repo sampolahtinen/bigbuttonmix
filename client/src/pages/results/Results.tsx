@@ -12,8 +12,7 @@ import { getDeviceLocation } from '../../app/App';
 import api from '../../api';
 import axios from 'axios';
 import { Message, MessageType } from '../../components/Message/Message';
-import { SoundcloudOembedResponse } from '../../api/getRandomMix';
-import { isEmpty } from 'ramda';
+import { RandomMixResponse } from '../../api/getRandomMix';
 
 declare global {
   interface Window {
@@ -21,42 +20,28 @@ declare global {
       standalone: string;
     };
   }
-  // interface SC {
-  //   Navigator: {
-  //     standalone: string;
-  //   };
-  // }
 }
-
-type EventInformation = {
-  eventLink: string;
-  venue: string;
-  title: string;
-  date: string;
-  openingHours: string;
-};
 
 export const Results = () => {
   const [errorMessage, setErrorMessage] = useState<string>('');
 
   const [isLoading, setIsLoading] = useState(true);
 
-  const [
-    soundcloudData,
-    setSoundcloudData
-  ] = useState<SoundcloudOembedResponse>();
+  const [soundcloudData, setSoundcloudData] = useState<
+    RandomMixResponse['soundcloud']
+  >();
 
-  const location = useLocation();
+  const location = (useLocation() as unknown) as { state: RandomMixResponse };
 
   const [searchLocation, setSearchLocation] = useState<
     DropdownOption | undefined
   >(undefined);
 
   const [raEventInformation, setRaEventInformation] = useState<
-    EventInformation | undefined
+    RandomMixResponse['event'] | undefined
   >(undefined);
 
-  const scWidget = useRef<any>();
+  const scWidget = useRef<SC.SoundCloudWidget>();
 
   const getCurrentDate = () => format(new Date(), 'yyyy-MM-dd');
 
@@ -76,18 +61,20 @@ export const Results = () => {
         scWidget.current.pause();
       }
 
-      setSoundcloudData(response.data);
+      setSoundcloudData(response.data.soundcloud);
 
-      scWidget.current.load(response.data.track_url, {
-        show_teaser: false,
-        show_artwork: true,
-        auto_play: true,
-        hide_related: true,
-        visual: true,
-        callback: () => scWidget.current.play()
-      });
+      if (scWidget.current) {
+        scWidget.current.load(response.data.soundcloud.track_url, {
+          show_teaser: false,
+          show_artwork: true,
+          auto_play: true,
+          hide_related: true,
+          visual: true,
+          callback: () => scWidget.current?.play()
+        });
+      }
 
-      setRaEventInformation(response.data);
+      setRaEventInformation(response.data.event);
     } catch (error) {
       if (axios.isAxiosError(error) && error.response?.status === 404) {
         setErrorMessage('No events found for given location. Try another one!');
@@ -151,9 +138,7 @@ export const Results = () => {
 
   const iframeRef = useCallback(iframe => {
     if (iframe !== null) {
-      //@ts-ignore
       const widget = SC.Widget(iframe);
-      //@ts-ignore
       widget.bind(SC.Widget.Events.READY, () => widget.play());
       scWidget.current = widget;
     }
@@ -161,8 +146,8 @@ export const Results = () => {
 
   useEffect(() => {
     if (location.state) {
-      setSoundcloudData(location.state);
-      setRaEventInformation(location.state);
+      setSoundcloudData(location.state.soundcloud);
+      setRaEventInformation(location.state.event);
       setIsLoading(false);
     }
   }, [location]);

@@ -10,6 +10,34 @@ declare namespace NodeJS {
   }
 }
 
+interface SC {
+  Widget: {
+    Events: any;
+  };
+}
+
+declare namespace SC {
+  type AnyFunction = (...args: any[]) => any;
+
+  type SoundCloudWidget = {
+    bind: (event: string, cb: AnyFunction) => void;
+    play: () => void;
+    load: (src: string, options: any) => void;
+    pause: () => null;
+  };
+
+  const Widget = (node: Element) => ({
+    bind: (event: string, cb: any) => null,
+    play: () => null,
+    pause: () => null,
+    load: (src: string, options?: EmbedOptions) => null
+  });
+
+  Widget.Events = {
+    READY: ''
+  };
+}
+
 declare module '*.ttf' {
   const src: string;
   export default src;

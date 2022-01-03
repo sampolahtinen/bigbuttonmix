@@ -5,7 +5,7 @@ import { BiCurrentLocation } from 'react-icons/bi';
 import { Select } from '../Select';
 import { Flex, Divider } from 'theme-ui';
 import { cityOptions } from '../../constants/cityOptions';
-import { uniq } from 'ramda';
+import { uniq, uniqBy, prop } from 'ramda';
 
 type LocationSelectorProps = {
   onChange: any;
@@ -33,7 +33,7 @@ export const LocationSelector = ({
     },
     {
       groupLabel: 'All',
-      list: uniq(cityOptions)
+      list: uniqBy(prop('value'), cityOptions)
     }
   ];
   return (

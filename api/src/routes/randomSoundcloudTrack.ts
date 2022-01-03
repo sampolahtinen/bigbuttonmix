@@ -62,8 +62,8 @@ router.get(
       );
 
       res.json({
-        ...soundcloudOembed,
-        ...randomRaEventDetails
+        soundcloud: soundcloudOembed,
+        event: randomRaEventDetails
       });
     } catch (error) {
       console.trace();
