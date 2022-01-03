@@ -13,6 +13,22 @@ import { REDIS_ENABLED, ErrorMessages } from '../constants';
 
 const generateRandomNumber = (max: number) => Math.floor(Math.random() * max);
 
+type SoundcloudOembedResponse = {
+  version: number;
+  type: string;
+  provider_name: string;
+  provider_url: string;
+  height: string;
+  width: string;
+  title: string;
+  description: string;
+  thumbnail_url: string;
+  html: string;
+  author_name: string;
+  author_url: string;
+  widgetSrc: string;
+};
+
 const puppetRequest = async (
   page: Page,
   eventUrl: string,
@@ -305,7 +321,6 @@ export const getSoundcloudTracks = async (
   logInfo(`scUserID ${scUserID}`);
 
   const client_id = 'iZIs9mchVcX5lhVRyQGGAYlNPVldzAoX';
-  // const client_id = 'o2BWXZ9TFWJtTjM1cF9OvS5BEYPk1hBS';
   // We could look into a better way to manage client IDs. One option is to use the youtube api
 
   const api_v2_url = `https://api-v2.soundcloud.com/users/${scUserID[0]}/tracks?representation=&client_id=${client_id}&limit=20&offset=0&linked_partitioning=1&app_version=1628858614&app_locale=en`;
@@ -338,7 +353,7 @@ export const getRandomSoundcloudTrack = async (
 export const generateSoundcloudEmbed = async (
   scTrackUrl: string,
   autoPlay: boolean
-) => {
+): Promise<SoundcloudOembedResponse> => {
   if (REDIS_ENABLED) {
     const cachedEmbed = ((await redisClient.get(
       `${scTrackUrl}:embed`
@@ -352,15 +367,34 @@ export const generateSoundcloudEmbed = async (
 
   logInfo('Generating soundcloud embed');
   const soundcloudEmbedServiceUrl = 'https://soundcloud.com/oembed';
-  const soundcloudEmbedResponse = await axios.get(soundcloudEmbedServiceUrl, {
-    params: {
-      url: scTrackUrl,
-      format: 'json',
-      auto_play: true,
-      // auto_play: autoPlay || true,
-      show_teaser: false
+  const soundcloudEmbedResponse = await axios.get<SoundcloudOembedResponse>(
+    soundcloudEmbedServiceUrl,
+    {
+      params: {
+        url: scTrackUrl,
+        format: 'json',
+        auto_play: true,
+        // auto_play: autoPlay || true,
+        show_teaser: false
+      }
     }
-  });
+  );
+  /**
+   * Picking the src out of the iframe of oembed response
+   * TODO: consider RegExp implementation
+   */
+  const scWidgetSrc = soundcloudEmbedResponse.data.html
+    // picking src
+    .split('src=')[1]
+    .replace('></iframe>', '')
+    .replaceAll('"', '')
+    // adding extra params as sc oembed is buggy
+    .replace(
+      'show_artwork=true',
+      'show_artwork=true&auto_play=true&show_teaser=false'
+    );
+
+  soundcloudEmbedResponse.data.widgetSrc = scWidgetSrc;
 
   if (REDIS_ENABLED) {
     await redisClient.set(
@@ -368,6 +402,6 @@ export const generateSoundcloudEmbed = async (
       JSON.stringify(soundcloudEmbedResponse.data)
     );
   }
-  console.log(soundcloudEmbedResponse.data);
+
   return soundcloudEmbedResponse.data;
 };
