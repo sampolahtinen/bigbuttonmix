@@ -55,12 +55,16 @@ export const Select = ({
             ? (options as GroupedDropdownOption[]).map(group => (
                 <optgroup label={group.groupLabel}>
                   {group.list.map(option => (
-                    <option value={option.value}>{option.label}</option>
+                    <option key={option.value} value={option.value}>
+                      {option.label}
+                    </option>
                   ))}
                 </optgroup>
               ))
             : (options as DropdownOption[]).map(option => (
-                <option value={option.value}>{option.label}</option>
+                <option key={option.value} value={option.value}>
+                  {option.label}
+                </option>
               ))}
         </StyledSelect>
       )}

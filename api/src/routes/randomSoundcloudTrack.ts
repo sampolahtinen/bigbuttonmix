@@ -55,13 +55,13 @@ router.get(
 
       const soundcloudOembed = await generateSoundcloudEmbed(
         randomSoundcloudTrack,
-        // Should extendx Red.query type definitions
+        // Should extend Red.query type definitions
         (autoPlay as unknown) as boolean
       );
 
       res.json({
-        ...soundcloudOembed,
-        ...randomRaEventDetails
+        soundcloud: soundcloudOembed,
+        event: randomRaEventDetails
       });
     } catch (error) {
       console.trace();

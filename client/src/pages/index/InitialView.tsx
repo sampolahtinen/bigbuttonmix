@@ -18,6 +18,7 @@ import { Footer } from '../../components/Footer/Footer';
 import { getDeviceLocation } from '../../app/App';
 import { Message, MessageType } from '../../components/Message/Message';
 import { LocationSelector } from '../../components/LocationSelector/LocationSelector';
+import { RandomMixResponse } from '../../api/getRandomMix';
 
 declare global {
   interface Window {

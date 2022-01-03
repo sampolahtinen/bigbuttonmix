@@ -1,5 +1,5 @@
 /** @jsx jsx */
-import React, { useEffect, useState } from 'react';
+import React, { useCallback, useEffect, useRef, useState } from 'react';
 import { css, jsx } from '@emotion/react';
 import { BigButton } from '../../components/BigButton';
 import { format } from 'date-fns';
@@ -12,7 +12,7 @@ import { getDeviceLocation } from '../../app/App';
 import api from '../../api';
 import axios from 'axios';
 import { Message, MessageType } from '../../components/Message/Message';
-import { SoundcloudOembedResponse } from '../../api/getRandomMix';
+import { RandomMixResponse } from '../../api/getRandomMix';
 
 declare global {
   interface Window {
@@ -22,45 +22,26 @@ declare global {
   }
 }
 
-type EventInformation = {
-  eventLink: string;
-  venue: string;
-  title: string;
-  date: string;
-  openingHours: string;
-};
-
 export const Results = () => {
   const [errorMessage, setErrorMessage] = useState<string>('');
+
   const [isLoading, setIsLoading] = useState(true);
-  const [scEmbedCode, setScEmbedCode] = useState<SoundcloudOembedResponse>();
-  const location = useLocation();
+
+  const [soundcloudData, setSoundcloudData] = useState<
+    RandomMixResponse['soundcloud']
+  >();
+
+  const location = (useLocation() as unknown) as { state: RandomMixResponse };
 
   const [searchLocation, setSearchLocation] = useState<
     DropdownOption | undefined
   >(undefined);
 
   const [raEventInformation, setRaEventInformation] = useState<
-    EventInformation | undefined
+    RandomMixResponse['event'] | undefined
   >(undefined);
 
-  useEffect(() => {
-    const storedSearchLocation = localStorage.getItem('search-location');
-
-    if (storedSearchLocation) {
-      setSearchLocation(JSON.parse(storedSearchLocation));
-    }
-  }, []);
-
-  useEffect(() => {
-    if (location.state) {
-      const soundcloudSrc = location.state;
-
-      setScEmbedCode(soundcloudSrc);
-      setRaEventInformation(location.state);
-      setIsLoading(false);
-    }
-  }, [location]);
+  const scWidget = useRef<SC.SoundCloudWidget>();
 
   const getCurrentDate = () => format(new Date(), 'yyyy-MM-dd');
 
@@ -76,9 +57,24 @@ export const Results = () => {
         date: getCurrentDate()
       });
 
-      setScEmbedCode(response.data);
+      if (scWidget.current) {
+        scWidget.current.pause();
+      }
 
-      setRaEventInformation(response.data);
+      setSoundcloudData(response.data.soundcloud);
+
+      if (scWidget.current) {
+        scWidget.current.load(response.data.soundcloud.track_url, {
+          show_teaser: false,
+          show_artwork: true,
+          auto_play: true,
+          hide_related: true,
+          visual: true,
+          callback: () => scWidget.current?.play()
+        });
+      }
+
+      setRaEventInformation(response.data.event);
     } catch (error) {
       if (axios.isAxiosError(error) && error.response?.status === 404) {
         setErrorMessage('No events found for given location. Try another one!');
@@ -120,24 +116,58 @@ export const Results = () => {
     }
   };
 
+  useEffect(() => {
+    const storedSearchLocation = localStorage.getItem('search-location');
+
+    if (storedSearchLocation) {
+      setSearchLocation(JSON.parse(storedSearchLocation));
+    }
+  }, []);
+
+  /**
+   * On initial render, when the data received from initial page,
+   * has been stored to local state, iframe renders.
+   * Once iframe has been rendered and SoundCloud widget has been mounted,
+   * we can listen to READY event and trigger play.
+   *
+   * Once widget has been loaded, we store it to a ref for accessing it later.
+   *
+   * Instead of using useRef and useEffect, React docs advise to use callback
+   * https://reactjs.org/docs/hooks-faq.html#how-can-i-measure-a-dom-node
+   */
+
+  const iframeRef = useCallback(iframe => {
+    if (iframe !== null) {
+      const widget = SC.Widget(iframe);
+      widget.bind(SC.Widget.Events.READY, () => widget.play());
+      scWidget.current = widget;
+    }
+  }, []);
+
+  useEffect(() => {
+    if (location.state) {
+      setSoundcloudData(location.state.soundcloud);
+      setRaEventInformation(location.state.event);
+      setIsLoading(false);
+    }
+  }, [location]);
+
   return (
     <React.Fragment>
-      {scEmbedCode && (
+      {soundcloudData?.widget_src && (
         <div
           className="soundcloud-embedded-player"
           css={{ paddingBottom: '1rem', width: '100%' }}
         >
-          <Player
-            className="player"
-            // dangerouslySetInnerHTML={{ __html: scEmbedCode }}
-          >
+          <Player className="player">
             <iframe
+              ref={iframeRef}
               width="100%"
               height="100%"
               scrolling="no"
               frameBorder="no"
               allow="autoplay"
-              src={scEmbedCode.widgetSrc}
+              src={soundcloudData.widget_src}
             ></iframe>
           </Player>
           {raEventInformation && (
@@ -174,7 +204,7 @@ export const Results = () => {
           )}
         </div>
       )}
-      {scEmbedCode && (
+      {soundcloudData && (
         <LocationSelector
           onChange={handleCitySelection}
           onCurrentLocationClick={handleSearchLocationChange}

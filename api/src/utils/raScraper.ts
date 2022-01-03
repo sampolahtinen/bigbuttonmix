@@ -26,7 +26,8 @@ type SoundcloudOembedResponse = {
   html: string;
   author_name: string;
   author_url: string;
-  widgetSrc: string;
+  widget_src: string;
+  track_url: string;
 };
 
 const puppetRequest = async (
@@ -374,7 +375,6 @@ export const generateSoundcloudEmbed = async (
         url: scTrackUrl,
         format: 'json',
         auto_play: true,
-        // auto_play: autoPlay || true,
         show_teaser: false
       }
     }
@@ -391,10 +391,11 @@ export const generateSoundcloudEmbed = async (
     // adding extra params as sc oembed is buggy
     .replace(
       'show_artwork=true',
-      'show_artwork=true&auto_play=true&show_teaser=false'
+      'show_artwork=true&auto_play=true&show_teaser=false&hide_related=true'
     );
 
-  soundcloudEmbedResponse.data.widgetSrc = scWidgetSrc;
+  soundcloudEmbedResponse.data.widget_src = scWidgetSrc;
+  soundcloudEmbedResponse.data.track_url = scTrackUrl;
 
   if (REDIS_ENABLED) {
     await redisClient.set(
