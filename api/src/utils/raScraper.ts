@@ -1,409 +1,107 @@
-import axios from 'axios';
-import { isEmpty } from 'ramda';
-import { Page } from 'puppeteer';
-import { redisClient } from '../server';
-import { logError, logInfo, logWarning } from './logger';
-import { REDIS_ENABLED, ErrorMessages } from '../constants';
+import { ErrorMessages, RETRY_LIMIT } from '../constants';
+import { EventArgs, RandomEventResponse, RaEventDetails } from '../typeDefs';
+import { Crawler } from './Crawler';
+import { logSuccess, logError } from './logger';
+import { DataSource } from 'apollo-datasource';
 import {
-  EventArtist,
-  EventDetails,
-  EventMetaInfo,
-  RaEventDetails
-} from '../typeDefs';
+  generateSoundcloudEmbed,
+  getRandomRaEventArtists,
+  getRandomSoundcloudTrack
+} from './scrapingMethods';
 
-const generateRandomNumber = (max: number) => Math.floor(Math.random() * max);
+const s = 122;
 
-type SoundcloudOembedResponse = {
-  version: number;
-  type: string;
-  provider_name: string;
-  provider_url: string;
-  height: string;
-  width: string;
-  title: string;
-  description: string;
-  thumbnail_url: string;
-  html: string;
-  author_name: string;
-  author_url: string;
-  widget_src: string;
-  track_url: string;
-};
+export class RaScraper extends DataSource {
+  crawler: Crawler;
+  retryCount: number;
 
-const puppetRequest = async (
-  page: Page,
-  eventUrl: string,
-  cssSelector: string,
-  cb: (args: Element[]) => string[] | Record<string, string>[]
-) => {
-  logInfo(`Puppeteer scraping: ${eventUrl}`);
-  logInfo(`Using selector: ${cssSelector}`);
-
-  await page.goto(eventUrl);
-
-  const elements = await page.$$eval(cssSelector, cb);
-
-  return elements;
-};
-
-// This function fetches event links from RA and throws and error if it is empty
-const getEventLinks = async (searchPageURL: string, page: Page) => {
-  if (REDIS_ENABLED) {
-    const cachedEvents = ((await redisClient.get(
-      searchPageURL
-    )) as unknown) as any;
-
-    if (cachedEvents) {
-      logInfo(`Using cached events for ${searchPageURL}`);
-      logInfo(`Total events: ${JSON.parse(cachedEvents).length}`);
-      return JSON.parse(cachedEvents);
-    }
+  constructor(crawler: Crawler) {
+    super();
+    this.crawler = crawler;
+    this.retryCount = 0;
   }
 
-  const events = await puppetRequest(
-    page,
-    searchPageURL,
-    'h3 > a[href^="/events"]',
-    elements => elements.map(e => e.getAttribute('href'))
-  );
+  getRandomEvent = (args: EventArgs): Promise<RandomEventResponse> =>
+    new Promise(async (resolve, reject) => {
+      console.log('raFunction');
+      console.time('raFunction');
 
-  logInfo('Number of events found:');
-  logInfo(events.length);
+      let { country, city, date, autoPlay } = args;
 
-  if (REDIS_ENABLED) {
-    await redisClient.set(searchPageURL, JSON.stringify(events));
-  }
+      let location = {
+        country,
+        city
+      };
 
-  logInfo(`Total events: ${events.length}`);
+      const page = await this.crawler.getPage();
 
-  return events;
-};
+      let randomRaEventDetails: RaEventDetails;
+      let randomSoundcloudTrack: string;
+      let step = 1;
 
-const convertRSHreftoURL = async href => {
-  // Converts an RS href into a URL
-  const baseRaUrl = 'https://ra.co';
-  const eventUrl = `${baseRaUrl}${href}`;
-  return eventUrl;
-};
+      while (step < 3 || this.retryCount === RETRY_LIMIT) {
+        try {
+          if (step === 1) {
+            randomRaEventDetails = await getRandomRaEventArtists(
+              location,
+              date,
+              page
+            );
 
-const getRandomEvent = async (eventLinks: string[]) => {
-  // Chooses a random item from the list and makes it into a URL
-  const randomNumber = generateRandomNumber(eventLinks.length);
-  const eventUrl = await convertRSHreftoURL(eventLinks[randomNumber]);
-  return eventUrl;
-};
+            logSuccess(
+              `SOUNDCLOUD LINK: ${randomRaEventDetails.randomEventScLink}`
+            );
+            step = 2;
+          }
 
-const getSoundCloudLinkFromArtist = async (page: Page, artistUrl: string) => {
-  // Reads soundcloud link from artist's RA page
-  if (REDIS_ENABLED) {
-    const cachedSoundCloud = ((await redisClient.get(
-      artistUrl
-    )) as unknown) as any;
+          if (step === 2) {
+            randomSoundcloudTrack = await getRandomSoundcloudTrack(
+              randomRaEventDetails.randomEventScLink
+            );
 
-    if (cachedSoundCloud) {
-      logInfo(`Using cached soundcloud link for ${artistUrl}`);
-      return cachedSoundCloud;
-    }
-  }
+            logSuccess(`SOUNDCLOUD TRACK: ${randomSoundcloudTrack}`);
 
-  const soundCloudLinks = await puppetRequest(
-    page,
-    artistUrl,
-    'a[href^="https://www.soundcloud.com"]',
-    elements => elements.map(elem => elem.getAttribute('href'))
-  );
+            step = 3;
+          }
 
-  if (soundCloudLinks.length == 0) {
-    const message = `No soundclound link for artist ${artistUrl}`;
-    console.log(message);
-    throw message;
-  }
+          if (step === 3) {
+            throw new Error('mooock');
+            // const soundcloudOembed = await generateSoundcloudEmbed(
+            //   randomSoundcloudTrack,
+            //   autoPlay
+            // );
 
-  if (REDIS_ENABLED) {
-    await redisClient.set(artistUrl, soundCloudLinks[0]);
-    logInfo(`Caching entry for ${artistUrl}`);
-  }
-  return soundCloudLinks[0];
-};
+            // resolve({
+            //   ...randomRaEventDetails,
+            //   randomTrack: soundcloudOembed
+            // });
+          }
+        } catch (error) {
+          console.trace();
+          logError(error);
 
-const getRandomEventArtistScLink = async (
-  page: Page,
-  eventArtists: EventArtist[]
-): Promise<string> => {
-  logInfo('GETTING RANDOM SOUNDCLOUD LINK');
-  const eventArtistLinks = eventArtists.map(artist => artist.id);
-  const randomNumber = generateRandomNumber(eventArtistLinks.length);
-  const randomArtist = eventArtistLinks[randomNumber];
-  const baseRaUrl = 'https://ra.co';
-  const randomArtistURL = baseRaUrl + randomArtist;
+          if (error.message === ErrorMessages.NoEvents) {
+            reject({
+              status: 404,
+              message: ErrorMessages.NoEvents
+            });
+          }
 
-  if (isEmpty(eventArtistLinks)) {
-    return null;
-  }
-
-  try {
-    const artistSoundcloudLink = (await getSoundCloudLinkFromArtist(
-      page,
-      randomArtistURL
-    )) as string;
-
-    if (!artistSoundcloudLink) {
-      const reducedEventArtists = eventArtists.filter(
-        artist => artist.id !== randomArtist
-      );
-      return getRandomEventArtistScLink(page, reducedEventArtists);
-    }
-
-    return artistSoundcloudLink;
-  } catch (error) {
-    logError('fetchRandomEventArtistScLink failed');
-    console.log(error);
-    const reducedEventArtists = eventArtists.filter(
-      artist => artist.id !== randomArtist
-    );
-    return getRandomEventArtistScLink(page, reducedEventArtists);
-  }
-};
-
-const getRaEventDetails = async (
-  page: Page,
-  eventUrl: string
-): Promise<EventDetails> => {
-  const id = eventUrl.match(/(?<=ra.co).*/gm)[0];
-  // Read event page and get artist links and other details
-
-  if (REDIS_ENABLED) {
-    const title = ((await redisClient.get(
-      `${eventUrl}:title`
-    )) as unknown) as any;
-
-    if (title) {
-      // to do: put an error catching in here so it goes to an external request
-      logInfo(`Using cached eventDetails for ${eventUrl}`);
-      const artistsString = await redisClient.get(`${eventUrl}:artists`);
-      const artists = JSON.parse(artistsString);
-
-      const metaInfoString = await redisClient.get(`${eventUrl}:meta`);
-      const metaInfo = JSON.parse(metaInfoString);
-
-      return { id, title, artists, ...metaInfo };
-    }
-  }
-
-  const artists = (await puppetRequest(
-    page,
-    eventUrl,
-    'a > span[href^="/dj"]',
-    elements =>
-      elements.map(elem => ({
-        name: elem.textContent,
-        id: elem.getAttribute('href')
-      }))
-  )) as EventArtist[];
-
-  const title = await page.title();
-
-  const metaInfoArray = await page.$$eval(
-    '[data-tracking-id=event-detail-bar] span',
-    (elements: Element[]) => {
-      return elements.map(element => element.textContent);
-    }
-  );
-
-  let metaInfo: EventMetaInfo = {
-    venue: '',
-    address: '',
-    date: '',
-    openingHours: ''
-  };
-
-  if (metaInfoArray.length > 0) {
-    metaInfo = {
-      venue: metaInfoArray[1],
-      address: metaInfoArray[2],
-      date: metaInfoArray[4],
-      openingHours: `${metaInfoArray[5]} - ${metaInfoArray[7]}`
-    };
-  }
-
-  if (artists.length == 0) {
-    const message = 'No artists found in event page: ' + eventUrl;
-    logWarning(message);
-    //throw message
-  }
-
-  if (REDIS_ENABLED) {
-    logInfo(`Caching data for event: ${eventUrl}`);
-    //logInfo('Title')
-    await redisClient.set(`${eventUrl}:title`, title);
-    //logInfo('Artists')
-    await redisClient.set(`${eventUrl}:artists`, JSON.stringify(artists));
-    //logInfo('Meta')
-    await redisClient.set(`${eventUrl}:meta`, JSON.stringify(metaInfo));
-  }
-
-  return { id, eventUrl, title, artists, ...metaInfo };
-};
-
-export const getRandomRaEventArtists = async (
-  location: { country: string; city: string },
-  date: string,
-  page: Page
-): Promise<RaEventDetails> => {
-  try {
-    const raUrl = `https://ra.co/events/${location.country}/${location.city}?week=${date}`;
-
-    logInfo(`Searching events on ${raUrl}`);
-
-    const eventLinks = await getEventLinks(raUrl, page);
-
-    if (isEmpty(eventLinks)) {
-      throw new Error(ErrorMessages.NoEvents);
-    }
-
-    const randomEventPage = await getRandomEvent(eventLinks);
-
-    let eventDetails = await getRaEventDetails(page, randomEventPage);
-
-    while (isEmpty(eventDetails.artists)) {
-      console.log('artistLinks were empty, trying again...');
-      const randomEventPage = await getRandomEvent(eventLinks);
-      eventDetails = await getRaEventDetails(page, randomEventPage);
-    }
-
-    const randomEventArtistSoundcloudLink = await getRandomEventArtistScLink(
-      page,
-      eventDetails.artists
-    );
-
-    logInfo(`ARTIST SOUNDCLOUD LINK: ${randomEventArtistSoundcloudLink}`);
-
-    if (!randomEventArtistSoundcloudLink) {
-      return getRandomRaEventArtists(location, date, page);
-    }
-
-    return {
-      eventLink: randomEventPage,
-      randomEventScLink: randomEventArtistSoundcloudLink,
-      ...eventDetails
-    };
-  } catch (error) {
-    if (error.message === ErrorMessages.NoEvents) {
-      throw error;
-    }
-    logError('There was an unknown general error. Fetching a new event.');
-    logError(JSON.stringify(error));
-  }
-};
-
-/**
- * Soundcloud scrape
- */
-export const getSoundcloudTracks = async (
-  scArtistLink: string
-): Promise<string[]> => {
-  if (REDIS_ENABLED) {
-    const cachedTrackLinks = ((await redisClient.get(
-      `${scArtistLink}:tracks`
-    )) as unknown) as any;
-
-    if (cachedTrackLinks) {
-      logInfo(`Using cached tracks for ${scArtistLink}`);
-      return JSON.parse(cachedTrackLinks);
-    }
-  }
-
-  logInfo('Requesting page from Soundcloud');
-  console.time('SC tracks page');
-  const scPageString = await axios.get(`${scArtistLink}/tracks/`);
-  logInfo(`Tracks page request status ${scPageString.status}`);
-  console.timeEnd('SC tracks page');
-
-  const scUserID = scPageString.data.match(/(?<=soundcloud:users:)\d+/g);
-  logInfo(`scUserID ${scUserID}`);
-
-  const client_id = 'iZIs9mchVcX5lhVRyQGGAYlNPVldzAoX';
-  // We could look into a better way to manage client IDs. One option is to use the youtube api
-
-  const api_v2_url = `https://api-v2.soundcloud.com/users/${scUserID[0]}/tracks?representation=&client_id=${client_id}&limit=20&offset=0&linked_partitioning=1&app_version=1628858614&app_locale=en`;
-
-  /**
-   * Testing of fetching soundcloud tracks via axios
-   */
-  // const d2 = await axios.get('https://m.soundcloud.com/loyd/tracks');
-  // console.log(d2);
-
-  const d = await axios.get(api_v2_url);
-  logInfo(`Tracks api request status ${d.status}`);
-  const tracks = d.data.collection.map(entry => entry.permalink_url);
-
-  if (REDIS_ENABLED) {
-    logInfo(`Caching track URLs for ${scArtistLink}:tracks`);
-    await redisClient.set(`${scArtistLink}:tracks`, JSON.stringify(tracks));
-  }
-  return tracks;
-};
-
-export const getRandomSoundcloudTrack = async (
-  scArtistLink: string
-): Promise<string> => {
-  const tracks = await getSoundcloudTracks(scArtistLink);
-
-  return tracks[generateRandomNumber(tracks.length)];
-};
-
-export const generateSoundcloudEmbed = async (
-  scTrackUrl: string,
-  autoPlay: boolean
-): Promise<SoundcloudOembedResponse> => {
-  if (REDIS_ENABLED) {
-    const cachedEmbed = ((await redisClient.get(
-      `${scTrackUrl}:embed`
-    )) as unknown) as any;
-
-    if (cachedEmbed) {
-      logInfo(`Using cached soundcloud embed for ${scTrackUrl}`);
-      return JSON.parse(cachedEmbed);
-    }
-  }
-
-  logInfo('Generating soundcloud embed');
-  const soundcloudEmbedServiceUrl = 'https://soundcloud.com/oembed';
-  const soundcloudEmbedResponse = await axios.get<SoundcloudOembedResponse>(
-    soundcloudEmbedServiceUrl,
-    {
-      params: {
-        url: scTrackUrl,
-        format: 'json',
-        auto_play: true,
-        show_teaser: false
+          if (this.retryCount < RETRY_LIMIT) {
+            logError('GENERAL ERROR. RETRYING PREVIOUS REQUEST!');
+            this.retryCount = this.retryCount + 1;
+            setTimeout(() => {
+              step = 1;
+            }, 300);
+          } else {
+            reject({
+              status: 408,
+              message: 'Timeout'
+            });
+          }
+        }
       }
-    }
-  );
-  /**
-   * Picking the src out of the iframe of oembed response
-   * TODO: consider RegExp implementation
-   */
-  const scWidgetSrc = soundcloudEmbedResponse.data.html
-    // picking src
-    .split('src=')[1]
-    .replace('></iframe>', '')
-    .replaceAll('"', '')
-    // adding extra params as sc oembed is buggy
-    .replace(
-      'show_artwork=true',
-      'show_artwork=true&auto_play=true&show_teaser=false&hide_related=true'
-    );
 
-  soundcloudEmbedResponse.data.widget_src = scWidgetSrc;
-  soundcloudEmbedResponse.data.track_url = scTrackUrl;
-
-  if (REDIS_ENABLED) {
-    await redisClient.set(
-      `${scTrackUrl}:embed`,
-      JSON.stringify(soundcloudEmbedResponse.data)
-    );
-  }
-
-  return soundcloudEmbedResponse.data;
-};
+      console.timeEnd('raFunction');
+    });
+}

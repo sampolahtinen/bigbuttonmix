@@ -1,15 +1,15 @@
-import { PORT, REDIS_ENABLED } from './constants';
-import { schema } from './schema';
 import { ApolloServer } from 'apollo-server';
 import redis from 'redis';
 import dotenv from 'dotenv';
 import util from 'util';
-import { getRandomEvent } from './utils/scrapeRandomEvent';
-import { DataSource } from 'apollo-datasource';
-import { RaScraper } from './typeDefs';
+import chalk from 'chalk';
+import { REDIS_ENABLED } from './constants';
+import { schema } from './schema';
+import { RaScraper } from './utils/RaScraper';
+import { Crawler } from './utils/Crawler';
 
 dotenv.config();
-console.log(process.env.NODE_ENV);
+console.log(`${chalk.blue('ENVIRONMENT:')} ${process.env.NODE_ENV}`);
 
 let redisClient;
 
@@ -29,26 +29,19 @@ if (REDIS_ENABLED) {
 
 export { redisClient };
 
-class RaScraper extends DataSource {
-  constructor() {
-    super();
-  }
-  getRandomEvent(args) {
-    return getRandomEvent(args);
-  }
-}
+const crawler = new Crawler();
 
-const dataSources = () => ({
-  raScraper: new RaScraper()
-});
+crawler.init().then(() => {
+  const dataSources = () => ({
+    raScraper: new RaScraper(crawler)
+  });
 
-const server = new ApolloServer({
-  schema,
-  dataSources
-});
+  const server = new ApolloServer({
+    schema,
+    dataSources
+  });
 
-const port = process.env.PORT || 4000;
-
-server.listen().then(({ url }) => {
-  console.log(`🚀 Server ready at ${url}`);
+  server.listen().then(({ url }) => {
+    console.log(chalk.green(`🚀 Server ready at ${url}`));
+  });
 });

@@ -4,18 +4,23 @@
     "noImplicitAny": false,
     "moduleResolution": "node",
     "allowJs": true,
-    "module": "commonjs",
+    "module": "esnext",
     "noImplicitReturns": false,
     "noUnusedLocals": false,
     "outDir": "./dist",
     "sourceMap": true,
     "strict": false,
-    "target": "es6",
+    "target": "es2017",
     "lib": ["dom", "dom.iterable", "esnext"],
     "rootDir": "./src",
     "typeRoots": ["../../node_modules/@types", "./types"],
     "skipLibCheck": true
   },
   "include": ["src", "./types"],
-  "exclude": ["node_modules"]
+  "exclude": ["node_modules"],
+  "ts-node": {
+    "compilerOptions": {
+      "module": "commonjs"
+    }
+  }
 }
