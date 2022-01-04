@@ -2,10 +2,10 @@ import {
   getRandomRaEventArtists,
   getRandomSoundcloudTrack,
   generateSoundcloudEmbed
-} from '../utils/raScraper';
+} from './raScraper';
 import { RETRY_LIMIT, ErrorMessages } from '../constants';
-import { Crawler } from '../utils/Crawler';
-import { logSuccess, logError } from '../utils/logger';
+import { Crawler } from './Crawler';
+import { logSuccess, logError } from './logger';
 import { EventArgs, RaEventDetails, RandomEventResponse } from '../typeDefs';
 
 console.log('Starting crawler');

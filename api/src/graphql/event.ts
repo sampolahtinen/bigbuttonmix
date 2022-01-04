@@ -1,5 +1,4 @@
 import { extendType, objectType, nonNull, stringArg, booleanArg } from 'nexus';
-import { getRandomEvent } from '../routes/randomSoundcloudTrack';
 
 export const Artist = objectType({
   name: 'Artist',
