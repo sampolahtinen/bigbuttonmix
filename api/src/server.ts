@@ -1,13 +1,9 @@
 import { PORT, REDIS_ENABLED } from './constants';
-import express from 'express';
-import cookieParser from 'cookie-parser';
-import cors from 'cors';
+import { schema } from './schema';
+import { ApolloServer } from 'apollo-server';
 import redis from 'redis';
 import dotenv from 'dotenv';
 import util from 'util';
-import booleanParser from 'express-query-boolean';
-import { randomSoundcloudTrackRoute } from './routes';
-
 dotenv.config();
 console.log(process.env.NODE_ENV);
 
@@ -29,16 +25,12 @@ if (REDIS_ENABLED) {
 
 export { redisClient };
 
-const app = express();
+const server = new ApolloServer({
+  schema
+});
 
-app.use(cors());
+const port = process.env.PORT || 4000;
 
-app.use(express.json());
-app.use(express.urlencoded({ extended: true }));
-app.use(booleanParser());
-app.use(cookieParser());
-app.use(randomSoundcloudTrackRoute);
-
-app.listen(PORT, () => {
-  console.log(`Server listening at http://localhost:${PORT}`);
+server.listen().then(({ url }) => {
+  console.log(`🚀 Server ready at ${url}`);
 });

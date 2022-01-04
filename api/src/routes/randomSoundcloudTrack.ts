@@ -1,5 +1,3 @@
-import router from './router';
-import { Request, Response } from 'express-async-router';
 import {
   getRandomRaEventArtists,
   getRandomSoundcloudTrack,
@@ -7,8 +5,8 @@ import {
 } from '../utils/raScraper';
 import { RETRY_LIMIT, ErrorMessages } from '../constants';
 import { Crawler } from '../utils/Crawler';
-import { logSuccess, logError, logWarning } from '../utils/logger';
-import { isDev } from '../utils';
+import { logSuccess, logError } from '../utils/logger';
+import { RaEventDetails } from '../types';
 
 console.log('Starting crawler');
 const crawler = new Crawler();
@@ -20,16 +18,22 @@ type Location = {
   country: string;
   city: string;
 };
-// This is the endpoint for the client to interact with the server
-router.get(
-  '/api/random-soundcloud-track',
-  async (req: Request, res: Response) => {
+
+type EventArgs = {
+  city: string;
+  country: string;
+  date: string; // Format: "2022-01-04" YYYY-MM-DD
+  autoPlay?: boolean;
+};
+
+export const getRandomEvent = (args: EventArgs) =>
+  new Promise(async (resolve, reject) => {
     console.log('raFunction');
     console.time('raFunction');
 
-    let { country, city, date, autoPlay } = req.query;
+    let { country, city, date, autoPlay } = args;
 
-    let location = {
+    let location: Location = {
       country,
       city
     };
@@ -38,50 +42,74 @@ router.get(
 
     retryCount = 0;
 
-    try {
-      const randomRaEventDetails = await getRandomRaEventArtists(
-        location as Location,
-        date as string,
-        page
-      );
+    let randomRaEventDetails: RaEventDetails;
+    let randomSoundcloudTrack: string;
 
-      logSuccess(`SOUNDCLOUD LINK: ${randomRaEventDetails.randomEventScLink}`);
+    let step = 1;
 
-      const randomSoundcloudTrack = await getRandomSoundcloudTrack(
-        randomRaEventDetails.randomEventScLink
-      );
+    while (step < 3) {
+      try {
+        if (step === 1) {
+          randomRaEventDetails = await getRandomRaEventArtists(
+            location,
+            date,
+            page
+          );
 
-      logSuccess(`SOUNDCLOUD TRACK: ${randomSoundcloudTrack}`);
+          logSuccess(
+            `SOUNDCLOUD LINK: ${randomRaEventDetails.randomEventScLink}`
+          );
+          step = 2;
+        }
 
-      const soundcloudOembed = await generateSoundcloudEmbed(
-        randomSoundcloudTrack,
-        // Should extend Red.query type definitions
-        (autoPlay as unknown) as boolean
-      );
+        if (step === 2) {
+          randomSoundcloudTrack = await getRandomSoundcloudTrack(
+            randomRaEventDetails.randomEventScLink
+          );
 
-      res.json({
-        soundcloud: soundcloudOembed,
-        event: randomRaEventDetails
-      });
-    } catch (error) {
-      console.trace();
-      logError(error);
+          logSuccess(`SOUNDCLOUD TRACK: ${randomSoundcloudTrack}`);
 
-      if (error.message === ErrorMessages.NoEvents) {
-        res.status(404).json({ message: ErrorMessages.NoEvents });
-      }
+          step = 3;
+        }
 
-      if (retryCount < RETRY_LIMIT) {
-        logError('GENERAL ERROR. RETRYING PREVIOUS REQUEST!');
-        retryCount++;
-        res.redirect(req.originalUrl);
-      } else {
-        res.status(408).json('Request Timeout');
+        if ((step = 3)) {
+          const soundcloudOembed = await generateSoundcloudEmbed(
+            randomSoundcloudTrack,
+            // Should extend Red.query type definitions
+            autoPlay
+          );
+
+          // resolve(randomRaEventDetails);
+          resolve({
+            ...randomRaEventDetails,
+            randomTrack: soundcloudOembed
+          });
+        }
+      } catch (error) {
+        console.trace();
+        logError(error);
+
+        if (error.message === ErrorMessages.NoEvents) {
+          reject({
+            status: 404,
+            message: ErrorMessages.NoEvents
+          });
+        }
+
+        if (retryCount < RETRY_LIMIT) {
+          logError('GENERAL ERROR. RETRYING PREVIOUS REQUEST!');
+          setTimeout(() => {
+            retryCount++;
+            step = 1;
+          }, 300);
+        } else {
+          reject({
+            status: 408,
+            message: 'Timeout'
+          });
+        }
       }
     }
 
     console.timeEnd('raFunction');
-  }
-);
-
-export default router;
+  });

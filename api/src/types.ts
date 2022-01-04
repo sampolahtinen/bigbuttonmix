@@ -7,10 +7,12 @@ export type EventMetaInfo = {
 
 export type EventArtist = {
   name: string;
-  profileLink: string;
+  id: string;
 };
 
 export type EventDetails = {
+  id: string;
+  eventUrl: string;
   title: string;
   artists: EventArtist[];
 } & Partial<EventMetaInfo>;

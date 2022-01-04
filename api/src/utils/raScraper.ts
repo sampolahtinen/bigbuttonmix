@@ -131,7 +131,7 @@ const getRandomEventArtistScLink = async (
   eventArtists: EventArtist[]
 ): Promise<string> => {
   logInfo('GETTING RANDOM SOUNDCLOUD LINK');
-  const eventArtistLinks = eventArtists.map(artist => artist.profileLink);
+  const eventArtistLinks = eventArtists.map(artist => artist.id);
   const randomNumber = generateRandomNumber(eventArtistLinks.length);
   const randomArtist = eventArtistLinks[randomNumber];
   const baseRaUrl = 'https://ra.co';
@@ -149,7 +149,7 @@ const getRandomEventArtistScLink = async (
 
     if (!artistSoundcloudLink) {
       const reducedEventArtists = eventArtists.filter(
-        artist => artist.profileLink !== randomArtist
+        artist => artist.id !== randomArtist
       );
       return getRandomEventArtistScLink(page, reducedEventArtists);
     }
@@ -159,7 +159,7 @@ const getRandomEventArtistScLink = async (
     logError('fetchRandomEventArtistScLink failed');
     console.log(error);
     const reducedEventArtists = eventArtists.filter(
-      artist => artist.profileLink !== randomArtist
+      artist => artist.id !== randomArtist
     );
     return getRandomEventArtistScLink(page, reducedEventArtists);
   }
@@ -169,6 +169,7 @@ const getRaEventDetails = async (
   page: Page,
   eventUrl: string
 ): Promise<EventDetails> => {
+  const id = eventUrl.match(/(?<=ra.co).*/gm)[0];
   // Read event page and get artist links and other details
 
   if (REDIS_ENABLED) {
@@ -185,7 +186,7 @@ const getRaEventDetails = async (
       const metaInfoString = await redisClient.get(`${eventUrl}:meta`);
       const metaInfo = JSON.parse(metaInfoString);
 
-      return { title, artists, ...metaInfo };
+      return { id, title, artists, ...metaInfo };
     }
   }
 
@@ -196,7 +197,7 @@ const getRaEventDetails = async (
     elements =>
       elements.map(elem => ({
         name: elem.textContent,
-        profileLink: elem.getAttribute('href')
+        id: elem.getAttribute('href')
       }))
   )) as EventArtist[];
 
@@ -241,7 +242,7 @@ const getRaEventDetails = async (
     await redisClient.set(`${eventUrl}:meta`, JSON.stringify(metaInfo));
   }
 
-  return { title, artists, ...metaInfo };
+  return { id, eventUrl, title, artists, ...metaInfo };
 };
 
 export const getRandomRaEventArtists = async (
