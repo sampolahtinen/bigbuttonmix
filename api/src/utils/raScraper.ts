@@ -1,15 +1,15 @@
 import axios from 'axios';
 import { isEmpty } from 'ramda';
 import { Page } from 'puppeteer';
-import {
-  EventDetails,
-  EventMetaInfo,
-  RaEventDetails,
-  EventArtist
-} from '../types';
 import { redisClient } from '../server';
 import { logError, logInfo, logWarning } from './logger';
 import { REDIS_ENABLED, ErrorMessages } from '../constants';
+import {
+  EventArtist,
+  EventDetails,
+  EventMetaInfo,
+  RaEventDetails
+} from '../typeDefs';
 
 const generateRandomNumber = (max: number) => Math.floor(Math.random() * max);
 

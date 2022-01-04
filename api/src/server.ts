@@ -4,6 +4,9 @@ import { ApolloServer } from 'apollo-server';
 import redis from 'redis';
 import dotenv from 'dotenv';
 import util from 'util';
+import { getRandomEvent } from './routes/randomSoundcloudTrack';
+import { DataSource } from 'apollo-datasource';
+
 dotenv.config();
 console.log(process.env.NODE_ENV);
 
@@ -25,8 +28,28 @@ if (REDIS_ENABLED) {
 
 export { redisClient };
 
+const dataSources = () => ({
+  raScraper: {
+    getRandomEvent
+  }
+});
+
+class RaScraper extends DataSource {
+  constructor() {
+    super();
+  }
+  getRandomEvent(args) {
+    return getRandomEvent(args);
+  }
+}
+
 const server = new ApolloServer({
-  schema
+  schema,
+  dataSources: () => {
+    return {
+      raScraper: new RaScraper()
+    };
+  }
 });
 
 const port = process.env.PORT || 4000;

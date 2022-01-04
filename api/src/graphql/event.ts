@@ -71,7 +71,8 @@ export const EventQuery = extendType({
     t.field('randomEvent', {
       type: 'Event',
       args: eventArgs,
-      resolve: async (_, args) => getRandomEvent(args)
+      resolve: async (_, args, ctx) =>
+        ctx.dataSources.raScraper.getRandomEvent(args)
     });
   }
 });

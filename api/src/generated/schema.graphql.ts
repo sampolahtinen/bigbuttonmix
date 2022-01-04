@@ -3,8 +3,8 @@
  * Do not make changes to this file directly
  */
 
-
-
+import type * as t from "./../typeDefs"
+import type { Context } from "./../context"
 
 
 
@@ -45,14 +45,7 @@ export interface NexusGenObjects {
     venue?: string | null; // String
   }
   Query: {};
-  SoundCloudMeta: { // root type
-    author_url?: string | null; // String
-    description?: string | null; // String
-    thumbnail_url?: string | null; // String
-    title?: string | null; // String
-    track_url?: string | null; // String
-    widget_src?: string | null; // String
-  }
+  SoundCloudMeta: t.SoundCloudMeta;
 }
 
 export interface NexusGenInterfaces {
@@ -167,7 +160,7 @@ export type NexusGenFeaturesConfig = {
 }
 
 export interface NexusGenTypes {
-  context: any;
+  context: Context;
   inputTypes: NexusGenInputs;
   rootTypes: NexusGenRootTypes;
   inputTypeShapes: NexusGenInputs & NexusGenEnums & NexusGenScalars;

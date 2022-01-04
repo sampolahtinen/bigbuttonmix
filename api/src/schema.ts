@@ -7,7 +7,20 @@ export const schema = makeSchema({
   outputs: {
     schema: path.join(__dirname, '/generated/nexus-typegen.ts'),
     typegen: path.join(__dirname, '/generated/schema.graphql.ts')
+  },
+  sourceTypes: {
+    modules: [
+      {
+        module: path.join(__dirname, 'typeDefs.ts'),
+        alias: 't'
+      }
+    ]
+  },
+  contextType: {
+    module: path.join(__dirname, 'context.ts'),
+    export: 'Context'
   }
+
   // plugins: [
   //   nullabilityGuardPlugin({
   //     shouldGuard: true,

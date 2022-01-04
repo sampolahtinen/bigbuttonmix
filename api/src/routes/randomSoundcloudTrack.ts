@@ -6,7 +6,7 @@ import {
 import { RETRY_LIMIT, ErrorMessages } from '../constants';
 import { Crawler } from '../utils/Crawler';
 import { logSuccess, logError } from '../utils/logger';
-import { RaEventDetails } from '../types';
+import { EventArgs, RaEventDetails, RandomEventResponse } from '../typeDefs';
 
 console.log('Starting crawler');
 const crawler = new Crawler();
@@ -14,26 +14,14 @@ crawler.init();
 
 let retryCount = 0;
 
-type Location = {
-  country: string;
-  city: string;
-};
-
-type EventArgs = {
-  city: string;
-  country: string;
-  date: string; // Format: "2022-01-04" YYYY-MM-DD
-  autoPlay?: boolean;
-};
-
-export const getRandomEvent = (args: EventArgs) =>
+export const getRandomEvent = (args: EventArgs): Promise<RandomEventResponse> =>
   new Promise(async (resolve, reject) => {
     console.log('raFunction');
     console.time('raFunction');
 
     let { country, city, date, autoPlay } = args;
 
-    let location: Location = {
+    let location = {
       country,
       city
     };
