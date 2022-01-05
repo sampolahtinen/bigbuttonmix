@@ -36,7 +36,7 @@ export interface NexusGenObjects {
     address?: string | null; // String
     artists?: Array<NexusGenRootTypes['Artist'] | null> | null; // [Artist]
     date?: string | null; // String
-    eventLink?: string | null; // String
+    eventUrl?: string | null; // String
     id?: string | null; // String
     openingHours?: string | null; // String
     randomEventScLink?: string | null; // String
@@ -67,7 +67,7 @@ export interface NexusGenFieldTypes {
     address: string | null; // String
     artists: Array<NexusGenRootTypes['Artist'] | null> | null; // [Artist]
     date: string | null; // String
-    eventLink: string | null; // String
+    eventUrl: string | null; // String
     id: string | null; // String
     openingHours: string | null; // String
     randomEventScLink: string | null; // String
@@ -97,7 +97,7 @@ export interface NexusGenFieldTypeNames {
     address: 'String'
     artists: 'Artist'
     date: 'String'
-    eventLink: 'String'
+    eventUrl: 'String'
     id: 'String'
     openingHours: 'String'
     randomEventScLink: 'String'

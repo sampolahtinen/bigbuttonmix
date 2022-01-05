@@ -26,7 +26,7 @@ export const Event = objectType({
   definition: t => {
     t.string('id', { description: 'The id of the event. FE: /events/12345' });
     t.string('title');
-    t.string('eventLink');
+    t.string('eventUrl');
     t.string('randomEventScLink', {
       description: "Randomly picked event's artist SoundCloud link"
     });

@@ -1,4 +1,5 @@
 import { DataSource } from 'apollo-datasource';
+
 export type Location = {
   country: string;
   city: string;
@@ -48,12 +49,28 @@ export type EventDetails = {
 } & Partial<EventMetaInfo>;
 
 export type RaEventDetails = {
-  randomEventScLink: string;
-  eventLink: string;
+  eventUrl: string;
 } & EventDetails;
 
 export type RandomEventResponse = RaEventDetails & {
   randomTrack: SoundCloudMeta;
+};
+
+export type SoundCloudOembedResponse = {
+  version: number;
+  type: string;
+  provider_name: string;
+  provider_url: string;
+  height: string;
+  width: string;
+  title: string;
+  description: string;
+  thumbnail_url: string;
+  html: string;
+  author_name: string;
+  author_url: string;
+  widget_src: string;
+  track_url: string;
 };
 
 export interface RaScraper extends DataSource {

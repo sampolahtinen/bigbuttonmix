@@ -12,7 +12,7 @@ type Event {
   address: String
   artists: [Artist]
   date: String
-  eventLink: String
+  eventUrl: String
 
   """The id of the event. FE: /events/12345"""
   id: String

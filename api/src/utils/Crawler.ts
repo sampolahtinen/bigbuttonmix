@@ -1,4 +1,4 @@
-import { Browser, Page } from 'puppeteer';
+import { Browser, Page, WrapElementHandle } from 'puppeteer';
 import puppeteer from 'puppeteer-extra';
 import { blockedDomains, minimalArgs } from './createChromiumBrowser';
 import StealthPlugin from 'puppeteer-extra-plugin-stealth';
@@ -16,7 +16,19 @@ export class Crawler {
     this.isReady = false;
   }
 
-  public async getPage() {
+  public async scrape<T = Array<string | Record<string, string>>>(
+    url: string,
+    selector: string,
+    pageFunction?: (args: Element[]) => T
+  ): Promise<Awaited<WrapElementHandle<T>>> {
+    await this.page.goto(url);
+
+    const results = await this.page.$$eval<T>(selector, pageFunction);
+
+    return results;
+  }
+
+  public async getPage(): Promise<Page> {
     if (!this.page) {
       const newPage = await this.createPage();
       return newPage;
