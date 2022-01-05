@@ -9,16 +9,28 @@ import {
   getRandomSoundcloudTrack
 } from './scrapingMethods';
 
-const s = 122;
+/**
+ *
+ * @param time string - milliseconds
+ * @returns Promise: string
+ */
+const wait = async (time: number = 100): Promise<string> =>
+  new Promise(resolve =>
+    setTimeout(() => {
+      resolve('ók');
+    }, time)
+  );
 
 export class RaScraper extends DataSource {
   crawler: Crawler;
   retryCount: number;
+  step: number;
 
   constructor(crawler: Crawler) {
     super();
     this.crawler = crawler;
     this.retryCount = 0;
+    this.step = 1;
   }
 
   getRandomEvent = (args: EventArgs): Promise<RandomEventResponse> =>
@@ -37,11 +49,10 @@ export class RaScraper extends DataSource {
 
       let randomRaEventDetails: RaEventDetails;
       let randomSoundcloudTrack: string;
-      let step = 1;
 
-      while (step < 3 || this.retryCount === RETRY_LIMIT) {
+      while (this.step < 3 || this.retryCount !== RETRY_LIMIT) {
         try {
-          if (step === 1) {
+          if (this.step === 1) {
             randomRaEventDetails = await getRandomRaEventArtists(
               location,
               date,
@@ -51,30 +62,29 @@ export class RaScraper extends DataSource {
             logSuccess(
               `SOUNDCLOUD LINK: ${randomRaEventDetails.randomEventScLink}`
             );
-            step = 2;
+            this.step = 2;
           }
 
-          if (step === 2) {
+          if (this.step === 2) {
             randomSoundcloudTrack = await getRandomSoundcloudTrack(
               randomRaEventDetails.randomEventScLink
             );
 
             logSuccess(`SOUNDCLOUD TRACK: ${randomSoundcloudTrack}`);
 
-            step = 3;
+            this.step = 3;
           }
 
-          if (step === 3) {
-            throw new Error('mooock');
-            // const soundcloudOembed = await generateSoundcloudEmbed(
-            //   randomSoundcloudTrack,
-            //   autoPlay
-            // );
+          if (this.step === 3) {
+            const soundcloudOembed = await generateSoundcloudEmbed(
+              randomSoundcloudTrack,
+              autoPlay
+            );
 
-            // resolve({
-            //   ...randomRaEventDetails,
-            //   randomTrack: soundcloudOembed
-            // });
+            resolve({
+              ...randomRaEventDetails,
+              randomTrack: soundcloudOembed
+            });
           }
         } catch (error) {
           console.trace();
@@ -88,11 +98,10 @@ export class RaScraper extends DataSource {
           }
 
           if (this.retryCount < RETRY_LIMIT) {
-            logError('GENERAL ERROR. RETRYING PREVIOUS REQUEST!');
+            logError('GENERAL ERROR. RETRYING!');
+            await wait(100);
             this.retryCount = this.retryCount + 1;
-            setTimeout(() => {
-              step = 1;
-            }, 300);
+            this.step = 1;
           } else {
             reject({
               status: 408,
