@@ -2,6 +2,7 @@ import { Browser, Page, WrapElementHandle } from 'puppeteer';
 import puppeteer from 'puppeteer-extra';
 import { blockedDomains, minimalArgs } from './createChromiumBrowser';
 import StealthPlugin from 'puppeteer-extra-plugin-stealth';
+import { logInfo } from './logger';
 
 puppeteer.use(StealthPlugin());
 
@@ -21,6 +22,7 @@ export class Crawler {
     selector: string,
     pageFunction?: (args: Element[]) => T
   ): Promise<Awaited<WrapElementHandle<T>>> {
+    logInfo(`CRAWLING: ${url}`);
     await this.page.goto(url);
 
     const results = await this.page.$$eval<T>(selector, pageFunction);

@@ -6,6 +6,7 @@ type Artist {
   """The id of the event. FE: /events/12345"""
   id: String
   name: String
+  soundcloudUrl: String
 }
 
 type Event {

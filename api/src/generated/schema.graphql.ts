@@ -31,6 +31,7 @@ export interface NexusGenObjects {
   Artist: { // root type
     id?: string | null; // String
     name?: string | null; // String
+    soundcloudUrl?: string | null; // String
   }
   Event: { // root type
     address?: string | null; // String
@@ -62,6 +63,7 @@ export interface NexusGenFieldTypes {
   Artist: { // field return type
     id: string | null; // String
     name: string | null; // String
+    soundcloudUrl: string | null; // String
   }
   Event: { // field return type
     address: string | null; // String
@@ -92,6 +94,7 @@ export interface NexusGenFieldTypeNames {
   Artist: { // field return type name
     id: 'String'
     name: 'String'
+    soundcloudUrl: 'String'
   }
   Event: { // field return type name
     address: 'String'

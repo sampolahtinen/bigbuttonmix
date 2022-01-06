@@ -5,6 +5,7 @@ export const Artist = objectType({
   definition: t => {
     t.string('id', { description: 'The id of the event. FE: /events/12345' });
     t.string('name');
+    t.string('soundcloudUrl');
   }
 });
 

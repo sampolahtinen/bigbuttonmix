@@ -17,6 +17,7 @@ import {
   SoundCloudOembedResponse
 } from '../typeDefs';
 import { isEmpty } from 'ramda';
+import { ApolloError } from 'apollo-server';
 
 enum Step {
   'GetEvents',
@@ -47,6 +48,7 @@ export class RaScraper extends DataSource {
   randomEventDetails: EventDetails;
   scLink: string;
   artistSoundCloudTracks: string[];
+  artistsWithSoundcloud: EventArtist[];
 
   constructor(crawler: Crawler) {
     super();
@@ -57,6 +59,7 @@ export class RaScraper extends DataSource {
     this.randomEventDetails;
     this.scLink = '';
     this.artistSoundCloudTracks = [];
+    this.artistsWithSoundcloud = [];
   }
 
   private goTo(step: Step) {
@@ -118,6 +121,14 @@ export class RaScraper extends DataSource {
     if (artists.length == 0) {
       const message = 'No artists found in event page: ' + url;
       logWarning(message);
+    } else {
+      /**
+       * Getting soundcloud link for each artist and adding that as a property
+       */
+      for (let i = 0; i < artists.length; i++) {
+        const link = await this.getArtistSoundcloudLink(artists[i].id);
+        artists[i].soundcloudUrl = link;
+      }
     }
 
     const page = await this.crawler.getPage();
@@ -164,7 +175,9 @@ export class RaScraper extends DataSource {
       elements => elements.map(elem => elem.getAttribute('href'))
     );
 
-    return link[0];
+    if (link) return link[0];
+
+    return '';
   }
 
   async getSoundcloudEmbedCode(
@@ -323,21 +336,22 @@ export class RaScraper extends DataSource {
             logInfo('>> GETTING RANDOM SOUNDCLOUD URL <<');
 
             const eventArtists = shuffle(this.randomEventDetails.artists); // Shuffle modifies original
-            const randomArtist = eventArtists.shift(); // also modifies original
-            this.scLink = await this.getArtistSoundcloudLink(randomArtist.id);
 
-            if (!this.scLink) {
-              logError('>> ARTIST HAS NO SOUNDCLOUD LINK');
+            this.artistsWithSoundcloud = eventArtists.filter(
+              artist => artist.soundcloudUrl
+            );
 
-              this.goTo(Step.GetArtistSoundCloudLink);
-            } else if (!this.scLink && isEmpty(eventArtists)) {
+            if (isEmpty(this.artistsWithSoundcloud)) {
               /**
                * If none of the event artists have soundcloud link,
                * go and pick next event
                */
-              logError('>> NONE OF THE EVENT ARTISTS HAVE SOUNDCLOUD <<');
+              logError('>> NONE OF THE EVENT ARTISTS HAVE SOUNDCLOUD URL <<');
 
               this.goTo(Step.GetEventDetails);
+            } else {
+              const randomArtist = this.artistsWithSoundcloud.shift(); // also modifies original
+              this.scLink = await this.getArtistSoundcloudLink(randomArtist.id);
             }
 
             logSuccess(`SOUNDCLOUD LINK: ${this.scLink}`);
@@ -353,12 +367,41 @@ export class RaScraper extends DataSource {
             );
 
             if (isEmpty(this.artistSoundCloudTracks)) {
-              this.goTo(Step.GetArtistSoundCloudLink);
+              logError('>> ARTIST HAS NO SOUNDCLOUD TRACKS <<');
+
+              if (isEmpty(this.artistsWithSoundcloud)) {
+                logError('>> NONE OF THE EVENT ARTISTS HAVE TRACKS <<');
+
+                if (isEmpty(this.events)) {
+                  logError(
+                    '>> NONE OF THE EVENTS HAVE ARTIST WITH SOUNDCLOUD TRACKS <<'
+                  );
+                  logError('>> REJECTING REQUEST <<');
+
+                  return reject(
+                    new ApolloError(
+                      'None of the events have artist with soundcloud tracks',
+                      '404'
+                    )
+                  );
+                }
+
+                logInfo('>> GETTING NEW EVENT <<');
+
+                this.goTo(Step.GetEventDetails);
+              } else {
+                const randomArtist = this.artistsWithSoundcloud.shift(); // also modifies original
+                this.scLink = await this.getArtistSoundcloudLink(
+                  randomArtist.id
+                );
+
+                this.goTo(Step.GetSoundCloudTracks);
+              }
+            } else {
+              logSuccess('>> GETTING SOUNDCLOUD TRACKS <<');
+
+              this.goTo(Step.GenerateSoundCloudEmbed);
             }
-
-            logSuccess('>> GETTING SOUNDCLOUD TRACKS <<');
-
-            this.goTo(Step.GenerateSoundCloudEmbed);
           }
 
           if (this.step === Step.GenerateSoundCloudEmbed) {
@@ -381,26 +424,15 @@ export class RaScraper extends DataSource {
             });
           }
         } catch (error) {
-          console.trace();
           logError(error);
-
-          if (error.message === ErrorMessages.NoEvents) {
-            reject({
-              status: 404,
-              message: ErrorMessages.NoEvents
-            });
-          }
 
           if (this.retryCount < RETRY_LIMIT) {
             logError('GENERAL ERROR. RETRYING!');
             await wait(100);
             this.retryCount = this.retryCount + 1;
-            this.step = 1;
+            this.goTo(Step.GetEventDetails);
           } else {
-            reject({
-              status: 408,
-              message: 'Timeout'
-            });
+            reject(new ApolloError('Timeout', '408'));
           }
         }
         console.timeEnd('raFunction');

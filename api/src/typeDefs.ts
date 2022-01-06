@@ -39,6 +39,7 @@ export type EventMetaInfo = {
 export type EventArtist = {
   name: string;
   id: string;
+  soundcloudUrl?: string;
 };
 
 export type EventDetails = {
