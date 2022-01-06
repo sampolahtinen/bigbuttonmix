@@ -81,7 +81,8 @@ export enum ErrorMessages {
 }
 
 export enum ErrorCodes {
-  '404' = '404'
+  'NotFound' = '404',
+  'Timeout' = '408'
 }
 
 export interface RaScraper extends DataSource {

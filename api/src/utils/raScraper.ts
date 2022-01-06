@@ -19,6 +19,7 @@ import {
 import { isEmpty } from 'ramda';
 import { ApolloError } from 'apollo-server';
 import { ErrorMessages, ErrorCodes } from '../typeDefs';
+import chalk from 'chalk';
 
 enum Step {
   'GetEvents',
@@ -67,16 +68,38 @@ export class RaScraper extends DataSource {
     this.step = step;
   }
 
+  private async isCached(key: string) {
+    if (redisClient) return redisClient.exists(key);
+
+    return false;
+  }
+
+  private async getCached(key: string) {
+    logInfo(chalk.magenta(`Using cached data: ${key}`));
+
+    const cachedData = await redisClient.get(key);
+
+    return JSON.parse(cachedData);
+  }
+
+  private async setCacheData<T = string>(
+    key: string,
+    data: Record<string, string | string[] | T> | string[]
+  ) {
+    if (redisClient) {
+      logInfo(chalk.magenta(`Caching data: ${key}`));
+
+      await redisClient.set(key, JSON.stringify(data));
+
+      logSuccess(chalk.magenta(`Cached data: ${key}`));
+    }
+  }
+
   public async getEvents(location: Location, date: string): Promise<string[]> {
     const url = `https://ra.co/events/${location.country}/${location.city}?week=${date}`;
 
-    if (REDIS_ENABLED) {
-      const cachedEvents = await redisClient.get(url);
-      if (cachedEvents) {
-        logInfo(`Using cached events for ${url}`);
-        logInfo(`Total events: ${JSON.parse(cachedEvents).length}`);
-        return JSON.parse(cachedEvents);
-      }
+    if (await this.isCached(url)) {
+      return await this.getCached(url);
     }
 
     const events = await this.crawler.scrape<string[]>(
@@ -86,21 +109,16 @@ export class RaScraper extends DataSource {
         elements.map(e => e.getAttribute('href'))
     );
 
+    await this.setCacheData(url, events);
+
     return events;
   }
 
   public async getEventDetails(eventId: string) {
     const url = `https://ra.co${eventId}`;
 
-    if (REDIS_ENABLED) {
-      const cachedEventDetails = await redisClient.get(url);
-
-      if (cachedEventDetails) {
-        // to do: put an error catching in here so it goes to an external request
-        logInfo(`Using cached eventDetails for ${eventId}`);
-
-        return JSON.parse(cachedEventDetails);
-      }
+    if (await this.isCached(url)) {
+      return await this.getCached(url);
     }
 
     const artists = await this.crawler.scrape<EventArtist[]>(
@@ -116,7 +134,7 @@ export class RaScraper extends DataSource {
     const page = await this.crawler.getPage();
     const title = await page.title();
 
-    const metaInfo = await page.$$eval<EventMetaInfo>(
+    const metaInfo = await page.$$eval(
       '[data-tracking-id=event-detail-bar] span',
       (elements: Element[]) => {
         const metaArray = elements.map(element => element.textContent);
@@ -154,9 +172,8 @@ export class RaScraper extends DataSource {
      * We dont wanna cache events with no artists...
      * as we cant get any music from them :)
      */
-    if (REDIS_ENABLED && !isEmpty(artists)) {
-      logInfo(`Caching event details: ${url}`);
-      await redisClient.set(`${url}`, JSON.stringify(eventDetails));
+    if (!isEmpty(artists)) {
+      await this.setCacheData(url, eventDetails);
     }
 
     return eventDetails;
@@ -178,13 +195,8 @@ export class RaScraper extends DataSource {
   async getSoundcloudEmbedCode(
     scTrackUrl: string
   ): Promise<SoundCloudOembedResponse> {
-    if (REDIS_ENABLED) {
-      const cachedEmbed = await redisClient.get(`${scTrackUrl}:embed`);
-
-      if (cachedEmbed) {
-        logInfo(`Using cached soundcloud embed for ${scTrackUrl}`);
-        return JSON.parse(cachedEmbed);
-      }
+    if (await this.isCached(scTrackUrl)) {
+      return await this.getCached(scTrackUrl);
     }
 
     logInfo('Generating soundcloud embed');
@@ -219,12 +231,7 @@ export class RaScraper extends DataSource {
     soundcloudEmbedResponse.data.widget_src = scWidgetSrc;
     soundcloudEmbedResponse.data.track_url = scTrackUrl;
 
-    if (REDIS_ENABLED) {
-      await redisClient.set(
-        `${scTrackUrl}:embed`,
-        JSON.stringify(soundcloudEmbedResponse.data)
-      );
-    }
+    await this.setCacheData(scTrackUrl, soundcloudEmbedResponse.data);
 
     return soundcloudEmbedResponse.data;
   }
@@ -232,15 +239,8 @@ export class RaScraper extends DataSource {
   async getArtistSoundCloudTracks(
     artistSoundCloudUrl: string
   ): Promise<string[]> {
-    if (REDIS_ENABLED) {
-      const cachedTrackLinks = await redisClient.get(
-        `${artistSoundCloudUrl}:tracks`
-      );
-
-      if (cachedTrackLinks) {
-        logInfo(`Using cached tracks for ${artistSoundCloudUrl}`);
-        return JSON.parse(cachedTrackLinks);
-      }
+    if (await this.isCached(artistSoundCloudUrl)) {
+      return await this.getCached(artistSoundCloudUrl);
     }
 
     logInfo('Requesting page from Soundcloud');
@@ -261,10 +261,6 @@ export class RaScraper extends DataSource {
 
     const api_v2_url = `https://api-v2.soundcloud.com/users/${scUserID[0]}/tracks?representation=&client_id=${client_id}&limit=20&offset=0&linked_partitioning=1&app_version=1628858614&app_locale=en`;
 
-    /**
-     * Testing of fetching soundcloud tracks via axios
-     */
-
     const response = await axios.get(api_v2_url);
 
     logInfo(`Tracks api request status ${response.status}`);
@@ -273,13 +269,8 @@ export class RaScraper extends DataSource {
       entry => entry.permalink_url
     );
 
-    if (REDIS_ENABLED) {
-      logInfo(`Caching track URLs for ${artistSoundCloudUrl}:tracks`);
-      await redisClient.set(
-        `${artistSoundCloudUrl}:tracks`,
-        JSON.stringify(tracks)
-      );
-    }
+    await this.setCacheData(artistSoundCloudUrl, tracks);
+
     return tracks;
   }
 
@@ -288,7 +279,7 @@ export class RaScraper extends DataSource {
       console.log('raFunction');
       console.time('raFunction');
 
-      let { country, city, date, autoPlay } = args;
+      let { country, city, date } = args;
 
       let location = {
         country,
