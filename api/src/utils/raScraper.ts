@@ -1,7 +1,7 @@
 import { DataSource } from 'apollo-datasource';
 import axios from 'axios';
 import shuffle from 'shuffle-array';
-import { ErrorMessages, RETRY_LIMIT, REDIS_ENABLED } from '../constants';
+import { RETRY_LIMIT, REDIS_ENABLED } from '../constants';
 import {
   EventArgs,
   RandomEventResponse,
@@ -18,6 +18,7 @@ import {
 } from '../typeDefs';
 import { isEmpty } from 'ramda';
 import { ApolloError } from 'apollo-server';
+import { ErrorMessages, ErrorCodes } from '../typeDefs';
 
 enum Step {
   'GetEvents',
@@ -66,12 +67,6 @@ export class RaScraper extends DataSource {
     this.step = step;
   }
 
-  private done() {
-    logSuccess('>> DONE <<');
-
-    this.step = Step.Done;
-  }
-
   public async getEvents(location: Location, date: string): Promise<string[]> {
     const url = `https://ra.co/events/${location.country}/${location.city}?week=${date}`;
 
@@ -118,19 +113,6 @@ export class RaScraper extends DataSource {
         }))
     );
 
-    if (artists.length == 0) {
-      const message = 'No artists found in event page: ' + url;
-      logWarning(message);
-    } else {
-      /**
-       * Getting soundcloud link for each artist and adding that as a property
-       */
-      for (let i = 0; i < artists.length; i++) {
-        const link = await this.getArtistSoundcloudLink(artists[i].id);
-        artists[i].soundcloudUrl = link;
-      }
-    }
-
     const page = await this.crawler.getPage();
     const title = await page.title();
 
@@ -146,6 +128,19 @@ export class RaScraper extends DataSource {
         };
       }
     );
+
+    if (artists.length == 0) {
+      const message = 'No artists found in event page: ' + url;
+      logWarning(message);
+    } else {
+      /**
+       * Getting soundcloud link for each artist and adding that as a property
+       */
+      for (let i = 0; i < artists.length; i++) {
+        const link = await this.getArtistSoundcloudLink(artists[i].id);
+        artists[i].soundcloudUrl = link;
+      }
+    }
 
     const eventDetails = {
       id: eventId,
@@ -302,91 +297,55 @@ export class RaScraper extends DataSource {
 
       while (this.step !== Step.Done || this.retryCount !== RETRY_LIMIT) {
         try {
-          /**
-           * First step is to get ra events
-           */
-          if (this.step === Step.GetEvents) {
-            logInfo('>> GETTING EVENTS <<');
-            this.events = shuffle(await this.getEvents(location, date));
+          switch (this.step) {
+            /**
+             * First step is to get ra events
+             */
+            case Step.GetEvents:
+              logInfo('>> GETTING EVENTS <<');
+              this.events = shuffle(await this.getEvents(location, date));
 
-            this.goTo(Step.GetEventDetails);
-          }
-
-          /**
-           * Second step is to get random event details
-           */
-          if (this.step === Step.GetEventDetails) {
-            logInfo('>> GETTING EVENT DETAILS <<');
-
-            const randomEvent = this.events.shift(); // shape is: /events/12345
-            this.randomEventDetails = await this.getEventDetails(randomEvent);
-
-            if (isEmpty(this.randomEventDetails.artists)) {
-              this.goTo(Step.GetEventDetails);
-            } else {
-              logSuccess('RANDOM EVENT DETAILS SCRAPED');
-              this.goTo(Step.GetArtistSoundCloudLink);
-            }
-          }
-
-          /**
-           * Third step is about getting random artist SoundCloud link
-           */
-          if (this.step === Step.GetArtistSoundCloudLink) {
-            logInfo('>> GETTING RANDOM SOUNDCLOUD URL <<');
-
-            const eventArtists = shuffle(this.randomEventDetails.artists); // Shuffle modifies original
-
-            this.artistsWithSoundcloud = eventArtists.filter(
-              artist => artist.soundcloudUrl
-            );
-
-            if (isEmpty(this.artistsWithSoundcloud)) {
-              /**
-               * If none of the event artists have soundcloud link,
-               * go and pick next event
-               */
-              logError('>> NONE OF THE EVENT ARTISTS HAVE SOUNDCLOUD URL <<');
+              if (isEmpty(this.events)) {
+                logError('>> NO EVENTS FOR GIVEN LOCATION. REJECTING <<');
+                return reject(
+                  new ApolloError(ErrorMessages.NoEvents, ErrorCodes.NotFound)
+                );
+              }
 
               this.goTo(Step.GetEventDetails);
-            } else {
-              const randomArtist = this.artistsWithSoundcloud.shift(); // also modifies original
-              this.scLink = await this.getArtistSoundcloudLink(randomArtist.id);
-            }
+            /**
+             * Second step is to get random event details
+             */
+            case Step.GetEventDetails:
+              logInfo('>> GETTING EVENT DETAILS <<');
 
-            logSuccess(`SOUNDCLOUD LINK: ${this.scLink}`);
+              const randomEvent = this.events.shift(); // shape is: /events/12345
+              this.randomEventDetails = await this.getEventDetails(randomEvent);
 
-            this.goTo(Step.GetSoundCloudTracks);
-          }
+              if (isEmpty(this.randomEventDetails.artists)) {
+                this.goTo(Step.GetEventDetails);
+              } else {
+                logSuccess(`RANDOM EVENT DETAILS SCRAPED: ${randomEvent}`);
+                this.goTo(Step.GetArtistSoundCloudLink);
+              }
+            /**
+             * Third step is about getting random artist SoundCloud link
+             */
+            case Step.GetArtistSoundCloudLink:
+              logInfo('>> GETTING RANDOM SOUNDCLOUD URL <<');
 
-          if (this.step === Step.GetSoundCloudTracks) {
-            logInfo('>> GETTING SOUNDCLOUD TRACKS <<');
+              const eventArtists = shuffle(this.randomEventDetails.artists); // Shuffle modifies original
 
-            this.artistSoundCloudTracks = shuffle(
-              await this.getArtistSoundCloudTracks(this.scLink)
-            );
-
-            if (isEmpty(this.artistSoundCloudTracks)) {
-              logError('>> ARTIST HAS NO SOUNDCLOUD TRACKS <<');
+              this.artistsWithSoundcloud = eventArtists.filter(
+                artist => artist.soundcloudUrl
+              );
 
               if (isEmpty(this.artistsWithSoundcloud)) {
-                logError('>> NONE OF THE EVENT ARTISTS HAVE TRACKS <<');
-
-                if (isEmpty(this.events)) {
-                  logError(
-                    '>> NONE OF THE EVENTS HAVE ARTIST WITH SOUNDCLOUD TRACKS <<'
-                  );
-                  logError('>> REJECTING REQUEST <<');
-
-                  return reject(
-                    new ApolloError(
-                      'None of the events have artist with soundcloud tracks',
-                      '404'
-                    )
-                  );
-                }
-
-                logInfo('>> GETTING NEW EVENT <<');
+                /**
+                 * If none of the event artists have soundcloud link,
+                 * go and pick next event
+                 */
+                logError('>> NONE OF THE EVENT ARTISTS HAVE SOUNDCLOUD URL <<');
 
                 this.goTo(Step.GetEventDetails);
               } else {
@@ -394,34 +353,75 @@ export class RaScraper extends DataSource {
                 this.scLink = await this.getArtistSoundcloudLink(
                   randomArtist.id
                 );
-
-                this.goTo(Step.GetSoundCloudTracks);
               }
-            } else {
-              logSuccess('>> GETTING SOUNDCLOUD TRACKS <<');
 
-              this.goTo(Step.GenerateSoundCloudEmbed);
-            }
-          }
+              logSuccess(`SOUNDCLOUD LINK: ${this.scLink}`);
 
-          if (this.step === Step.GenerateSoundCloudEmbed) {
-            logInfo('>> GENERATING SOUNDCLOUD OEMBED <<');
-            const randomTrack = this.artistSoundCloudTracks[0];
+              this.goTo(Step.GetSoundCloudTracks);
 
-            const soundcloudOembed = await this.getSoundcloudEmbedCode(
-              randomTrack
-            );
+            case Step.GetSoundCloudTracks:
+              logInfo('>> GETTING SOUNDCLOUD TRACKS <<');
 
-            logSuccess('>> GENERATING SOUNDCLOUD OEMBED <<');
-            logSuccess('>> DONE <<');
+              this.artistSoundCloudTracks = shuffle(
+                await this.getArtistSoundCloudTracks(this.scLink)
+              );
 
-            // this.done();
-            console.timeEnd('raFunction');
+              if (isEmpty(this.artistSoundCloudTracks)) {
+                logError('>> ARTIST HAS NO SOUNDCLOUD TRACKS <<');
 
-            return resolve({
-              ...this.randomEventDetails,
-              randomTrack: soundcloudOembed
-            });
+                if (isEmpty(this.artistsWithSoundcloud)) {
+                  logError('>> NONE OF THE EVENT ARTISTS HAVE TRACKS <<');
+
+                  if (isEmpty(this.events)) {
+                    logError(
+                      '>> NONE OF THE EVENTS HAVE ARTIST WITH SOUNDCLOUD TRACKS <<'
+                    );
+                    logError('>> REJECTING REQUEST <<');
+
+                    return reject(
+                      new ApolloError(
+                        ErrorMessages.EventHasNoSoundcloud,
+                        ErrorCodes.NotFound
+                      )
+                    );
+                  }
+
+                  logInfo('>> GETTING NEW EVENT <<');
+
+                  this.goTo(Step.GetEventDetails);
+                } else {
+                  const randomArtist = this.artistsWithSoundcloud.shift(); // also modifies original
+                  this.scLink = await this.getArtistSoundcloudLink(
+                    randomArtist.id
+                  );
+
+                  this.goTo(Step.GetSoundCloudTracks);
+                }
+              } else {
+                logSuccess('>> GETTING SOUNDCLOUD TRACKS <<');
+
+                this.goTo(Step.GenerateSoundCloudEmbed);
+              }
+
+            case Step.GenerateSoundCloudEmbed:
+              logInfo('>> GENERATING SOUNDCLOUD OEMBED <<');
+              const randomTrack = this.artistSoundCloudTracks[0];
+
+              const soundcloudOembed = await this.getSoundcloudEmbedCode(
+                randomTrack
+              );
+
+              logSuccess('>> GENERATING SOUNDCLOUD OEMBED <<');
+              logSuccess('>> DONE <<');
+
+              console.timeEnd('raFunction');
+
+              return resolve({
+                ...this.randomEventDetails,
+                randomTrack: soundcloudOembed
+              });
+
+            default:
           }
         } catch (error) {
           logError(error);
@@ -432,7 +432,7 @@ export class RaScraper extends DataSource {
             this.retryCount = this.retryCount + 1;
             this.goTo(Step.GetEventDetails);
           } else {
-            reject(new ApolloError('Timeout', '408'));
+            reject(new ApolloError(ErrorMessages.Timeout, ErrorCodes.Timeout));
           }
         }
         console.timeEnd('raFunction');
