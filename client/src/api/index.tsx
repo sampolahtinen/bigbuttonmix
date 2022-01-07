@@ -1,4 +1,3 @@
-import { getRandomMix } from './getRandomMix';
 import { getMapboxLocation } from './getMapboxLocation';
 
 // type CustomResponse = Promise<{
@@ -10,7 +9,7 @@ import { getMapboxLocation } from './getMapboxLocation';
 
 export const apiUrl =
   process.env.NODE_ENV === 'production'
-    ? 'https://big-button-api.herokuapp.com/api'
+    ? 'https://big-button-api.herokuapp.com/graphql'
     : 'http://localhost:5000/api';
 
 // export const api = async function api(
@@ -32,6 +31,5 @@ export const apiUrl =
 // };
 
 export default {
-  getRandomMix,
   getMapboxLocation
 };

@@ -1,14 +1,24 @@
 import React, { useEffect } from 'react';
+import {
+  ApolloClient,
+  InMemoryCache,
+  ApolloProvider,
+  useQuery,
+  gql
+} from '@apollo/client';
 import { Routes, Route } from 'react-router-dom';
 import { Global } from '@emotion/react';
 import { ThemeProvider } from 'theme-ui';
+
+import { Results } from '../pages/results';
+import { Layout } from '../components/Layout/Layout';
+
 import { theme } from '../styles/theme';
 import { globalStyles } from '../styles/globalStyles';
 import { InitialView } from '../pages/index/InitialView';
-import { Results } from '../pages/results';
 import { Routes as RoutePaths } from '../constants/routes';
 import { getMapboxLocation } from '../api/getMapboxLocation';
-import { Layout } from '../components/Layout/Layout';
+import { apolloClient } from '../../config/apollo/index';
 
 type DeviceLocation = {
   countryCode: string;
@@ -112,15 +122,17 @@ const App = () => {
 
   return (
     <>
-      <ThemeProvider theme={theme}>
-        <Global styles={globalStyles} />
-        <Layout>
-          <Routes>
-            <Route path={RoutePaths.Index} element={<InitialView />} />
-            <Route path={RoutePaths.Results} element={<Results />} />
-          </Routes>
-        </Layout>
-      </ThemeProvider>
+      <ApolloProvider client={apolloClient}>
+        <ThemeProvider theme={theme}>
+          <Global styles={globalStyles} />
+          <Layout>
+            <Routes>
+              <Route path={RoutePaths.Index} element={<InitialView />} />
+              <Route path={RoutePaths.Results} element={<Results />} />
+            </Routes>
+          </Layout>
+        </ThemeProvider>
+      </ApolloProvider>
     </>
   );
 };

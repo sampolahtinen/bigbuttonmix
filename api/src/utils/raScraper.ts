@@ -20,6 +20,7 @@ import { isEmpty } from 'ramda';
 import { ApolloError } from 'apollo-server';
 import { ErrorMessages, ErrorCodes } from '../typeDefs';
 import chalk from 'chalk';
+import { mockRandomEventResponse } from '../__mocks__/mockRandomEventResponse';
 
 enum Step {
   'GetEvents',
@@ -285,6 +286,8 @@ export class RaScraper extends DataSource {
         country,
         city
       };
+
+      return resolve(mockRandomEventResponse);
 
       while (this.step !== Step.Done || this.retryCount !== RETRY_LIMIT) {
         try {

@@ -12,7 +12,9 @@ import { getDeviceLocation } from '../../app/App';
 import api from '../../api';
 import axios from 'axios';
 import { Message, MessageType } from '../../components/Message/Message';
-import { RandomMixResponse } from '../../api/getRandomMix';
+import { RandomMixQueryResponse } from '../../api/getRandomMix';
+import { useLazyQuery } from '@apollo/client';
+import { RandomEventQuery } from '../index/getRandomEvent';
 
 declare global {
   interface Window {
@@ -28,18 +30,22 @@ export const Results = () => {
   const [isLoading, setIsLoading] = useState(true);
 
   const [soundcloudData, setSoundcloudData] = useState<
-    RandomMixResponse['soundcloud']
+    RandomMixQueryResponse['randomEvent']['randomTrack']
   >();
 
-  const location = (useLocation() as unknown) as { state: RandomMixResponse };
+  const location = (useLocation() as unknown) as {
+    state: RandomMixQueryResponse;
+  };
 
   const [searchLocation, setSearchLocation] = useState<
     DropdownOption | undefined
   >(undefined);
 
   const [raEventInformation, setRaEventInformation] = useState<
-    RandomMixResponse['event'] | undefined
+    Omit<RandomMixQueryResponse['randomEvent'], 'randomTrack'> | undefined
   >(undefined);
+
+  const [getRandomEvent] = useLazyQuery(RandomEventQuery);
 
   const scWidget = useRef<SC.SoundCloudWidget>();
 
@@ -50,11 +56,13 @@ export const Results = () => {
     setErrorMessage('');
 
     try {
-      const response = await api.getRandomMix({
-        country: searchLocation?.country.urlCode.toLowerCase(),
-        city: searchLocation?.value.toLowerCase().replace(/\s+/g, ''),
-        autoPlay: true,
-        date: getCurrentDate()
+      const response = await getRandomEvent({
+        variables: {
+          country: searchLocation?.country.urlCode.toLowerCase() ?? 'de',
+          city:
+            searchLocation?.value.toLowerCase().replace(/\s+/g, '') ?? 'berlin',
+          date: getCurrentDate()
+        }
       });
 
       if (scWidget.current) {
@@ -146,8 +154,13 @@ export const Results = () => {
 
   useEffect(() => {
     if (location.state) {
-      setSoundcloudData(location.state.soundcloud);
-      setRaEventInformation(location.state.event);
+      const {
+        randomTrack: soundcloudData,
+        ...raEventInformation
+      } = location.state.randomEvent;
+
+      setSoundcloudData(soundcloudData);
+      setRaEventInformation(raEventInformation);
       setIsLoading(false);
     }
   }, [location]);
