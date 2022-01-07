@@ -9,12 +9,12 @@ import { DropdownOption } from '../../utils/generateCityOptions';
 import { useLocation } from 'react-router';
 import { LocationSelector } from '../../components/LocationSelector/LocationSelector';
 import { getDeviceLocation } from '../../app/App';
-import api from '../../api';
 import axios from 'axios';
 import { Message, MessageType } from '../../components/Message/Message';
 import { RandomMixQueryResponse } from '../../api/getRandomMix';
 import { useLazyQuery } from '@apollo/client';
 import { RandomEventQuery } from '../index/getRandomEvent';
+import { Box } from 'theme-ui';
 
 declare global {
   interface Window {
@@ -203,6 +203,14 @@ export const Results = () => {
                     {raEventInformation.venue}
                   </Text>
                 </Row>
+                {/* <Row>
+                  <Heading>Artists</Heading>
+                  <Text className="event-info-row">
+                    {raEventInformation.artists.map(artist => (
+                      <Text>{artist.name}</Text>
+                    ))}
+                  </Text>
+                </Row> */}
               </div>
               <div className="column">
                 <Row>
@@ -213,6 +221,30 @@ export const Results = () => {
                   <Text>{raEventInformation.openingHours}</Text>
                 </Row>
               </div>
+              <Row
+                css={{
+                  textAlign: 'center',
+                  flexBasis: '100%'
+                }}
+              >
+                <Heading>Artists</Heading>
+                <Box
+                  css={{
+                    display: 'flex',
+                    flexWrap: 'wrap',
+                    justifyContent: 'center'
+                  }}
+                >
+                  {raEventInformation.artists.map((artist, index) => (
+                    <div>
+                      <Text>{artist.name}</Text>
+                      {index < raEventInformation.artists.length - 1 && (
+                        <span css={{ padding: '0 0.8rem' }}>|</span>
+                      )}
+                    </div>
+                  ))}
+                </Box>
+              </Row>
             </EventInfoContainer>
           )}
         </div>
@@ -278,6 +310,7 @@ const DateText = styled(Text)`
 
 const EventInfoContainer = styled.div`
   display: flex;
+  flex-wrap: wrap;
   padding: 16px;
   background-color: hsl(231deg 24% 15%);
   text-align: left;

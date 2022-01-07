@@ -4,6 +4,11 @@ export type EventInformation = {
   title: string;
   date: string;
   openingHours: string;
+  artists: {
+    id: string;
+    name: string;
+    soundcloudUrl: string | null;
+  }[];
 };
 
 export type RandomMixQueryResponse = {

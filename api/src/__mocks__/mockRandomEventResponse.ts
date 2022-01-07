@@ -11,6 +11,31 @@ export const mockRandomEventResponse = {
       id: '/dj/phalanx',
       name: 'Phalanx',
       soundcloudUrl: 'https://www.soundcloud.com/phalanxeu'
+    },
+    {
+      id: '/dj/phalanx',
+      name: 'Phalanx',
+      soundcloudUrl: 'https://www.soundcloud.com/phalanxeu'
+    },
+    {
+      id: '/dj/phalanx',
+      name: 'Phalanx',
+      soundcloudUrl: 'https://www.soundcloud.com/phalanxeu'
+    },
+    {
+      id: '/dj/phalanx',
+      name: 'Phalanx',
+      soundcloudUrl: 'https://www.soundcloud.com/phalanxeu'
+    },
+    {
+      id: '/dj/phalanx',
+      name: 'Phalanx',
+      soundcloudUrl: 'https://www.soundcloud.com/phalanxeu'
+    },
+    {
+      id: '/dj/phalanx',
+      name: 'Phalanx',
+      soundcloudUrl: 'https://www.soundcloud.com/phalanxeu'
     }
   ],
   randomTrack: {
