@@ -3,7 +3,9 @@ import { isEmpty } from 'ramda';
 import { Page } from 'puppeteer';
 import { redisClient } from '../server';
 import { logError, logInfo, logWarning } from './logger';
-import { REDIS_ENABLED, ErrorMessages } from '../constants';
+import { REDIS_ENABLED} from '../constants';
+import { ErrorMessages} from '../typeDefs';
+
 import {
   EventArtist,
   EventDetails,
@@ -47,7 +49,7 @@ const puppetRequest = async (
 };
 
 // This function fetches event links from RA and throws and error if it is empty
-const getEventLinks = async (searchPageURL: string, page: Page) => {
+export const getEventLinks = async (searchPageURL: string, page: Page) => {
   if (REDIS_ENABLED) {
     const cachedEvents = ((await redisClient.get(
       searchPageURL
