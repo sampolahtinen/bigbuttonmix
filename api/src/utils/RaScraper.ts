@@ -216,18 +216,18 @@ export class RaScraper extends DataSource {
     );
     /**
      * Picking the src out of the iframe of oembed response
-     * TODO: consider RegExp implementation
      */
-    const scWidgetSrc = soundcloudEmbedResponse.data.html
-      // picking src
-      .split('src=')[1]
-      .replace('></iframe>', '')
-      .replaceAll('"', '')
-      // adding extra params as sc oembed is buggy
-      .replace(
+    const matchResults = soundcloudEmbedResponse.data.html.match(
+      /(?<=src=")(.*)(?=")/gm
+    );
+    let scWidgetSrc = '';
+
+    if (matchResults) {
+      scWidgetSrc = matchResults[0].replace(
         'show_artwork=true',
         'show_artwork=true&auto_play=true&show_teaser=false&hide_related=true'
       );
+    }
 
     soundcloudEmbedResponse.data.widget_src = scWidgetSrc;
     soundcloudEmbedResponse.data.track_url = scTrackUrl;
