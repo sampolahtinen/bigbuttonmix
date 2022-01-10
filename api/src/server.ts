@@ -2,7 +2,7 @@ import { ApolloServer } from 'apollo-server';
 import * as redis from 'redis';
 import dotenv from 'dotenv';
 import chalk from 'chalk';
-import { REDIS_ENABLED } from './constants';
+import { REDIS_ENABLED, PORT } from './constants';
 import { schema } from './schema';
 import { RaScraper } from './utils/RaScraper';
 import { Crawler } from './utils/Crawler';
@@ -35,7 +35,7 @@ crawler.init().then(async () => {
     dataSources
   });
 
-  server.listen().then(({ url }) => {
+  server.listen({ port: PORT }).then(({ url }) => {
     console.log(chalk.green(`🚀 Server ready at ${url}`));
   });
 });
