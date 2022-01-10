@@ -9,10 +9,13 @@ import { DropdownOption } from '../../utils/generateCityOptions';
 import { useLocation } from 'react-router';
 import { LocationSelector } from '../../components/LocationSelector/LocationSelector';
 import { getDeviceLocation } from '../../app/App';
-import api from '../../api';
 import axios from 'axios';
 import { Message, MessageType } from '../../components/Message/Message';
-import { RandomMixResponse } from '../../api/getRandomMix';
+import { RandomMixQueryResponse } from '../../api/getRandomMix';
+import { useLazyQuery } from '@apollo/client';
+import { RandomEventQuery } from '../index/getRandomEvent';
+import { Box } from 'theme-ui';
+import { theme } from '../../styles/theme';
 
 declare global {
   interface Window {
@@ -28,18 +31,22 @@ export const Results = () => {
   const [isLoading, setIsLoading] = useState(true);
 
   const [soundcloudData, setSoundcloudData] = useState<
-    RandomMixResponse['soundcloud']
+    RandomMixQueryResponse['randomEvent']['randomTrack']
   >();
 
-  const location = (useLocation() as unknown) as { state: RandomMixResponse };
+  const location = (useLocation() as unknown) as {
+    state: RandomMixQueryResponse;
+  };
 
   const [searchLocation, setSearchLocation] = useState<
     DropdownOption | undefined
   >(undefined);
 
   const [raEventInformation, setRaEventInformation] = useState<
-    RandomMixResponse['event'] | undefined
+    Omit<RandomMixQueryResponse['randomEvent'], 'randomTrack'> | undefined
   >(undefined);
+
+  const [getRandomEvent, { refetch }] = useLazyQuery(RandomEventQuery);
 
   const scWidget = useRef<SC.SoundCloudWidget>();
 
@@ -50,10 +57,10 @@ export const Results = () => {
     setErrorMessage('');
 
     try {
-      const response = await api.getRandomMix({
-        country: searchLocation?.country.urlCode.toLowerCase(),
-        city: searchLocation?.value.toLowerCase().replace(/\s+/g, ''),
-        autoPlay: true,
+      const response = await refetch({
+        country: searchLocation?.country.urlCode.toLowerCase() ?? 'de',
+        city:
+          searchLocation?.value.toLowerCase().replace(/\s+/g, '') ?? 'berlin',
         date: getCurrentDate()
       });
 
@@ -61,10 +68,15 @@ export const Results = () => {
         scWidget.current.pause();
       }
 
-      setSoundcloudData(response.data.soundcloud);
+      const {
+        randomTrack: soundcloudData,
+        ...raEventInformation
+      } = response.data.randomEvent;
+
+      setSoundcloudData(soundcloudData);
 
       if (scWidget.current) {
-        scWidget.current.load(response.data.soundcloud.track_url, {
+        scWidget.current.load(soundcloudData.track_url, {
           show_teaser: false,
           show_artwork: true,
           auto_play: true,
@@ -74,7 +86,7 @@ export const Results = () => {
         });
       }
 
-      setRaEventInformation(response.data.event);
+      setRaEventInformation(raEventInformation);
     } catch (error) {
       if (axios.isAxiosError(error) && error.response?.status === 404) {
         setErrorMessage('No events found for given location. Try another one!');
@@ -82,6 +94,14 @@ export const Results = () => {
     } finally {
       setIsLoading(false);
     }
+  };
+
+  const parseArtistName = (url: string) => {
+    const artistName = url.match(/(?<=soundcloud.com\/).*/gm);
+    if (artistName) {
+      return artistName[0];
+    }
+    return url;
   };
 
   const handleCitySelection = (selectedLocation: string) => {
@@ -146,8 +166,13 @@ export const Results = () => {
 
   useEffect(() => {
     if (location.state) {
-      setSoundcloudData(location.state.soundcloud);
-      setRaEventInformation(location.state.event);
+      const {
+        randomTrack: soundcloudData,
+        ...raEventInformation
+      } = location.state.randomEvent;
+
+      setSoundcloudData(soundcloudData);
+      setRaEventInformation(raEventInformation);
       setIsLoading(false);
     }
   }, [location]);
@@ -172,34 +197,70 @@ export const Results = () => {
           </Player>
           {raEventInformation && (
             <EventInfoContainer className="event-info-container">
-              <div className="column" css={{ marginRight: '1rem' }}>
-                <Row className="row">
-                  <Heading>Event</Heading>
-                  <Anchor
-                    as="a"
-                    className="event-info-row"
-                    href={raEventInformation.eventLink}
-                    target="_blank"
-                  >
-                    {raEventInformation.title}
-                  </Anchor>
-                </Row>
-                <Row>
-                  <Heading>Venue</Heading>
-                  <Text className="event-info-row">
-                    {raEventInformation.venue}
-                  </Text>
-                </Row>
-              </div>
-              <div className="column">
-                <Row>
-                  <Heading>Date</Heading>
-                  <DateText>{raEventInformation.date}</DateText>
-                </Row>
-                <Row>
-                  <Text>{raEventInformation.openingHours}</Text>
-                </Row>
-              </div>
+              <Row css={{ display: 'flex', flexWrap: 'nowrap' }}>
+                <div className="column" css={{ marginRight: '1rem' }}>
+                  <Row className="row">
+                    <Heading>Event</Heading>
+                    <Anchor
+                      as="a"
+                      className="event-info-row"
+                      href={raEventInformation.eventLink}
+                      target="_blank"
+                    >
+                      {raEventInformation.title}
+                    </Anchor>
+                  </Row>
+                  <Row>
+                    <Heading>Venue</Heading>
+                    <Text className="event-info-row">
+                      {raEventInformation.venue}
+                    </Text>
+                  </Row>
+                </div>
+                <div className="column">
+                  <Row>
+                    <Heading>Date</Heading>
+                    <DateText>{raEventInformation.date}</DateText>
+                  </Row>
+                  <Row>
+                    <Text>{raEventInformation.openingHours}</Text>
+                  </Row>
+                </div>
+              </Row>
+              <Row
+                css={{
+                  textAlign: 'center',
+                  flexBasis: '100%'
+                }}
+              >
+                <Heading>Artists</Heading>
+                <Box
+                  css={{
+                    display: 'flex',
+                    flexWrap: 'wrap',
+                    justifyContent: 'center'
+                  }}
+                >
+                  {raEventInformation.artists.map((artist, index) => (
+                    <div>
+                      <Text
+                        css={{
+                          color:
+                            parseArtistName(artist.soundcloudUrl) ===
+                            parseArtistName(soundcloudData.author_url)
+                              ? theme.colors.orange
+                              : theme.colors.text
+                        }}
+                      >
+                        {artist.name}
+                      </Text>
+                      {index < raEventInformation.artists.length - 1 && (
+                        <span css={{ padding: '0 0.8rem' }}>|</span>
+                      )}
+                    </div>
+                  ))}
+                </Box>
+              </Row>
             </EventInfoContainer>
           )}
         </div>
@@ -265,6 +326,7 @@ const DateText = styled(Text)`
 
 const EventInfoContainer = styled.div`
   display: flex;
+  flex-wrap: wrap;
   padding: 16px;
   background-color: hsl(231deg 24% 15%);
   text-align: left;

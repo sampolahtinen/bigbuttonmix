@@ -1,44 +1,41 @@
-import { PORT, REDIS_ENABLED } from './constants';
-import express from 'express';
-import cookieParser from 'cookie-parser';
-import cors from 'cors';
-import redis from 'redis';
+import { ApolloServer } from 'apollo-server';
+import * as redis from 'redis';
 import dotenv from 'dotenv';
-import util from 'util';
-import booleanParser from 'express-query-boolean';
-import { randomSoundcloudTrackRoute } from './routes';
+import chalk from 'chalk';
+import { REDIS_ENABLED } from './constants';
+import { schema } from './schema';
+import { RaScraper } from './utils/RaScraper';
+import { Crawler } from './utils/Crawler';
 
 dotenv.config();
-console.log(process.env.NODE_ENV);
+console.log(`${chalk.blue('ENVIRONMENT:')} ${process.env.NODE_ENV}`);
 
-let redisClient;
-
-if (REDIS_ENABLED) {
-  redisClient = redis.createClient({
-    url: process.env.REDIS_URL || 'redis://localhost:6379'
-  });
-  //@ts-ignore
-  redisClient.get = util.promisify(redisClient.get);
-  //@ts-ignore
-  redisClient.set = util.promisify(redisClient.set);
-
-  redisClient.flushdb = util.promisify(redisClient.flushdb);
-
-  redisClient.info = util.promisify(redisClient.info);
-}
+const redisClient = REDIS_ENABLED
+  ? redis.createClient({
+      url: process.env.REDIS_URL || 'redis://localhost:6379'
+    })
+  : null;
 
 export { redisClient };
 
-const app = express();
+const crawler = new Crawler();
 
-app.use(cors());
+crawler.init().then(async () => {
+  if (redisClient) {
+    console.log('Connecting to redis...');
+    await redisClient.connect();
+  }
 
-app.use(express.json());
-app.use(express.urlencoded({ extended: true }));
-app.use(booleanParser());
-app.use(cookieParser());
-app.use(randomSoundcloudTrackRoute);
+  const dataSources = () => ({
+    raScraper: new RaScraper(crawler)
+  });
 
-app.listen(PORT, () => {
-  console.log(`Server listening at http://localhost:${PORT}`);
+  const server = new ApolloServer({
+    schema,
+    dataSources
+  });
+
+  server.listen().then(({ url }) => {
+    console.log(chalk.green(`🚀 Server ready at ${url}`));
+  });
 });

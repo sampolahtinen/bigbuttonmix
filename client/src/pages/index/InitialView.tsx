@@ -7,7 +7,6 @@ import axios from 'axios';
 import { useNavigate } from 'react-router';
 import { animated, config, useTransition } from 'react-spring';
 
-import api from '../../api';
 import { BigButton } from '../../components/BigButton';
 import { getCurrentDate } from '../../utils/index';
 import { cityOptions } from '../../constants/cityOptions';
@@ -18,7 +17,8 @@ import { Footer } from '../../components/Footer/Footer';
 import { getDeviceLocation } from '../../app/App';
 import { Message, MessageType } from '../../components/Message/Message';
 import { LocationSelector } from '../../components/LocationSelector/LocationSelector';
-import { RandomMixResponse } from '../../api/getRandomMix';
+import { useLazyQuery, useQuery } from '@apollo/client';
+import { RandomEventQuery } from './getRandomEvent';
 
 declare global {
   interface Window {
@@ -32,6 +32,7 @@ export const InitialView = () => {
   const [errorMessage, setErrorMessage] = useState<string>('');
   const [isLoading, setIsLoading] = useState(false);
   const [isMounting, setIsMounting] = useState(true);
+  const [getRandomEvent] = useLazyQuery(RandomEventQuery);
 
   const [searchLocation, setSearchLocation] = useState<
     DropdownOption | undefined
@@ -73,11 +74,13 @@ export const InitialView = () => {
     setErrorMessage('');
 
     try {
-      const response = await api.getRandomMix({
-        country: searchLocation?.country.urlCode.toLowerCase(),
-        city: searchLocation?.value.toLowerCase().replace(/\s+/g, ''),
-        autoPlay: true,
-        date: getCurrentDate()
+      const response = await getRandomEvent({
+        variables: {
+          country: searchLocation?.country.urlCode.toLowerCase() ?? 'de',
+          city:
+            searchLocation?.value.toLowerCase().replace(/\s+/g, '') ?? 'berlin',
+          date: getCurrentDate()
+        }
       });
 
       navigate(Routes.Results, { state: response.data });
@@ -96,14 +99,6 @@ export const InitialView = () => {
     );
     localStorage.setItem('search-location', JSON.stringify(cityOption));
     setSearchLocation(cityOption);
-  };
-
-  const selectStyles = {
-    singleValue: (provided: any) => ({
-      ...provided,
-      color: theme.colors.orange,
-      fontSize: theme.fontSizes[0]
-    })
   };
 
   const animatedTextElements = [

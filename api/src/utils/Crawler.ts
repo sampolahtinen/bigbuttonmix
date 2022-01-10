@@ -1,19 +1,39 @@
-import { Browser, Page } from "puppeteer";
-import puppeteer from "puppeteer-extra";
-import { blockedDomains, minimalArgs } from "./createChromiumBrowser";
-import StealthPlugin from "puppeteer-extra-plugin-stealth";
+import { Browser, Page, WrapElementHandle } from 'puppeteer';
+import puppeteer from 'puppeteer-extra';
+import { blockedDomains, minimalArgs } from './createChromiumBrowser';
+import StealthPlugin from 'puppeteer-extra-plugin-stealth';
+import { logInfo } from './logger';
+import { redisClient } from '../server';
+import chalk from 'chalk';
 
 puppeteer.use(StealthPlugin());
+
 export class Crawler {
   browser: any; // TS Bug, complains if Browser type is assigned
   page: Page;
+  isReady: boolean;
 
   constructor() {
     this.browser = null;
     this.page = null;
+    this.isReady = false;
   }
 
-  public async getPage() {
+  public async scrape<T = Array<string | Record<string, string>>>(
+    url: string,
+    selector: string,
+    pageFunction?: (args: Element[]) => T
+  ): Promise<Awaited<WrapElementHandle<T>>> {
+    logInfo(`CRAWLING: ${url}`);
+
+    await this.page.goto(url);
+
+    const results = await this.page.$$eval<T>(selector, pageFunction);
+
+    return results;
+  }
+
+  public async getPage(): Promise<Page> {
     if (!this.page) {
       const newPage = await this.createPage();
       return newPage;
@@ -37,13 +57,13 @@ export class Crawler {
     const page = await this.browser.newPage();
     await page.setRequestInterception(true);
 
-    page.on("request", (req) => {
+    page.on('request', req => {
       if (
-        req.resourceType() === "image" ||
-        req.resourceType() === "stylesheet" ||
-        req.resourceType() === "font" ||
-        req.resourceType() === "script" ||
-        blockedDomains.some((domain) => req.url().includes(domain))
+        req.resourceType() === 'image' ||
+        req.resourceType() === 'stylesheet' ||
+        req.resourceType() === 'font' ||
+        req.resourceType() === 'script' ||
+        blockedDomains.some(domain => req.url().includes(domain))
       ) {
         req.abort();
       } else {
@@ -56,26 +76,27 @@ export class Crawler {
   }
 
   async init() {
-    console.time("puppeteerInit");
+    const timeBenchmark = process.hrtime();
+    const NS_PER_SEC = 1e9;
+
     this.browser = await puppeteer.launch({
       args: minimalArgs,
       headless: true,
-      ignoreHTTPSErrors: true,
+      ignoreHTTPSErrors: true
     });
 
     this.browser;
-    //console.log(this.browser);
 
     const page = await this.browser.newPage();
     await page.setRequestInterception(true);
 
-    page.on("request", (req) => {
+    page.on('request', req => {
       if (
-        req.resourceType() === "image" ||
-        req.resourceType() === "stylesheet" ||
-        req.resourceType() === "font" ||
-        req.resourceType() === "script" ||
-        blockedDomains.some((domain) => req.url().includes(domain))
+        req.resourceType() === 'image' ||
+        req.resourceType() === 'stylesheet' ||
+        req.resourceType() === 'font' ||
+        req.resourceType() === 'script' ||
+        blockedDomains.some(domain => req.url().includes(domain))
       ) {
         req.abort();
       } else {
@@ -84,6 +105,12 @@ export class Crawler {
     });
 
     this.page = page;
-    console.timeEnd("puppeteerInit");
+    this.isReady = true;
+    const timeDiff = process.hrtime(timeBenchmark);
+    console.log(
+      `Puppeteer initiated in: ${
+        (timeDiff[0], timeDiff[1] / NS_PER_SEC)
+      } seconds `
+    );
   }
 }
