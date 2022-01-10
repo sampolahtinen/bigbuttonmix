@@ -96,10 +96,12 @@ export const Results = () => {
     }
   };
 
-  const parseArtistName = (url: string) => {
-    const artistName = url.match(/(?<=soundcloud.com\/).*/gm);
-    if (artistName) {
-      return artistName[0];
+  const parseArtistName = (url: string | null) => {
+    if (url) {
+      const artistName = url.match(/(?<=soundcloud.com\/).*/gm);
+      if (artistName) {
+        return artistName[0];
+      }
     }
     return url;
   };
