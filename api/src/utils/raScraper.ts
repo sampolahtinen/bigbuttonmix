@@ -30,7 +30,7 @@ const puppetRequest = async (
 };
 
 // This function fetches event links from RA and throws and error if it is empty
-const getEventLinks = async (searchPageURL: string, page: Page) => {
+export const getEventLinks = async (searchPageURL: string, page: Page) => {
   if (REDIS_ENABLED) {
     const cachedEvents = ((await redisClient.get(
       searchPageURL
@@ -76,7 +76,7 @@ const getRandomEvent = async (eventLinks: string[]) => {
   return eventUrl;
 };
 
-const getSoundCloudLinkFromArtist = async (page: Page, artistUrl: string) => {
+export const getSoundCloudLinkFromArtist = async (page: Page, artistUrl: string) => {
   // Reads soundcloud link from artist's RA page
   if (REDIS_ENABLED) {
     const cachedSoundCloud = ((await redisClient.get(
@@ -148,7 +148,7 @@ const getRandomEventArtistScLink = async (
   }
 };
 
-const getRaEventDetails = async (
+export const getRaEventDetails = async (
   page: Page,
   eventUrl: string
 ): Promise<EventDetails> => {

@@ -1,6 +1,11 @@
 {
   "name": "api",
   "homepage": ".",
+  "jest": {
+    "testPathIgnorePatterns": [
+      "node_modules"
+    ]
+  },
   "version": "0.0.1",
   "private": true,
   "scripts": {
@@ -8,7 +13,9 @@
     "dev": "NODE_ENV=development nodemon --watch '**/*' -e ts,tsx,js  --ignore 'src/**/*.spec.ts' --exec 'ts-node --project ./tsconfig.json' src/server.ts",
     "start": "node ./dist/server.js",
     "start:redis": "docker-compose up -d",
-    "build": "NODE_ENV=production tsc"
+    "build": "NODE_ENV=production tsc",
+    "test:block": "jest testsExternalLinks/block.test.ts",
+    "test:pagerequests": "jest testsExternalLinks/pageScraping.test.ts"
   },
   "engines": {
     "node": "14.15.5",
@@ -17,6 +24,7 @@
   "license": "MIT",
   "main": "dist/server.js",
   "devDependencies": {
+    "@babel/preset-typescript": "^7.16.7",
     "@types/cookie": "^0.4.0",
     "@types/puppeteer": "^5.4.4",
     "@types/ramda": "^0.27.44",
@@ -41,6 +49,7 @@
     "express": "^4.17.1",
     "express-async-router": "^0.1.15",
     "express-query-boolean": "^2.0.0",
+    "jest": "^27.4.7",
     "node-fetch": "^2.6.1",
     "puppeteer": "^10.2.0",
     "puppeteer-extra": "^3.1.18",
