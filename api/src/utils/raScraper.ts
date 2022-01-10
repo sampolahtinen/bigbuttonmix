@@ -287,8 +287,6 @@ export class RaScraper extends DataSource {
         city
       };
 
-      return resolve(mockRandomEventResponse);
-
       while (this.step !== Step.Done || this.retryCount !== RETRY_LIMIT) {
         try {
           switch (this.step) {

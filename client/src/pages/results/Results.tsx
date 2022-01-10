@@ -15,6 +15,7 @@ import { RandomMixQueryResponse } from '../../api/getRandomMix';
 import { useLazyQuery } from '@apollo/client';
 import { RandomEventQuery } from '../index/getRandomEvent';
 import { Box } from 'theme-ui';
+import { theme } from '../../styles/theme';
 
 declare global {
   interface Window {
@@ -45,7 +46,7 @@ export const Results = () => {
     Omit<RandomMixQueryResponse['randomEvent'], 'randomTrack'> | undefined
   >(undefined);
 
-  const [getRandomEvent] = useLazyQuery(RandomEventQuery);
+  const [getRandomEvent, { refetch }] = useLazyQuery(RandomEventQuery);
 
   const scWidget = useRef<SC.SoundCloudWidget>();
 
@@ -56,23 +57,26 @@ export const Results = () => {
     setErrorMessage('');
 
     try {
-      const response = await getRandomEvent({
-        variables: {
-          country: searchLocation?.country.urlCode.toLowerCase() ?? 'de',
-          city:
-            searchLocation?.value.toLowerCase().replace(/\s+/g, '') ?? 'berlin',
-          date: getCurrentDate()
-        }
+      const response = await refetch({
+        country: searchLocation?.country.urlCode.toLowerCase() ?? 'de',
+        city:
+          searchLocation?.value.toLowerCase().replace(/\s+/g, '') ?? 'berlin',
+        date: getCurrentDate()
       });
 
       if (scWidget.current) {
         scWidget.current.pause();
       }
 
-      setSoundcloudData(response.data.soundcloud);
+      const {
+        randomTrack: soundcloudData,
+        ...raEventInformation
+      } = response.data.randomEvent;
+
+      setSoundcloudData(soundcloudData);
 
       if (scWidget.current) {
-        scWidget.current.load(response.data.soundcloud.track_url, {
+        scWidget.current.load(soundcloudData.track_url, {
           show_teaser: false,
           show_artwork: true,
           auto_play: true,
@@ -82,7 +86,7 @@ export const Results = () => {
         });
       }
 
-      setRaEventInformation(response.data.event);
+      setRaEventInformation(raEventInformation);
     } catch (error) {
       if (axios.isAxiosError(error) && error.response?.status === 404) {
         setErrorMessage('No events found for given location. Try another one!');
@@ -90,6 +94,14 @@ export const Results = () => {
     } finally {
       setIsLoading(false);
     }
+  };
+
+  const parseArtistName = (url: string) => {
+    const artistName = url.match(/(?<=soundcloud.com\/).*/gm);
+    if (artistName) {
+      return artistName[0];
+    }
+    return url;
   };
 
   const handleCitySelection = (selectedLocation: string) => {
@@ -185,42 +197,36 @@ export const Results = () => {
           </Player>
           {raEventInformation && (
             <EventInfoContainer className="event-info-container">
-              <div className="column" css={{ marginRight: '1rem' }}>
-                <Row className="row">
-                  <Heading>Event</Heading>
-                  <Anchor
-                    as="a"
-                    className="event-info-row"
-                    href={raEventInformation.eventLink}
-                    target="_blank"
-                  >
-                    {raEventInformation.title}
-                  </Anchor>
-                </Row>
-                <Row>
-                  <Heading>Venue</Heading>
-                  <Text className="event-info-row">
-                    {raEventInformation.venue}
-                  </Text>
-                </Row>
-                {/* <Row>
-                  <Heading>Artists</Heading>
-                  <Text className="event-info-row">
-                    {raEventInformation.artists.map(artist => (
-                      <Text>{artist.name}</Text>
-                    ))}
-                  </Text>
-                </Row> */}
-              </div>
-              <div className="column">
-                <Row>
-                  <Heading>Date</Heading>
-                  <DateText>{raEventInformation.date}</DateText>
-                </Row>
-                <Row>
-                  <Text>{raEventInformation.openingHours}</Text>
-                </Row>
-              </div>
+              <Row css={{ display: 'flex', flexWrap: 'nowrap' }}>
+                <div className="column" css={{ marginRight: '1rem' }}>
+                  <Row className="row">
+                    <Heading>Event</Heading>
+                    <Anchor
+                      as="a"
+                      className="event-info-row"
+                      href={raEventInformation.eventLink}
+                      target="_blank"
+                    >
+                      {raEventInformation.title}
+                    </Anchor>
+                  </Row>
+                  <Row>
+                    <Heading>Venue</Heading>
+                    <Text className="event-info-row">
+                      {raEventInformation.venue}
+                    </Text>
+                  </Row>
+                </div>
+                <div className="column">
+                  <Row>
+                    <Heading>Date</Heading>
+                    <DateText>{raEventInformation.date}</DateText>
+                  </Row>
+                  <Row>
+                    <Text>{raEventInformation.openingHours}</Text>
+                  </Row>
+                </div>
+              </Row>
               <Row
                 css={{
                   textAlign: 'center',
@@ -237,7 +243,17 @@ export const Results = () => {
                 >
                   {raEventInformation.artists.map((artist, index) => (
                     <div>
-                      <Text>{artist.name}</Text>
+                      <Text
+                        css={{
+                          color:
+                            parseArtistName(artist.soundcloudUrl) ===
+                            parseArtistName(soundcloudData.author_url)
+                              ? theme.colors.orange
+                              : theme.colors.text
+                        }}
+                      >
+                        {artist.name}
+                      </Text>
                       {index < raEventInformation.artists.length - 1 && (
                         <span css={{ padding: '0 0.8rem' }}>|</span>
                       )}

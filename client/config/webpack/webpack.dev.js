@@ -5,7 +5,7 @@ const { merge } = require('webpack-merge');
 const commonWebpackConfig = require('./webpack.common');
 const paths = require('../paths');
 
-const PORT = 3000;
+const PORT = 5000;
 
 const webpackDevConfig = env => {
   return merge(commonWebpackConfig(env), {

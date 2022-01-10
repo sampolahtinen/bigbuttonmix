@@ -7,7 +7,7 @@ export type EventInformation = {
   artists: {
     id: string;
     name: string;
-    soundcloudUrl: string | null;
+    soundcloudUrl: string;
   }[];
 };
 
@@ -23,7 +23,7 @@ export type RandomMixQueryResponse = {
       title?: string;
       description?: string;
       thumbnail_url?: string;
-      author_url?: string;
+      author_url: string;
       author_name?: string;
       html: string;
       widget_src: string;
