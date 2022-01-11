@@ -338,5 +338,5 @@ const EventInfoContainer = styled.div`
 `;
 
 const Player = styled.div`
-  height: 45vh;
+  height: 35vh;
 `;
