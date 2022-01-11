@@ -35,7 +35,8 @@ crawler.init().then(async () => {
     dataSources
   });
 
-  server.listen({ port: PORT }).then(({ url }) => {
+  server.listen({ port: PORT }).then(({ url, server }) => {
+    server.setTimeout(10 * 60 * 1000); // 10 minutes
     console.log(chalk.green(`🚀 Server ready at ${url}`));
   });
 });

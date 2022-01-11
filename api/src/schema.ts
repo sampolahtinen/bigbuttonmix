@@ -1,5 +1,5 @@
 import { makeSchema, nullabilityGuardPlugin } from 'nexus';
-import path from 'path';
+import * as path from 'path';
 import * as types from './graphql';
 
 export const schema = makeSchema({

@@ -83,6 +83,12 @@ export class RaScraper extends DataSource {
     return JSON.parse(cachedData);
   }
 
+  private async removeCached(key: string) {
+    logInfo(chalk.magenta(`Removing cached data: ${key}`));
+
+    await redisClient.del(key);
+  }
+
   private async setCacheData<T = string>(
     key: string,
     data: Record<string, string | string[] | T> | string[]
@@ -246,13 +252,13 @@ export class RaScraper extends DataSource {
 
     logInfo('Requesting page from Soundcloud');
 
-    console.time('SC tracks page');
+    // console.time('SC tracks page');
 
     const scPageString = await axios.get(`${artistSoundCloudUrl}/tracks/`);
 
     logInfo(`Tracks page request status ${scPageString.status}`);
 
-    console.timeEnd('SC tracks page');
+    // console.timeEnd('SC tracks page');
 
     const scUserID = scPageString.data.match(/(?<=soundcloud:users:)\d+/g);
     logInfo(`scUserID ${scUserID}`);
@@ -277,8 +283,8 @@ export class RaScraper extends DataSource {
 
   getRandomEvent(args: EventArgs): Promise<RandomEventResponse> {
     return new Promise(async (resolve, reject) => {
-      console.log('raFunction');
-      console.time('raFunction');
+      // console.log('raFunction');
+      // console.time('raFunction');
 
       let { country, city, date } = args;
 
@@ -316,9 +322,13 @@ export class RaScraper extends DataSource {
 
               if (isEmpty(this.randomEventDetails.artists)) {
                 this.goTo(Step.GetEventDetails);
+
+                break;
               } else {
                 logSuccess(`RANDOM EVENT DETAILS SCRAPED: ${randomEvent}`);
                 this.goTo(Step.GetArtistSoundCloudLink);
+
+                break;
               }
             /**
              * Third step is about getting random artist SoundCloud link
@@ -340,6 +350,8 @@ export class RaScraper extends DataSource {
                 logError('>> NONE OF THE EVENT ARTISTS HAVE SOUNDCLOUD URL <<');
 
                 this.goTo(Step.GetEventDetails);
+
+                break;
               } else {
                 const randomArtist = this.artistsWithSoundcloud.shift(); // also modifies original
                 this.scLink = await this.getArtistSoundcloudLink(
@@ -364,6 +376,8 @@ export class RaScraper extends DataSource {
                 if (isEmpty(this.artistsWithSoundcloud)) {
                   logError('>> NONE OF THE EVENT ARTISTS HAVE TRACKS <<');
 
+                  this.removeCached(this.randomEventDetails.eventUrl);
+
                   if (isEmpty(this.events)) {
                     logError(
                       '>> NONE OF THE EVENTS HAVE ARTIST WITH SOUNDCLOUD TRACKS <<'
@@ -381,6 +395,8 @@ export class RaScraper extends DataSource {
                   logInfo('>> GETTING NEW EVENT <<');
 
                   this.goTo(Step.GetEventDetails);
+
+                  break;
                 } else {
                   const randomArtist = this.artistsWithSoundcloud.shift(); // also modifies original
                   this.scLink = await this.getArtistSoundcloudLink(
@@ -388,6 +404,8 @@ export class RaScraper extends DataSource {
                   );
 
                   this.goTo(Step.GetSoundCloudTracks);
+
+                  break;
                 }
               } else {
                 logSuccess('>> GETTING SOUNDCLOUD TRACKS <<');
@@ -406,7 +424,7 @@ export class RaScraper extends DataSource {
               logSuccess('>> GENERATING SOUNDCLOUD OEMBED <<');
               logSuccess('>> DONE <<');
 
-              console.timeEnd('raFunction');
+              // console.timeEnd('raFunction');
 
               return resolve({
                 ...this.randomEventDetails,
@@ -427,7 +445,7 @@ export class RaScraper extends DataSource {
             reject(new ApolloError(ErrorMessages.Timeout, ErrorCodes.Timeout));
           }
         }
-        console.timeEnd('raFunction');
+        // console.timeEnd('raFunction');
       }
     });
   }
