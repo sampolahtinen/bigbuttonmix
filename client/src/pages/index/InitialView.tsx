@@ -1,9 +1,17 @@
 /** @jsx jsx */
+import { useLazyQuery } from '@apollo/client';
+import { jsx } from '@emotion/react';
+import styled from '@emotion/styled';
+import axios from 'axios';
+import { useEffect, useState } from 'react';
+import { useNavigate } from 'react-router';
+import { animated, config, useTransition } from 'react-spring';
+import { Box, Flex, Text } from 'theme-ui';
 import { BigButton } from '../../components/BigButton';
 import { Footer } from '../../components/Footer/Footer';
 import {
-  LocationSelector,
-  defaultSearchLocation
+  defaultSearchLocation,
+  LocationSelector
 } from '../../components/LocationSelector/LocationSelector';
 import { Message, MessageType } from '../../components/Message/Message';
 import { Routes } from '../../constants/routes';
@@ -11,14 +19,6 @@ import { theme } from '../../styles/theme';
 import { DropdownOption } from '../../utils/generateCityOptions';
 import { getCurrentDate } from '../../utils/index';
 import { RandomEventQuery } from './getRandomEvent';
-import { useLazyQuery } from '@apollo/client';
-import { css, jsx } from '@emotion/react';
-import styled from '@emotion/styled';
-import axios from 'axios';
-import React, { useEffect, useState } from 'react';
-import { useNavigate } from 'react-router';
-import { animated, config, useTransition } from 'react-spring';
-import { Box, Flex, Text, Divider } from 'theme-ui';
 
 declare global {
   interface Window {
@@ -62,8 +62,11 @@ export const InitialView = () => {
   };
 
   const handleCitySelection = (selectedLocation: DropdownOption) => {
+    setErrorMessage('');
     setSearchLocation(selectedLocation);
   };
+
+  const handleLocationError = (message: string) => setErrorMessage(message);
 
   const animatedTextElements = [
     <Title>Tap!</Title>,
@@ -132,6 +135,7 @@ export const InitialView = () => {
         </Text>
         <LocationSelector
           onChange={handleCitySelection}
+          onError={handleLocationError}
           locatorIconPosition="end"
           css={{
             fontSize: theme.fontSizes[1]
@@ -142,7 +146,7 @@ export const InitialView = () => {
         <Message
           type={MessageType.Error}
           size="small"
-          css={{ padding: '2rem' }}
+          css={{ padding: '2rem', textAlign: 'center', whiteSpace: 'pre-line' }}
         >
           {errorMessage}
         </Message>

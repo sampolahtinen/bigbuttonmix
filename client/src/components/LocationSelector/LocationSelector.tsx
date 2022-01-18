@@ -5,11 +5,11 @@ import { Box, Divider, Flex } from 'theme-ui';
 import { cityOptions } from '../../constants/cityOptions';
 import { useDeviceLocation } from '../../hooks/useDeviceLocation';
 import { DropdownOption } from '../../utils/generateCityOptions';
-import { Message, MessageType } from '../Message/Message';
 import { Select } from '../Select';
 
 type LocationSelectorProps = {
   onChange: (cityOption: DropdownOption) => void;
+  onError?: (message: string) => void;
   locatorIconPosition?: 'start' | 'end';
   className?: string;
 };
@@ -28,6 +28,7 @@ export const defaultSearchLocation = {
 
 export const LocationSelector = ({
   onChange,
+  onError,
   locatorIconPosition = 'start',
   className
 }: LocationSelectorProps) => {
@@ -42,15 +43,12 @@ export const LocationSelector = ({
     DropdownOption | undefined
   >(defaultSearchLocation);
 
-  const [locationNotValidError, setLocationNotValidError] = useState('');
-
   useEffect(() => {
     /**
-     * When the view mounts, we first check if user have previously chosen a search location from the dropdown.
-     * If yes, then we use this search location again.
-     * If there is no stored search-location, we take the device location and set it to be the search location.
-     *
-     * Local storage search-location will always be favored before device location
+     * When useDeviceLocation yields data, we convert the device location data into a dropdown option,
+     * and store this as "search-location" in local storage.
+     * Next time when LocationSelector mounts, "search-location" is retrieved from local storage,
+     * and used as a preselection for dropdowns as well as searches.
      */
     if (!isLoadingLocation && deviceLocation) {
       const deviceLocationDropdownOption = cityOptions.find(
@@ -64,9 +62,9 @@ export const LocationSelector = ({
         );
 
         setSearchLocation(deviceLocationDropdownOption);
-      } else {
-        setLocationNotValidError(
-          'Your location has no events :( Try choosing another location!'
+      } else if (onError) {
+        onError(
+          'Your location has no events :(\nTry choosing another location!'
         );
       }
     }
@@ -89,6 +87,9 @@ export const LocationSelector = ({
     }
   }, []);
 
+  /**
+   * Here we propagate each local searchLocal change to the parent.
+   */
   useEffect(() => {
     if (searchLocation && !isEmpty(searchLocation)) {
       onChange(searchLocation);
@@ -96,8 +97,6 @@ export const LocationSelector = ({
   }, [searchLocation]);
 
   const handleCitySelection = (selectedLocation: string) => {
-    setLocationNotValidError('');
-
     const cityOption = cityOptions.find(
       city => city.label.toLowerCase() === selectedLocation.toLowerCase()
     );
@@ -175,9 +174,9 @@ export const LocationSelector = ({
           </>
         )}
       </Flex>
-      {locationNotValidError && (
+      {/* {locationNotValidError && (
         <Message type={MessageType.Error}>{locationNotValidError}</Message>
-      )}
+      )} */}
     </Box>
   );
 };
