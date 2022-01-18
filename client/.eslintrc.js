@@ -37,6 +37,7 @@ module.exports = {
     'no-undef': ['error'],
     'no-var': ['error'],
     'object-curly-spacing': ['error', 'always'],
+    'sort-imports': ['off'],
     indent: ['off']
   }
 };

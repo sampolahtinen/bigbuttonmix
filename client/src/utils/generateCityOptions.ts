@@ -18,7 +18,7 @@ type Subregion = {
   name: string;
   isCountry: boolean;
   urlName: string;
-  parentId: string;
+  parentId: string | number;
   country: {
     id: string;
     name: string;
@@ -39,19 +39,19 @@ type Area = {
   isCountry: boolean;
   isTopCity?: boolean;
   urlName: string;
-  parentId: number;
+  parentId: string | number;
   subregion: Subregion[];
   __typename: 'Area';
 };
 
 type Country = {
-  id: string;
+  id?: string;
   name: string;
   urlCode: string;
   topCountry: boolean;
-  order: number;
-  areas: Area[];
-  __typename: 'Country';
+  order?: number;
+  areas?: Area[];
+  __typename?: 'Country';
 };
 
 export type DropdownOption = {

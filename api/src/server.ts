@@ -1,11 +1,11 @@
 import { ApolloServer } from 'apollo-server';
-import * as redis from 'redis';
-import dotenv from 'dotenv';
 import chalk from 'chalk';
-import { REDIS_ENABLED, PORT } from './constants';
+import dotenv from 'dotenv';
+import * as redis from 'redis';
+import { PORT, REDIS_ENABLED } from './constants';
 import { schema } from './schema';
-import { RaScraper } from './utils/RaScraper';
 import { Crawler } from './utils/Crawler';
+import { RaScraper } from './utils/RaScraper';
 
 dotenv.config();
 console.log(`${chalk.blue('ENVIRONMENT:')} ${process.env.NODE_ENV}`);
