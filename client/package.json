@@ -120,5 +120,8 @@
       "node"
     ],
     "resetMocks": true
+  },
+  "devDependencies": {
+    "prettier": "^2.5.1"
   }
 }

@@ -86,7 +86,9 @@ export class RaScraper extends DataSource {
   private async removeCached(key: string) {
     logInfo(chalk.magenta(`Removing cached data: ${key}`));
 
-    await redisClient.del(key);
+    if (redisClient && (await redisClient.exists(key))) {
+      await redisClient.del(key);
+    }
   }
 
   private async setCacheData<T = string>(
@@ -376,7 +378,7 @@ export class RaScraper extends DataSource {
                 if (isEmpty(this.artistsWithSoundcloud)) {
                   logError('>> NONE OF THE EVENT ARTISTS HAVE TRACKS <<');
 
-                  this.removeCached(this.randomEventDetails.eventUrl);
+                  await this.removeCached(this.randomEventDetails.eventUrl);
 
                   if (isEmpty(this.events)) {
                     logError(

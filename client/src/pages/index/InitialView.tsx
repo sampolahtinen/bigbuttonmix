@@ -1,23 +1,23 @@
 /** @jsx jsx */
-import React, { useEffect, useState } from 'react';
-import { css, jsx } from '@emotion/react';
-import { Box, Flex, Text, Divider } from 'theme-ui';
+import { useLazyQuery } from '@apollo/client';
+import { jsx } from '@emotion/react';
 import styled from '@emotion/styled';
 import axios from 'axios';
+import { useEffect, useState } from 'react';
 import { useNavigate } from 'react-router';
 import { animated, config, useTransition } from 'react-spring';
-
+import { Box, Flex, Text } from 'theme-ui';
 import { BigButton } from '../../components/BigButton';
-import { getCurrentDate } from '../../utils/index';
-import { cityOptions } from '../../constants/cityOptions';
-import { DropdownOption } from '../../utils/generateCityOptions';
-import { theme } from '../../styles/theme';
-import { Routes } from '../../constants/routes';
 import { Footer } from '../../components/Footer/Footer';
-import { getDeviceLocation } from '../../app/App';
+import {
+  defaultSearchLocation,
+  LocationSelector
+} from '../../components/LocationSelector/LocationSelector';
 import { Message, MessageType } from '../../components/Message/Message';
-import { LocationSelector } from '../../components/LocationSelector/LocationSelector';
-import { useLazyQuery, useQuery } from '@apollo/client';
+import { Routes } from '../../constants/routes';
+import { theme } from '../../styles/theme';
+import { DropdownOption } from '../../utils/generateCityOptions';
+import { getCurrentDate } from '../../utils/index';
 import { RandomEventQuery } from './getRandomEvent';
 
 declare global {
@@ -31,43 +31,11 @@ declare global {
 export const InitialView = () => {
   const [errorMessage, setErrorMessage] = useState<string>('');
   const [isLoading, setIsLoading] = useState(false);
-  const [isMounting, setIsMounting] = useState(true);
   const [getRandomEvent] = useLazyQuery(RandomEventQuery);
-
-  const [searchLocation, setSearchLocation] = useState<
-    DropdownOption | undefined
-  >(undefined);
-
+  const [searchLocation, setSearchLocation] = useState<DropdownOption>(
+    defaultSearchLocation
+  );
   const navigate = useNavigate();
-
-  useEffect(() => {
-    const storedSearchLocation = localStorage.getItem('search-location');
-    const deviceLocation = localStorage.getItem('device-location');
-
-    /**
-     * When the view mounts, we first check if user have previously chosen a search location from the dropdown.
-     * If yes, then we use this search location againPropTypes.
-     * If there is no stored search-location, we take the device location and set it to be the search location.
-     *
-     * Local storage search-location will always be favored before device location
-     */
-    if (storedSearchLocation) {
-      setSearchLocation(JSON.parse(storedSearchLocation));
-      setIsMounting(false);
-    } else if (deviceLocation) {
-      const deviceLocationDropdownOption = cityOptions.find(
-        city => city.label.toLowerCase() === JSON.parse(deviceLocation).city
-      );
-
-      localStorage.setItem(
-        'search-location',
-        JSON.stringify(deviceLocationDropdownOption)
-      );
-
-      setIsMounting(false);
-      setSearchLocation(deviceLocationDropdownOption);
-    }
-  }, []);
 
   const getScEmbedCode = async () => {
     setIsLoading(true);
@@ -93,13 +61,12 @@ export const InitialView = () => {
     }
   };
 
-  const handleCitySelection = (selectedLocation: string) => {
-    const cityOption = cityOptions.find(
-      city => city.label.toLowerCase() === selectedLocation.toLowerCase()
-    );
-    localStorage.setItem('search-location', JSON.stringify(cityOption));
-    setSearchLocation(cityOption);
+  const handleCitySelection = (selectedLocation: DropdownOption) => {
+    setErrorMessage('');
+    setSearchLocation(selectedLocation);
   };
+
+  const handleLocationError = (message: string) => setErrorMessage(message);
 
   const animatedTextElements = [
     <Title>Tap!</Title>,
@@ -137,32 +104,6 @@ export const InitialView = () => {
     return () => clearInterval(interval);
   }, []);
 
-  const [isGettingLocation, setIsGettingLocation] = useState(false);
-  const handleDeviceLocationRequest = async () => {
-    setIsGettingLocation(true);
-
-    try {
-      const deviceLocation = await getDeviceLocation();
-
-      if (deviceLocation && deviceLocation.city) {
-        const nextSearchLocation = cityOptions.find(
-          city => city.label.toLowerCase() === deviceLocation.city
-        );
-
-        localStorage.setItem(
-          'search-location',
-          JSON.stringify(nextSearchLocation)
-        );
-        setSearchLocation(nextSearchLocation);
-
-        setIsGettingLocation(false);
-      }
-    } catch (error) {
-      setErrorMessage('Could not determine device location');
-      setIsGettingLocation(false);
-    }
-  };
-
   return (
     <Container>
       <Box
@@ -192,24 +133,20 @@ export const InitialView = () => {
         <Text css={{ fontSize: theme.fontSizes[1], marginRight: '0.8rem' }}>
           Raving in
         </Text>
-        {!isMounting && (
-          <LocationSelector
-            onChange={handleCitySelection}
-            onCurrentLocationClick={handleDeviceLocationRequest}
-            selectedValue={searchLocation}
-            isLoading={isGettingLocation}
-            locatorIconPosition="end"
-            css={{
-              fontSize: theme.fontSizes[1]
-            }}
-          />
-        )}
+        <LocationSelector
+          onChange={handleCitySelection}
+          onError={handleLocationError}
+          locatorIconPosition="end"
+          css={{
+            fontSize: theme.fontSizes[1]
+          }}
+        />
       </Flex>
       {errorMessage && (
         <Message
           type={MessageType.Error}
           size="small"
-          css={{ padding: '2rem' }}
+          css={{ padding: '2rem', textAlign: 'center', whiteSpace: 'pre-line' }}
         >
           {errorMessage}
         </Message>

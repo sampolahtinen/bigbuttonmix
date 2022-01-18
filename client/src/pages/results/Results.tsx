@@ -1,21 +1,19 @@
 /** @jsx jsx */
-import React, { useCallback, useEffect, useRef, useState } from 'react';
-import { css, jsx } from '@emotion/react';
-import { BigButton } from '../../components/BigButton';
-import { format } from 'date-fns';
-import styled from '@emotion/styled';
-import { cityOptions } from '../../constants/cityOptions';
-import { DropdownOption } from '../../utils/generateCityOptions';
-import { useLocation } from 'react-router';
-import { LocationSelector } from '../../components/LocationSelector/LocationSelector';
-import { getDeviceLocation } from '../../app/App';
-import axios from 'axios';
-import { Message, MessageType } from '../../components/Message/Message';
-import { RandomMixQueryResponse } from '../../api/getRandomMix';
 import { useLazyQuery } from '@apollo/client';
-import { RandomEventQuery } from '../index/getRandomEvent';
+import { jsx } from '@emotion/react';
+import styled from '@emotion/styled';
+import axios from 'axios';
+import { format } from 'date-fns';
+import React, { useCallback, useEffect, useRef, useState } from 'react';
+import { useLocation } from 'react-router';
 import { Box } from 'theme-ui';
+import { RandomMixQueryResponse } from '../../api/getRandomMix';
+import { BigButton } from '../../components/BigButton';
+import { LocationSelector } from '../../components/LocationSelector/LocationSelector';
+import { Message, MessageType } from '../../components/Message/Message';
 import { theme } from '../../styles/theme';
+import { DropdownOption } from '../../utils/generateCityOptions';
+import { RandomEventQuery } from '../index/getRandomEvent';
 
 declare global {
   interface Window {
@@ -30,11 +28,10 @@ export const Results = () => {
 
   const [isLoading, setIsLoading] = useState(true);
 
-  const [soundcloudData, setSoundcloudData] = useState<
-    RandomMixQueryResponse['randomEvent']['randomTrack']
-  >();
+  const [soundcloudData, setSoundcloudData] =
+    useState<RandomMixQueryResponse['randomEvent']['randomTrack']>();
 
-  const location = (useLocation() as unknown) as {
+  const location = useLocation() as unknown as {
     state: RandomMixQueryResponse;
   };
 
@@ -68,10 +65,8 @@ export const Results = () => {
         scWidget.current.pause();
       }
 
-      const {
-        randomTrack: soundcloudData,
-        ...raEventInformation
-      } = response.data.randomEvent;
+      const { randomTrack: soundcloudData, ...raEventInformation } =
+        response.data.randomEvent;
 
       setSoundcloudData(soundcloudData);
 
@@ -106,37 +101,12 @@ export const Results = () => {
     return url;
   };
 
-  const handleCitySelection = (selectedLocation: string) => {
-    const cityOption = cityOptions.find(
-      city => city.label.toLowerCase() === selectedLocation.toLowerCase()
-    );
-    localStorage.setItem('search-location', JSON.stringify(cityOption));
-    setSearchLocation(cityOption);
+  const handleCitySelection = (selectedLocation: DropdownOption) => {
+    setErrorMessage('');
+    setSearchLocation(selectedLocation);
   };
 
-  const [isGettingLocation, setIsGettingLocation] = useState(false);
-  const handleSearchLocationChange = async () => {
-    setIsGettingLocation(true);
-    try {
-      const deviceLocation = await getDeviceLocation();
-
-      if (deviceLocation && deviceLocation.city) {
-        const nextSearchLocation = cityOptions.find(
-          city => city.label.toLowerCase() === deviceLocation.city
-        );
-
-        localStorage.setItem(
-          'search-location',
-          JSON.stringify(nextSearchLocation)
-        );
-        setSearchLocation(nextSearchLocation);
-        setIsGettingLocation(false);
-      }
-    } catch (error) {
-      setErrorMessage('Could not determine device location');
-      setIsGettingLocation(false);
-    }
-  };
+  const handleLocationError = (message: string) => setErrorMessage(message);
 
   useEffect(() => {
     const storedSearchLocation = localStorage.getItem('search-location');
@@ -157,7 +127,6 @@ export const Results = () => {
    * Instead of using useRef and useEffect, React docs advise to use callback
    * https://reactjs.org/docs/hooks-faq.html#how-can-i-measure-a-dom-node
    */
-
   const iframeRef = useCallback(iframe => {
     if (iframe !== null) {
       const widget = SC.Widget(iframe);
@@ -168,10 +137,8 @@ export const Results = () => {
 
   useEffect(() => {
     if (location.state) {
-      const {
-        randomTrack: soundcloudData,
-        ...raEventInformation
-      } = location.state.randomEvent;
+      const { randomTrack: soundcloudData, ...raEventInformation } =
+        location.state.randomEvent;
 
       setSoundcloudData(soundcloudData);
       setRaEventInformation(raEventInformation);
@@ -270,9 +237,7 @@ export const Results = () => {
       {soundcloudData && (
         <LocationSelector
           onChange={handleCitySelection}
-          onCurrentLocationClick={handleSearchLocationChange}
-          selectedValue={searchLocation}
-          isLoading={isGettingLocation}
+          onError={handleLocationError}
         />
       )}
       <BigButton
@@ -282,7 +247,11 @@ export const Results = () => {
         isLoading={isLoading}
       />
       {errorMessage && (
-        <Message type={MessageType.Error} size="small">
+        <Message
+          type={MessageType.Error}
+          size="small"
+          css={{ padding: '2rem', textAlign: 'center', whiteSpace: 'pre-line' }}
+        >
           {errorMessage}
         </Message>
       )}
