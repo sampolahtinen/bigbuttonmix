@@ -174,9 +174,6 @@ export const LocationSelector = ({
           </>
         )}
       </Flex>
-      {/* {locationNotValidError && (
-        <Message type={MessageType.Error}>{locationNotValidError}</Message>
-      )} */}
     </Box>
   );
 };
