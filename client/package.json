@@ -5,6 +5,7 @@
   "description": "Bigbutton mix UI",
   "main": "dist/index.js",
   "engines": {
+    "node": "14.16.0",
     "yarn": "1.x"
   },
   "scripts": {
