@@ -4,6 +4,9 @@
   "author": "Sampo Lahtinen",
   "description": "Bigbutton mix UI",
   "main": "dist/index.js",
+  "engines": {
+    "yarn": "1.x"
+  },
   "scripts": {
     "dev": "webpack serve --env development --config ./config/webpack/webpack.dev.js",
     "build": "webpack --env production --config ./config/webpack/webpack.prod.js",
