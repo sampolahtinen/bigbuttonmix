@@ -7,7 +7,6 @@
   "scripts": {
     "dev": "webpack serve --env development --config ./config/webpack/webpack.dev.js",
     "build": "webpack --env production --config ./config/webpack/webpack.prod.js",
-    "prebuild": "node loadEnv.js",
     "start": "serve -s dist",
     "test": "jest"
   },
