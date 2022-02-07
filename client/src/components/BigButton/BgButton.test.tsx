@@ -14,11 +14,11 @@ describe('BigButton', () => {
     expect(mockClickHandler).toHaveBeenCalled();
   });
 
-  it('is small when isSmall prop is not passed into it', () => {
+  it('is big when isSmall prop is not passed into it', () => {
     expect(wrapper.find(BigButtonContainer)).toHaveStyleRule('width', '240px');
   });
 
-  it('is big when isSmall prop is passed into it', () => {
+  it('is small when isSmall prop is passed into it', () => {
     wrapper.setProps({ isSmall: true });
     expect(wrapper.find(BigButtonContainer)).toHaveStyleRule('width', '120px');
   });
