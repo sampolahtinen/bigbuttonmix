@@ -12,7 +12,7 @@
     "dev": "webpack serve --env development --config ./config/webpack/webpack.dev.js",
     "build": "webpack --env production --config ./config/webpack/webpack.prod.js",
     "start": "serve -s dist",
-    "test": "jest"
+    "test": "jest --config config/jest/jest.config.js"
   },
   "keywords": [],
   "license": "ISC",
@@ -23,6 +23,7 @@
     "@babel/preset-react": "^7.16.0",
     "@babel/preset-typescript": "^7.16.0",
     "@babel/runtime": "^7.16.0",
+    "@emotion/jest": "^11.7.1",
     "@emotion/react": "^11.5.0",
     "@emotion/styled": "^11.3.0",
     "@pmmmwh/react-refresh-webpack-plugin": "^0.5.1",
@@ -32,6 +33,7 @@
     "@testing-library/user-event": "^13.5.0",
     "@theme-ui/presets": "^0.12.0",
     "@types/axios": "^0.14.0",
+    "@types/enzyme": "^3.10.11",
     "@types/jest": "^27.0.2",
     "@types/ramda": "^0.27.46",
     "@types/react": "^17.0.33",
@@ -39,10 +41,11 @@
     "@types/react-select": "^5.0.1",
     "axios": "^0.24.0",
     "babel-eslint": "^10.0.1",
-    "babel-jest": "^23.6.0",
+    "babel-jest": "27.5.0",
     "babel-loader": "^8.2.3",
     "camelcase": "^6.2.0",
     "chalk": "^4.1.2",
+    "classnames": "^2.3.1",
     "clean-webpack-plugin": "^4.0.0",
     "copy-webpack-plugin": "^9.1.0",
     "date-fns": "^2.25.0",
@@ -61,7 +64,7 @@
     "history": "5",
     "html-loader": "^3.0.0",
     "html-webpack-plugin": "^5.5.0",
-    "jest": "^23.6.0",
+    "jest": "27.5.0",
     "jest-enzyme": "^7.1.2",
     "node-polyfill-webpack-plugin": "^1.1.4",
     "nodemon-webpack-plugin": "^4.5.2",
@@ -84,43 +87,6 @@
     "webpack-cli": "^4.9.1",
     "webpack-dev-server": "^4.4.0",
     "workbox-webpack-plugin": "^6.3.0"
-  },
-  "jest": {
-    "roots": [
-      "<rootDir>/src"
-    ],
-    "collectCoverageFrom": [
-      "src/**/*.{js,jsx,ts,tsx}",
-      "!src/**/*.d.ts"
-    ],
-    "setupTestFrameworkScriptFile": "<rootDir>/config/jest/setupTests.ts",
-    "testMatch": [
-      "<rootDir>/src/**/__tests__/**/*.{js,jsx,ts,tsx}",
-      "<rootDir>/src/**/*.{spec,test}.{js,jsx,ts,tsx}"
-    ],
-    "testEnvironment": "jsdom",
-    "transform": {
-      "^.+\\.(js|jsx|mjs|cjs|ts|tsx)$": "<rootDir>/node_modules/esbuild-jest/esbuild-jest.js",
-      "^(?!.*\\.(js|jsx|mjs|cjs|ts|tsx|css|json)$)": "<rootDir>/config/jest/fileTransform.js"
-    },
-    "transformIgnorePatterns": [
-      "[/\\\\]node_modules[/\\\\].+\\.(js|jsx|mjs|cjs|ts|tsx)$",
-      "^.+\\.module\\.(css|sass|scss)$"
-    ],
-    "modulePaths": [],
-    "moduleFileExtensions": [
-      "web.js",
-      "js",
-      "web.ts",
-      "ts",
-      "web.tsx",
-      "tsx",
-      "json",
-      "web.jsx",
-      "jsx",
-      "node"
-    ],
-    "resetMocks": true
   },
   "devDependencies": {
     "@wojtekmaj/enzyme-adapter-react-17": "^0.6.6",
