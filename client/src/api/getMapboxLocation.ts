@@ -1,6 +1,6 @@
 import axios from 'axios';
 
-const mapboxGeocodingApiUrl = `https://api.mapbox.com/geocoding/v5/mapbox.places/`;
+export const mapboxGeocodingApiUrl = `https://api.mapbox.com/geocoding/v5/mapbox.places/`;
 
 export interface MapboxReverseGeocodeResponse {
   type: string;

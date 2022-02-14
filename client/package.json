@@ -66,6 +66,7 @@
     "html-webpack-plugin": "^5.5.0",
     "jest": "27.5.0",
     "jest-enzyme": "^7.1.2",
+    "msw": "^0.36.8",
     "node-polyfill-webpack-plugin": "^1.1.4",
     "nodemon-webpack-plugin": "^4.5.2",
     "ramda": "^0.27.1",
