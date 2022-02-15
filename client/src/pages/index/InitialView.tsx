@@ -44,7 +44,7 @@ export const InitialView = () => {
     try {
       const response = await getRandomEvent({
         variables: {
-          country: searchLocation?.country.urlCode.toLowerCase() ?? 'de',
+          country: searchLocation?.country?.urlCode.toLowerCase() ?? 'de',
           city:
             searchLocation?.value.toLowerCase().replace(/\s+/g, '') ?? 'berlin',
           date: getCurrentDate()

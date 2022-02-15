@@ -1,9 +1,9 @@
 /** @jsx jsx */
-import React from 'react';
 import { jsx } from '@emotion/react';
-import { DropdownOption } from '../../utils/generateCityOptions';
 import styled from '@emotion/styled';
+import React from 'react';
 import { Box, Spinner } from 'theme-ui';
+import { DropdownOption } from '../../utils/generateCityOptions';
 
 type GroupedDropdownOption = {
   groupLabel: string;
@@ -12,7 +12,7 @@ type GroupedDropdownOption = {
 
 type SelectProps = {
   options: DropdownOption[] | GroupedDropdownOption[];
-  onChange: any;
+  onChange: (arg: string) => void;
   value?: DropdownOption;
   isLoading?: boolean;
   isGrouped?: boolean;
