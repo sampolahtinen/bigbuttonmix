@@ -18,7 +18,8 @@
     "dev:svelte": "yarn workspace client-svelte run dev",
     "deploy:api": "git subtree push --prefix api heroku-api main",
     "deploy:client": "git subtree push --prefix client heroku-client main",
-    "dev": "concurrently yarn:dev:*"
+    "dev": "concurrently yarn:dev:*",
+    "test:client": "yarn workspace client run test"
   },
   "devDependencies": {},
   "dependencies": {

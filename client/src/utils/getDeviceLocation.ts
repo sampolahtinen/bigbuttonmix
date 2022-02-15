@@ -11,7 +11,6 @@ export const getDeviceLocation = () => {
     if (navigator && navigator.geolocation) {
       const onGranted: PositionCallback = async ({ coords }) => {
         const { latitude, longitude } = coords;
-
         try {
           const response = await getMapboxLocation(latitude, longitude);
 
@@ -39,7 +38,6 @@ export const getDeviceLocation = () => {
             },
             { countryCode: '', city: '' }
           );
-
           resolve(deviceLocation);
         } catch (error) {
           reject(new Error('Mapbox request failed.'));

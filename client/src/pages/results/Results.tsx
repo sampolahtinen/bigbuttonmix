@@ -55,7 +55,7 @@ export const Results = () => {
 
     try {
       const response = await refetch({
-        country: searchLocation?.country.urlCode.toLowerCase() ?? 'de',
+        country: searchLocation?.country?.urlCode.toLowerCase() ?? 'de',
         city:
           searchLocation?.value.toLowerCase().replace(/\s+/g, '') ?? 'berlin',
         date: getCurrentDate()

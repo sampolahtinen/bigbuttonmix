@@ -1,7 +1,5 @@
-import { LocationOptions } from '../constants/locationOptions';
 import {
   append,
-  descend,
   flatten,
   map,
   pipe,
@@ -9,9 +7,9 @@ import {
   propEq,
   reduce,
   reject,
-  sortBy,
-  sortWith
+  sortBy
 } from 'ramda';
+import { LocationOptions } from '../constants/locationOptions';
 
 type Subregion = {
   id: string;
@@ -58,7 +56,7 @@ export type DropdownOption = {
   value: string;
   label: string;
   group?: string;
-  country: Country;
+  country?: Country;
   isTopCity?: boolean;
 };
 

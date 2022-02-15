@@ -1,8 +1,8 @@
 /** @jsx jsx */
-import React from 'react';
-import { jsx, css } from '@emotion/react';
+import { jsx } from '@emotion/react';
 import styled from '@emotion/styled';
-import { useSpring, animated } from 'react-spring';
+import React from 'react';
+import { animated, useSpring } from 'react-spring';
 
 type BigButtonProps = {
   onClick: (event: React.MouseEvent<HTMLButtonElement>) => void;
@@ -50,15 +50,17 @@ export const BigButton = ({
   const staticShadow = { filter: 'drop-shadow(2px 7px 43px #683ab7ea)' };
 
   return (
-    <Button className={className} onClick={onClick} isSmall={isSmall}>
+    <BigButtonContainer
+      className={className}
+      onClick={onClick}
+      isSmall={isSmall}
+    >
       <animated.svg
         width="auto"
         viewBox="0 0 471 471"
         fill="none"
         xmlns="http://www.w3.org/2000/svg"
         style={{
-          // transform: isSmall ? 'scale(0.3)' : 'scale(1)',
-          // transformOrigin: 'center 0',
           overflow: 'visible'
         }}
       >
@@ -177,14 +179,14 @@ export const BigButton = ({
           strokeWidth="4"
         />
       </animated.svg>
-    </Button>
+    </BigButtonContainer>
   );
 };
 
-const Button = styled.button<BigButtonProps>`
+export const BigButtonContainer = styled.button<BigButtonProps>`
   position: relative;
-  width: ${props => props.isSmall ? '120px' : '240px'};
-  height: ${props => props.isSmall ? '120px' : '240px'};
+  width: ${props => (props.isSmall ? '120px' : '240px')};
+  height: ${props => (props.isSmall ? '120px' : '240px')};
   border-radius: 50%;
   border: none;
   cursor: pointer;

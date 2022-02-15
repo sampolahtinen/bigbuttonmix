@@ -1,5 +1,5 @@
 import { useState } from 'react';
-import { getDeviceLocation, DeviceLocation } from '../utils/getDeviceLocation';
+import { DeviceLocation, getDeviceLocation } from '../utils/getDeviceLocation';
 
 export const useDeviceLocation = () => {
   const [deviceLocation, setDeviceLocation] = useState<
@@ -12,7 +12,6 @@ export const useDeviceLocation = () => {
     setIsLoading(true);
     try {
       const location = await getDeviceLocation();
-
       localStorage.setItem('device-location', JSON.stringify(location));
 
       setDeviceLocation(location);
