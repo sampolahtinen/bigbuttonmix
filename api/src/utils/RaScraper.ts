@@ -106,6 +106,7 @@ export class RaScraper extends DataSource {
 
   public async getEvents(location: Location, date: string): Promise<string[]> {
     const url = `https://ra.co/events/${location.country}/${location.city}?week=${date}`;
+    logInfo(`Getting events for: ${url}`);
 
     if (await this.isCached(url)) {
       return await this.getCached(url);
@@ -125,6 +126,7 @@ export class RaScraper extends DataSource {
 
   public async getEventDetails(eventId: string) {
     const url = `https://ra.co${eventId}`;
+    logInfo(`Getting details for event: ${url}`);
 
     if (await this.isCached(url)) {
       return await this.getCached(url);
@@ -162,6 +164,7 @@ export class RaScraper extends DataSource {
     } else {
       /**
        * Getting soundcloud link for each artist and adding that as a property
+       * todo - how do we send these requests but also continue on with selecting a sc link and displaying it?
        */
       for (let i = 0; i < artists.length; i++) {
         const link = await this.getArtistSoundcloudLink(artists[i].id);
