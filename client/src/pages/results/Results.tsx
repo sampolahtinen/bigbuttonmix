@@ -28,10 +28,11 @@ export const Results = () => {
 
   const [isLoading, setIsLoading] = useState(true);
 
-  const [soundcloudData, setSoundcloudData] =
-    useState<RandomMixQueryResponse['randomEvent']['randomTrack']>();
+  const [soundcloudData, setSoundcloudData] = useState<
+    RandomMixQueryResponse['randomEvent']['randomTrack']
+  >();
 
-  const location = useLocation() as unknown as {
+  const location = (useLocation() as unknown) as {
     state: RandomMixQueryResponse;
   };
 
@@ -65,8 +66,10 @@ export const Results = () => {
         scWidget.current.pause();
       }
 
-      const { randomTrack: soundcloudData, ...raEventInformation } =
-        response.data.randomEvent;
+      const {
+        randomTrack: soundcloudData,
+        ...raEventInformation
+      } = response.data.randomEvent;
 
       setSoundcloudData(soundcloudData);
 
@@ -137,8 +140,10 @@ export const Results = () => {
 
   useEffect(() => {
     if (location.state) {
-      const { randomTrack: soundcloudData, ...raEventInformation } =
-        location.state.randomEvent;
+      const {
+        randomTrack: soundcloudData,
+        ...raEventInformation
+      } = location.state.randomEvent;
 
       setSoundcloudData(soundcloudData);
       setRaEventInformation(raEventInformation);

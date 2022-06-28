@@ -1,4 +1,5 @@
 import { ApolloClient, InMemoryCache } from '@apollo/client';
+import { __DEV__ } from '../../src/constants/index';
 
 export const graphqlEndpoint =
   process.env.NODE_ENV === 'production'

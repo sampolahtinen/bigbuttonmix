@@ -70,7 +70,7 @@ export class RaScraper extends DataSource {
   }
 
   private async isCached(key: string) {
-    if (redisClient) return redisClient.exists(key);
+    if (redisClient) return redisClient.getAsync(key);
 
     return false;
   }
@@ -78,7 +78,7 @@ export class RaScraper extends DataSource {
   private async getCached(key: string) {
     logInfo(chalk.magenta(`Using cached data: ${key}`));
 
-    const cachedData = await redisClient.get(key);
+    const cachedData = await redisClient.getAsync(key);
 
     return JSON.parse(cachedData);
   }
@@ -86,8 +86,8 @@ export class RaScraper extends DataSource {
   private async removeCached(key: string) {
     logInfo(chalk.magenta(`Removing cached data: ${key}`));
 
-    if (redisClient && (await redisClient.exists(key))) {
-      await redisClient.del(key);
+    if (redisClient && (await redisClient.getAsync(key))) {
+      await redisClient.delAsync(key);
     }
   }
 
@@ -98,7 +98,7 @@ export class RaScraper extends DataSource {
     if (redisClient) {
       logInfo(chalk.magenta(`Caching data: ${key}`));
 
-      await redisClient.set(key, JSON.stringify(data));
+      await redisClient.setAsync(key, JSON.stringify(data));
 
       logSuccess(chalk.magenta(`Cached data: ${key}`));
     }

@@ -1,14 +1,19 @@
+import 'dotenv/config';
 import { ApolloServer } from 'apollo-server';
+import bluebird from 'bluebird';
 import chalk from 'chalk';
-import dotenv from 'dotenv';
 import * as redis from 'redis';
 import { PORT, REDIS_ENABLED } from './constants';
 import { schema } from './schema';
 import { Crawler } from './utils/Crawler';
 import { RaScraper } from './utils/RaScraper';
 
-dotenv.config();
+bluebird.promisifyAll((<any>redis).RedisClient.prototype);
+bluebird.promisifyAll((<any>redis).Multi.prototype);
+
 console.log(`${chalk.blue('ENVIRONMENT:')} ${process.env.NODE_ENV}`);
+
+console.log('Connecting to redis...');
 
 const redisClient = REDIS_ENABLED
   ? redis.createClient({
@@ -21,10 +26,10 @@ export { redisClient };
 const crawler = new Crawler();
 
 crawler.init().then(async () => {
-  if (redisClient) {
-    console.log('Connecting to redis...');
-    await redisClient.connect();
-  }
+  // if (redisClient) {
+  //   console.log('Connecting to redis...');
+  //   await redisClient.connect();
+  // }
 
   const dataSources = () => ({
     raScraper: new RaScraper(crawler)
