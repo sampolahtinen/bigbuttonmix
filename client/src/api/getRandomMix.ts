@@ -1,5 +1,5 @@
 export type EventInformation = {
-  eventLink: string;
+  eventUrl: string;
   venue: string;
   title: string;
   date: string;
