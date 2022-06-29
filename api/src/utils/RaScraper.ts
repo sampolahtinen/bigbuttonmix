@@ -2,12 +2,7 @@ import { DataSource } from 'apollo-datasource';
 import axios from 'axios';
 import shuffle from 'shuffle-array';
 import { RETRY_LIMIT, REDIS_ENABLED } from '../constants';
-import {
-  EventArgs,
-  RandomEventResponse,
-  Location,
-  EventMetaInfo
-} from '../typeDefs';
+import { EventArgs, RandomEventResponse, Location } from '../typeDefs';
 import { Crawler } from './Crawler';
 import { logSuccess, logError, logInfo, logWarning } from './logger';
 import { redisClient } from '../server';
@@ -20,7 +15,6 @@ import { isEmpty } from 'ramda';
 import { ApolloError } from 'apollo-server';
 import { ErrorMessages, ErrorCodes } from '../typeDefs';
 import chalk from 'chalk';
-import { mockRandomEventResponse } from '../__mocks__/mockRandomEventResponse';
 
 enum Step {
   'GetEvents',
@@ -52,6 +46,7 @@ export class RaScraper extends DataSource {
   scLink: string;
   artistSoundCloudTracks: string[];
   artistsWithSoundcloud: EventArtist[];
+  shuffledEventArtists: EventArtist[];
 
   constructor(crawler: Crawler) {
     super();
@@ -63,6 +58,7 @@ export class RaScraper extends DataSource {
     this.scLink = '';
     this.artistSoundCloudTracks = [];
     this.artistsWithSoundcloud = [];
+    this.shuffledEventArtists = [];
   }
 
   private goTo(step: Step) {
@@ -166,10 +162,10 @@ export class RaScraper extends DataSource {
        * Getting soundcloud link for each artist and adding that as a property
        * todo - how do we send these requests but also continue on with selecting a sc link and displaying it?
        */
-      for (let i = 0; i < artists.length; i++) {
-        const link = await this.getArtistSoundcloudLink(artists[i].id);
-        artists[i].soundcloudUrl = link;
-      }
+      // for (let i = 0; i < artists.length; i++) {
+      //   const link = await this.getArtistSoundcloudLink(artists[i].id);
+      //   artists[i].soundcloudUrl = link;
+      // }
     }
 
     const eventDetails = {
@@ -331,6 +327,11 @@ export class RaScraper extends DataSource {
                 break;
               } else {
                 logSuccess(`RANDOM EVENT DETAILS SCRAPED: ${randomEvent}`);
+
+                this.shuffledEventArtists = shuffle(
+                  this.randomEventDetails.artists
+                );
+
                 this.goTo(Step.GetArtistSoundCloudLink);
 
                 break;
@@ -339,26 +340,18 @@ export class RaScraper extends DataSource {
              * Third step is about getting random artist SoundCloud link
              */
             case Step.GetArtistSoundCloudLink:
-              logInfo('>> GETTING RANDOM SOUNDCLOUD URL <<');
+              logInfo('>> GETTING RANDOM SOUNDCLOUD URL <<'); // Shuffle modifies original
 
-              const eventArtists = shuffle(this.randomEventDetails.artists); // Shuffle modifies original
+              while (!this.scLink) {
+                if (isEmpty(this.shuffledEventArtists)) {
+                  logError(
+                    '>> NONE OF THE EVENT ARTISTS HAVE SOUNDCLOUD URL <<'
+                  );
 
-              this.artistsWithSoundcloud = eventArtists.filter(
-                artist => artist.soundcloudUrl
-              );
+                  return this.goTo(Step.GetEventDetails);
+                }
 
-              if (isEmpty(this.artistsWithSoundcloud)) {
-                /**
-                 * If none of the event artists have soundcloud link,
-                 * go and pick next event
-                 */
-                logError('>> NONE OF THE EVENT ARTISTS HAVE SOUNDCLOUD URL <<');
-
-                this.goTo(Step.GetEventDetails);
-
-                break;
-              } else {
-                const randomArtist = this.artistsWithSoundcloud.shift(); // also modifies original
+                const randomArtist = this.shuffledEventArtists.shift(); // also modifies original
                 this.scLink = await this.getArtistSoundcloudLink(
                   randomArtist.id
                 );
@@ -378,7 +371,7 @@ export class RaScraper extends DataSource {
               if (isEmpty(this.artistSoundCloudTracks)) {
                 logError('>> ARTIST HAS NO SOUNDCLOUD TRACKS <<');
 
-                if (isEmpty(this.artistsWithSoundcloud)) {
+                if (isEmpty(this.shuffledEventArtists)) {
                   logError('>> NONE OF THE EVENT ARTISTS HAVE TRACKS <<');
 
                   await this.removeCached(this.randomEventDetails.eventUrl);
@@ -403,12 +396,10 @@ export class RaScraper extends DataSource {
 
                   break;
                 } else {
-                  const randomArtist = this.artistsWithSoundcloud.shift(); // also modifies original
-                  this.scLink = await this.getArtistSoundcloudLink(
-                    randomArtist.id
-                  );
-
-                  this.goTo(Step.GetSoundCloudTracks);
+                  /**
+                   * Lets go and pick another artist from the event
+                   */
+                  this.goTo(Step.GetArtistSoundCloudLink);
 
                   break;
                 }
