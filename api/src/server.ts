@@ -21,16 +21,20 @@ const redisClient = REDIS_ENABLED
     })
   : null;
 
+if (redisClient) {
+  redisClient.on('ready', () =>
+    console.log(`${chalk.green('Redis connected successfully')}`)
+  );
+  redisClient.on('error', () =>
+    console.log(`${chalk.red('Redis connection failed')}`)
+  );
+}
+
 export { redisClient };
 
 const crawler = new Crawler();
 
 crawler.init().then(async () => {
-  // if (redisClient) {
-  //   console.log('Connecting to redis...');
-  //   await redisClient.connect();
-  // }
-
   const dataSources = () => ({
     raScraper: new RaScraper(crawler)
   });
