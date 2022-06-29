@@ -1,8 +1,8 @@
 /** @jsx jsx */
-import React from 'react';
-import { jsx, css } from '@emotion/react';
+import { jsx } from '@emotion/react';
 import styled from '@emotion/styled';
-import { useSpring, animated } from 'react-spring';
+import React from 'react';
+import { animated, useSpring } from 'react-spring';
 
 type BigButtonProps = {
   onClick: (event: React.MouseEvent<HTMLButtonElement>) => void;
@@ -183,11 +183,13 @@ export const BigButton = ({
 
 const Button = styled.button<BigButtonProps>`
   position: relative;
-  width: ${props => props.isSmall ? '120px' : '240px'};
-  height: ${props => props.isSmall ? '120px' : '240px'};
+  width: ${props => (props.isSmall ? '120px' : '240px')};
+  height: ${props => (props.isSmall ? '120px' : '240px')};
   border-radius: 50%;
   border: none;
   cursor: pointer;
   background: unset;
   margin-bottom: 2rem;
+  -webkit-tap-highlight-color: transparent;
+  outline: none;
 `;
