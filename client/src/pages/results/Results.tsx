@@ -7,13 +7,19 @@ import { format } from 'date-fns';
 import React, { useCallback, useEffect, useRef, useState } from 'react';
 import { useLocation } from 'react-router';
 import { Box } from 'theme-ui';
-import { RandomMixQueryResponse } from '../../api/getRandomMix';
+import {
+  Artist,
+  EventInformation,
+  RandomMixQueryResponse
+} from '../../api/getRandomMix';
 import { BigButton } from '../../components/BigButton';
 import { LocationSelector } from '../../components/LocationSelector/LocationSelector';
 import { Message, MessageType } from '../../components/Message/Message';
 import { theme } from '../../styles/theme';
 import { DropdownOption } from '../../utils/generateCityOptions';
 import { RandomEventQuery } from '../index/getRandomEvent';
+import { EventArtists } from './getEventArtists';
+import { RandomSoundcloudTrack } from './getSoundcloudTrack';
 
 declare global {
   interface Window {
@@ -39,11 +45,30 @@ export const Results = () => {
     DropdownOption | undefined
   >(undefined);
 
-  const [raEventInformation, setRaEventInformation] = useState<
-    Omit<RandomMixQueryResponse['randomEvent'], 'randomTrack'> | undefined
-  >(undefined);
+  const [raEventInformation, setRaEventInformation] =
+    useState<EventInformation>();
+
+  const [raEventArtists, setRaEventArtists] = useState<Artist[]>([]);
 
   const [getRandomEvent, { refetch }] = useLazyQuery(RandomEventQuery);
+
+  const [
+    getEventArtists,
+    { refetch: refetchEventArtists, loading: isArtistsLoading }
+  ] = useLazyQuery(EventArtists, {
+    onCompleted: ({ eventArtists }) => {
+      if (raEventInformation) {
+        setRaEventArtists(eventArtists);
+      }
+    }
+  });
+
+  const [getRandomSoundcloudTrack] = useLazyQuery(RandomSoundcloudTrack, {
+    onCompleted: ({ randomSoundcloudTrack }) => {
+      console.log(randomSoundcloudTrack);
+      setSoundcloudData(randomSoundcloudTrack);
+    }
+  });
 
   const scWidget = useRef<SC.SoundCloudWidget>();
 
@@ -82,6 +107,7 @@ export const Results = () => {
       }
 
       setRaEventInformation(raEventInformation);
+      setRaEventArtists(raEventInformation.artists);
     } catch (error) {
       if (axios.isAxiosError(error) && error.response?.status === 404) {
         setErrorMessage('No events found for given location. Try another one!');
@@ -107,6 +133,13 @@ export const Results = () => {
   };
 
   const handleLocationError = (message: string) => setErrorMessage(message);
+
+  const handleGetArtistTrack = (artistSoundcloudUrl: string) => {
+    console.log(artistSoundcloudUrl);
+    getRandomSoundcloudTrack({
+      variables: { soundcloudUrl: artistSoundcloudUrl }
+    });
+  };
 
   useEffect(() => {
     const storedSearchLocation = localStorage.getItem('search-location');
@@ -145,6 +178,12 @@ export const Results = () => {
       setIsLoading(false);
     }
   }, [location]);
+
+  useEffect(() => {
+    if (raEventInformation?.id) {
+      getEventArtists({ variables: { eventId: raEventInformation.id } });
+    }
+  }, [raEventInformation]);
 
   return (
     <React.Fragment>
@@ -210,7 +249,7 @@ export const Results = () => {
                     justifyContent: 'center'
                   }}
                 >
-                  {raEventInformation.artists.map((artist, index) => (
+                  {raEventArtists.map((artist, index) => (
                     <div>
                       <Text
                         css={{
@@ -220,6 +259,10 @@ export const Results = () => {
                               ? theme.colors.orange
                               : theme.colors.text
                         }}
+                        disabled={isArtistsLoading || !artist.soundcloudUrl}
+                        onClick={() =>
+                          handleGetArtistTrack(artist.soundcloudUrl)
+                        }
                       >
                         {artist.name}
                       </Text>
@@ -271,13 +314,14 @@ const Heading = styled.span`
   font-weight: 200;
 `;
 
-const Text = styled.span`
+const Text = styled.span<{ disabled?: boolean }>`
   font-family: 'bold';
   text-decoration: none;
-  color: white;
+  opacity: ${props => (props.disabled ? 0.5 : 1)};
   font-size: 1.2rem;
   text-align: left;
   margin-bottom: 32px;
+  cursor: pointer;
 `;
 
 const Anchor = styled.a`

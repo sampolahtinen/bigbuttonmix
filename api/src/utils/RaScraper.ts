@@ -157,15 +157,6 @@ export class RaScraper extends DataSource {
     if (artists.length == 0) {
       const message = 'No artists found in event page: ' + url;
       logWarning(message);
-    } else {
-      /**
-       * Getting soundcloud link for each artist and adding that as a property
-       * todo - how do we send these requests but also continue on with selecting a sc link and displaying it?
-       */
-      // for (let i = 0; i < artists.length; i++) {
-      //   const link = await this.getArtistSoundcloudLink(artists[i].id);
-      //   artists[i].soundcloudUrl = link;
-      // }
     }
 
     const eventDetails = {
@@ -282,6 +273,46 @@ export class RaScraper extends DataSource {
     return tracks;
   }
 
+  getEventArtists(eventId: string): Promise<EventArtist[]> {
+    return new Promise(async (resolve, reject) => {
+      console.log(eventId);
+      const url = `https://ra.co${eventId}`;
+
+      const artists = await this.crawler.scrape<EventArtist[]>(
+        url,
+        'a > span[href^="/dj"]',
+        elements =>
+          elements.map(elem => ({
+            name: elem.textContent,
+            id: elem.getAttribute('href')
+          }))
+      );
+
+      for (let i = 0; i < artists.length; i++) {
+        const link = await this.getArtistSoundcloudLink(artists[i].id);
+
+        artists[i].soundcloudUrl = link;
+      }
+      console.log(artists);
+      return resolve(artists);
+    });
+  }
+
+  getRandomSoundcloudTrack(
+    artistSoundcloudUrl: string
+  ): Promise<SoundCloudOembedResponse> {
+    return new Promise(async (resolve, reject) => {
+      console.log(artistSoundcloudUrl);
+      const tracks = shuffle(
+        await this.getArtistSoundCloudTracks(artistSoundcloudUrl)
+      );
+
+      const oembed = this.getSoundcloudEmbedCode(tracks[0]);
+
+      return resolve(oembed);
+    });
+  }
+
   getRandomEvent(args: EventArgs): Promise<RandomEventResponse> {
     return new Promise(async (resolve, reject) => {
       // console.log('raFunction');
@@ -328,9 +359,9 @@ export class RaScraper extends DataSource {
               } else {
                 logSuccess(`RANDOM EVENT DETAILS SCRAPED: ${randomEvent}`);
 
-                this.shuffledEventArtists = shuffle(
-                  this.randomEventDetails.artists
-                );
+                this.shuffledEventArtists = shuffle([
+                  ...this.randomEventDetails.artists
+                ]);
 
                 this.goTo(Step.GetArtistSoundCloudLink);
 
@@ -348,10 +379,13 @@ export class RaScraper extends DataSource {
                     '>> NONE OF THE EVENT ARTISTS HAVE SOUNDCLOUD URL <<'
                   );
 
-                  return this.goTo(Step.GetEventDetails);
+                  this.goTo(Step.GetEventDetails);
+
+                  break;
                 }
 
                 const randomArtist = this.shuffledEventArtists.shift(); // also modifies original
+
                 this.scLink = await this.getArtistSoundcloudLink(
                   randomArtist.id
                 );

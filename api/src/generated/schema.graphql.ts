@@ -78,7 +78,9 @@ export interface NexusGenFieldTypes {
     venue: string | null; // String
   }
   Query: { // field return type
+    eventArtists: Array<NexusGenRootTypes['Artist'] | null> | null; // [Artist]
     randomEvent: NexusGenRootTypes['Event'] | null; // Event
+    randomSoundcloudTrack: NexusGenRootTypes['SoundCloudMeta'] | null; // SoundCloudMeta
   }
   SoundCloudMeta: { // field return type
     author_url: string | null; // String
@@ -109,7 +111,9 @@ export interface NexusGenFieldTypeNames {
     venue: 'String'
   }
   Query: { // field return type name
+    eventArtists: 'Artist'
     randomEvent: 'Event'
+    randomSoundcloudTrack: 'SoundCloudMeta'
   }
   SoundCloudMeta: { // field return type name
     author_url: 'String'
@@ -123,11 +127,17 @@ export interface NexusGenFieldTypeNames {
 
 export interface NexusGenArgTypes {
   Query: {
+    eventArtists: { // args
+      eventId: string; // String!
+    }
     randomEvent: { // args
       autoPlay?: boolean | null; // Boolean
       city: string; // String!
       country: string; // String!
       date: string; // String!
+    }
+    randomSoundcloudTrack: { // args
+      soundcloudUrl: string; // String!
     }
   }
 }

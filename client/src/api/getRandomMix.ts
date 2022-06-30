@@ -1,14 +1,17 @@
+export type Artist = {
+  id: string;
+  name: string;
+  soundcloudUrl: string;
+};
+
 export type EventInformation = {
+  id: string;
   eventUrl: string;
   venue: string;
   title: string;
   date: string;
   openingHours: string;
-  artists: {
-    id: string;
-    name: string;
-    soundcloudUrl: string;
-  }[];
+  artists: Artist[];
 };
 
 export type RandomMixQueryResponse = {

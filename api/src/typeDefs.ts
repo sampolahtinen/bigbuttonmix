@@ -87,4 +87,6 @@ export enum ErrorCodes {
 
 export interface RaScraper extends DataSource {
   getRandomEvent(args: EventArgs): Promise<RandomEventResponse>;
+  getEventArtists(eventId: string): Promise<EventArtist[]>;
+  getRandomSoundcloudTrack(artistId: string): Promise<SoundCloudOembedResponse>;
 }
