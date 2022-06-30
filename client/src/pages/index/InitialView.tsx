@@ -18,7 +18,7 @@ import { Routes } from '../../constants/routes';
 import { theme } from '../../styles/theme';
 import { DropdownOption } from '../../utils/generateCityOptions';
 import { getCurrentDate } from '../../utils/index';
-import { RandomEventQuery } from './getRandomEvent';
+import RandomEventQuery from './getRandomEvent.graphql';
 
 declare global {
   interface Window {

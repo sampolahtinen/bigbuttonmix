@@ -17,9 +17,9 @@ import { LocationSelector } from '../../components/LocationSelector/LocationSele
 import { Message, MessageType } from '../../components/Message/Message';
 import { theme } from '../../styles/theme';
 import { DropdownOption } from '../../utils/generateCityOptions';
-import { RandomEventQuery } from '../index/getRandomEvent';
-import { EventArtists } from './getEventArtists';
-import { RandomSoundcloudTrack } from './getSoundcloudTrack';
+import RandomEventQuery from '../index/getRandomEvent.graphql';
+import EventArtists from './getEventArtists.graphql';
+import RandomSoundcloudTrack from './getSoundcloudTrack.graphql';
 
 declare global {
   interface Window {
