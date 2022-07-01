@@ -1,5 +1,5 @@
-query RandomSoundcloudTrack($soundcloudUrl: String!) {
-  randomSoundcloudTrack(soundcloudUrl: $soundcloudUrl) {
+query RandomSoundcloudTrack($soundcloudUrl: String, $artistId: String) {
+  randomSoundcloudTrack(soundcloudUrl: $soundcloudUrl, artistId: $artistId) {
     track_url
     widget_src
     author_url

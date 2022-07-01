@@ -137,7 +137,8 @@ export interface NexusGenArgTypes {
       date: string; // String!
     }
     randomSoundcloudTrack: { // args
-      soundcloudUrl: string; // String!
+      artistId?: string | null; // String
+      soundcloudUrl?: string | null; // String
     }
   }
 }

@@ -298,16 +298,37 @@ export class RaScraper extends DataSource {
     });
   }
 
-  getRandomSoundcloudTrack(
-    artistSoundcloudUrl: string
-  ): Promise<SoundCloudOembedResponse> {
+  getRandomSoundcloudTrack(args: {
+    artistSoundcloudUrl?: string;
+    artistId?: string;
+  }): Promise<SoundCloudOembedResponse> {
     return new Promise(async (resolve, reject) => {
-      console.log(artistSoundcloudUrl);
-      const tracks = shuffle(
-        await this.getArtistSoundCloudTracks(artistSoundcloudUrl)
-      );
+      console.log(args);
+      let oembed;
 
-      const oembed = this.getSoundcloudEmbedCode(tracks[0]);
+      if (args.artistSoundcloudUrl) {
+        const tracks = shuffle(
+          await this.getArtistSoundCloudTracks(args.artistSoundcloudUrl)
+        );
+
+        oembed = this.getSoundcloudEmbedCode(tracks[0]);
+      }
+
+      if (args.artistId) {
+        const soundcloudUrl = await this.getArtistSoundcloudLink(args.artistId);
+
+        if (soundcloudUrl) {
+          const tracks = shuffle(
+            await this.getArtistSoundCloudTracks(soundcloudUrl)
+          );
+
+          oembed = this.getSoundcloudEmbedCode(tracks[0]);
+        } else {
+          return reject(
+            new ApolloError(ErrorMessages.NoSoundcloud, ErrorCodes.NotFound)
+          );
+        }
+      }
 
       return resolve(oembed);
     });
@@ -405,6 +426,10 @@ export class RaScraper extends DataSource {
               if (isEmpty(this.artistSoundCloudTracks)) {
                 logError('>> ARTIST HAS NO SOUNDCLOUD TRACKS <<');
 
+                console.log(
+                  'shuffled artists array: ',
+                  this.shuffledEventArtists
+                );
                 if (isEmpty(this.shuffledEventArtists)) {
                   logError('>> NONE OF THE EVENT ARTISTS HAVE TRACKS <<');
 

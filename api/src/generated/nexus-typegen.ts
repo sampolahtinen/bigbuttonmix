@@ -43,7 +43,7 @@ type Query {
     """
     date: String!
   ): Event
-  randomSoundcloudTrack(soundcloudUrl: String!): SoundCloudMeta
+  randomSoundcloudTrack(artistId: String, soundcloudUrl: String): SoundCloudMeta
 }
 
 type SoundCloudMeta {

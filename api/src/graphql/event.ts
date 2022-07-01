@@ -104,10 +104,11 @@ export const RandomSoundcloudTrack = extendType({
     t.field('randomSoundcloudTrack', {
       type: 'SoundCloudMeta',
       args: {
-        soundcloudUrl: nonNull(stringArg())
+        soundcloudUrl: stringArg(),
+        artistId: stringArg()
       },
       resolve: async (_, args, ctx) =>
-        ctx.dataSources.raScraper.getRandomSoundcloudTrack(args.soundcloudUrl)
+        ctx.dataSources.raScraper.getRandomSoundcloudTrack(args)
     });
   }
 });

@@ -134,12 +134,18 @@ export const Results = () => {
 
   const handleLocationError = (message: string) => setErrorMessage(message);
 
-  const handleGetArtistTrack = (artistSoundcloudUrl: string) => {
-    console.log(artistSoundcloudUrl);
+  const handleGetArtistTrack = (artistId: string) => {
+    console.log(artistId);
     getRandomSoundcloudTrack({
-      variables: { soundcloudUrl: artistSoundcloudUrl }
+      variables: { artistId }
     });
   };
+  // const handleGetArtistTrack = (artistSoundcloudUrl: string) => {
+  //   console.log(artistSoundcloudUrl);
+  //   getRandomSoundcloudTrack({
+  //     variables: { soundcloudUrl: artistSoundcloudUrl }
+  //   });
+  // };
 
   useEffect(() => {
     const storedSearchLocation = localStorage.getItem('search-location');
@@ -179,11 +185,11 @@ export const Results = () => {
     }
   }, [location]);
 
-  useEffect(() => {
-    if (raEventInformation?.id) {
-      getEventArtists({ variables: { eventId: raEventInformation.id } });
-    }
-  }, [raEventInformation]);
+  // useEffect(() => {
+  //   if (raEventInformation?.id) {
+  //     getEventArtists({ variables: { eventId: raEventInformation.id } });
+  //   }
+  // }, [raEventInformation]);
 
   return (
     <React.Fragment>
@@ -260,9 +266,7 @@ export const Results = () => {
                               : theme.colors.text
                         }}
                         disabled={isArtistsLoading || !artist.soundcloudUrl}
-                        onClick={() =>
-                          handleGetArtistTrack(artist.soundcloudUrl)
-                        }
+                        onClick={() => handleGetArtistTrack(artist.id)}
                       >
                         {artist.name}
                       </Text>
