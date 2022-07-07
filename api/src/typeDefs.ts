@@ -76,6 +76,7 @@ export type SoundCloudOembedResponse = {
 
 export enum ErrorMessages {
   'NoEvents' = 'No events for given location.',
+  'NoSoundcloud' = 'Artist has no soundcloud page.',
   'EventHasNoSoundcloud' = 'None of the events have artist with soundcloud tracks.',
   'Timeout' = 'Timeout'
 }
@@ -87,4 +88,9 @@ export enum ErrorCodes {
 
 export interface RaScraper extends DataSource {
   getRandomEvent(args: EventArgs): Promise<RandomEventResponse>;
+  getEventArtists(eventId: string): Promise<EventArtist[]>;
+  getRandomSoundcloudTrack(args: {
+    soundcloudUrl?: string;
+    artistId?: string;
+  }): Promise<SoundCloudOembedResponse>;
 }

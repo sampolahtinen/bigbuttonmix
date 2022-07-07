@@ -7,13 +7,18 @@ import { format } from 'date-fns';
 import React, { useCallback, useEffect, useRef, useState } from 'react';
 import { useLocation } from 'react-router';
 import { Box } from 'theme-ui';
-import { RandomMixQueryResponse } from '../../api/getRandomMix';
+import {
+  Artist,
+  EventInformation,
+  RandomMixQueryResponse
+} from '../../api/getRandomMix';
 import { BigButton } from '../../components/BigButton';
 import { LocationSelector } from '../../components/LocationSelector/LocationSelector';
 import { Message, MessageType } from '../../components/Message/Message';
 import { theme } from '../../styles/theme';
 import { DropdownOption } from '../../utils/generateCityOptions';
-import { RandomEventQuery } from '../index/getRandomEvent';
+import RandomEventQuery from '../index/getRandomEvent.graphql';
+import RandomSoundcloudTrack from './getSoundcloudTrack.graphql';
 
 declare global {
   interface Window {
@@ -39,11 +44,33 @@ export const Results = () => {
     DropdownOption | undefined
   >(undefined);
 
-  const [raEventInformation, setRaEventInformation] = useState<
-    Omit<RandomMixQueryResponse['randomEvent'], 'randomTrack'> | undefined
-  >(undefined);
+  const [raEventInformation, setRaEventInformation] =
+    useState<EventInformation>();
+
+  const [raEventArtists, setRaEventArtists] = useState<Artist[]>([]);
 
   const [getRandomEvent, { refetch }] = useLazyQuery(RandomEventQuery);
+
+  const [getRandomSoundcloudTrack] = useLazyQuery(RandomSoundcloudTrack, {
+    notifyOnNetworkStatusChange: true,
+    onCompleted: ({ randomSoundcloudTrack, variables }) => {
+      console.log(randomSoundcloudTrack);
+      setSoundcloudData(randomSoundcloudTrack);
+    },
+    onError: error => {
+      if (error.message === 'Artist has no soundcloud page.') {
+        const errorArtistId = error.graphQLErrors[0].extensions.artistId;
+        if (errorArtistId) {
+          setRaEventArtists(prevArtists =>
+            prevArtists.map(artist => ({
+              ...artist,
+              hasErrors: artist.id === errorArtistId ? true : false
+            }))
+          );
+        }
+      }
+    }
+  });
 
   const scWidget = useRef<SC.SoundCloudWidget>();
 
@@ -82,6 +109,7 @@ export const Results = () => {
       }
 
       setRaEventInformation(raEventInformation);
+      setRaEventArtists(raEventInformation.artists);
     } catch (error) {
       if (axios.isAxiosError(error) && error.response?.status === 404) {
         setErrorMessage('No events found for given location. Try another one!');
@@ -107,6 +135,24 @@ export const Results = () => {
   };
 
   const handleLocationError = (message: string) => setErrorMessage(message);
+
+  const handleGetArtistTrack = async (artistId: string) => {
+    const response: any = await getRandomSoundcloudTrack({
+      variables: { artistId }
+    });
+
+    if (response.data && response.data.randomSoundcloudTrack) {
+      setRaEventArtists(prevArtists =>
+        prevArtists.map(artist => ({
+          ...artist,
+          soundcloudUrl:
+            artist.id === artistId
+              ? response.data.randomSoundcloudTrack.author_url
+              : artist.soundcloudUrl
+        }))
+      );
+    }
+  };
 
   useEffect(() => {
     const storedSearchLocation = localStorage.getItem('search-location');
@@ -137,11 +183,16 @@ export const Results = () => {
 
   useEffect(() => {
     if (location.state) {
-      const { randomTrack: soundcloudData, ...raEventInformation } =
-        location.state.randomEvent;
+      const {
+        randomTrack: soundcloudData,
+        artists,
+        ...raEventInformation
+      } = location.state.randomEvent;
 
       setSoundcloudData(soundcloudData);
+      console.log(raEventInformation);
       setRaEventInformation(raEventInformation);
+      setRaEventArtists(artists);
       setIsLoading(false);
     }
   }, [location]);
@@ -210,7 +261,7 @@ export const Results = () => {
                     justifyContent: 'center'
                   }}
                 >
-                  {raEventInformation.artists.map((artist, index) => (
+                  {raEventArtists.map((artist, index) => (
                     <div>
                       <Text
                         css={{
@@ -220,10 +271,12 @@ export const Results = () => {
                               ? theme.colors.orange
                               : theme.colors.text
                         }}
+                        disabled={artist.hasErrors}
+                        onClick={() => handleGetArtistTrack(artist.id)}
                       >
                         {artist.name}
                       </Text>
-                      {index < raEventInformation.artists.length - 1 && (
+                      {index < raEventArtists.length - 1 && (
                         <span css={{ padding: '0 0.8rem' }}>|</span>
                       )}
                     </div>
@@ -271,13 +324,15 @@ const Heading = styled.span`
   font-weight: 200;
 `;
 
-const Text = styled.span`
+const Text = styled.span<{ disabled?: boolean | null | undefined }>`
   font-family: 'bold';
   text-decoration: none;
-  color: white;
+  opacity: ${props => (props.disabled ? 0.5 : 1)};
   font-size: 1.2rem;
   text-align: left;
   margin-bottom: 32px;
+  cursor: pointer;
+  pointer-events: ${props => (props.disabled ? 'none' : 'all')};
 `;
 
 const Anchor = styled.a`

@@ -42,6 +42,11 @@ const webpackConfig = env => {
         {
           test: /\.(jpg|jpeg|png|webp|avif)$/i,
           type: 'asset/resource'
+        },
+        {
+          test: /\.(graphql|gql)$/,
+          exclude: /node_modules/,
+          loader: 'graphql-tag/loader'
         }
       ]
     },

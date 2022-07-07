@@ -2,12 +2,7 @@ import { DataSource } from 'apollo-datasource';
 import axios from 'axios';
 import shuffle from 'shuffle-array';
 import { RETRY_LIMIT, REDIS_ENABLED } from '../constants';
-import {
-  EventArgs,
-  RandomEventResponse,
-  Location,
-  EventMetaInfo
-} from '../typeDefs';
+import { EventArgs, RandomEventResponse, Location } from '../typeDefs';
 import { Crawler } from './Crawler';
 import { logSuccess, logError, logInfo, logWarning } from './logger';
 import { redisClient } from '../server';
@@ -20,7 +15,6 @@ import { isEmpty } from 'ramda';
 import { ApolloError } from 'apollo-server';
 import { ErrorMessages, ErrorCodes } from '../typeDefs';
 import chalk from 'chalk';
-import { mockRandomEventResponse } from '../__mocks__/mockRandomEventResponse';
 
 enum Step {
   'GetEvents',
@@ -52,6 +46,7 @@ export class RaScraper extends DataSource {
   scLink: string;
   artistSoundCloudTracks: string[];
   artistsWithSoundcloud: EventArtist[];
+  shuffledEventArtists: EventArtist[];
 
   constructor(crawler: Crawler) {
     super();
@@ -63,6 +58,7 @@ export class RaScraper extends DataSource {
     this.scLink = '';
     this.artistSoundCloudTracks = [];
     this.artistsWithSoundcloud = [];
+    this.shuffledEventArtists = [];
   }
 
   private goTo(step: Step) {
@@ -161,15 +157,6 @@ export class RaScraper extends DataSource {
     if (artists.length == 0) {
       const message = 'No artists found in event page: ' + url;
       logWarning(message);
-    } else {
-      /**
-       * Getting soundcloud link for each artist and adding that as a property
-       * todo - how do we send these requests but also continue on with selecting a sc link and displaying it?
-       */
-      for (let i = 0; i < artists.length; i++) {
-        const link = await this.getArtistSoundcloudLink(artists[i].id);
-        artists[i].soundcloudUrl = link;
-      }
     }
 
     const eventDetails = {
@@ -255,35 +242,121 @@ export class RaScraper extends DataSource {
       return await this.getCached(artistSoundCloudUrl);
     }
 
-    logInfo('Requesting page from Soundcloud');
+    logInfo(`Requesting page from Soundcloud: "${artistSoundCloudUrl}"`);
 
     // console.time('SC tracks page');
 
-    const scPageString = await axios.get(`${artistSoundCloudUrl}/tracks/`);
+    try {
+      const scPageString = await axios.get(`${artistSoundCloudUrl}/tracks/`);
 
-    logInfo(`Tracks page request status ${scPageString.status}`);
+      logInfo(`Tracks page request status ${scPageString.status}`);
 
-    // console.timeEnd('SC tracks page');
+      // console.timeEnd('SC tracks page');
 
-    const scUserID = scPageString.data.match(/(?<=soundcloud:users:)\d+/g);
-    logInfo(`scUserID ${scUserID}`);
+      const scUserID = scPageString.data.match(/(?<=soundcloud:users:)\d+/g);
 
-    const client_id = 'iZIs9mchVcX5lhVRyQGGAYlNPVldzAoX';
-    // We could look into a better way to manage client IDs. One option is to use the youtube api
+      logInfo(`scUserID ${scUserID}`);
 
-    const api_v2_url = `https://api-v2.soundcloud.com/users/${scUserID[0]}/tracks?representation=&client_id=${client_id}&limit=20&offset=0&linked_partitioning=1&app_version=1628858614&app_locale=en`;
+      const client_id = 'iZIs9mchVcX5lhVRyQGGAYlNPVldzAoX';
+      // We could look into a better way to manage client IDs. One option is to use the youtube api
 
-    const response = await axios.get(api_v2_url);
+      const api_v2_url = `https://api-v2.soundcloud.com/users/${scUserID[0]}/tracks?representation=&client_id=${client_id}&limit=20&offset=0&linked_partitioning=1&app_version=1628858614&app_locale=en`;
 
-    logInfo(`Tracks api request status ${response.status}`);
+      const response = await axios.get(api_v2_url);
 
-    const tracks: string[] = response.data.collection.map(
-      entry => entry.permalink_url
-    );
+      logInfo(`Tracks api request status ${response.status}`);
 
-    await this.setCacheData(artistSoundCloudUrl, tracks);
+      const tracks: string[] = response.data.collection.map(
+        entry => entry.permalink_url
+      );
 
-    return tracks;
+      await this.setCacheData(artistSoundCloudUrl, tracks);
+
+      return tracks;
+    } catch (error) {
+      logError('Soundcloud User not found (404)');
+      throw new Error(ErrorMessages.NoSoundcloud);
+    }
+  }
+
+  getEventArtists(eventId: string): Promise<EventArtist[]> {
+    return new Promise(async (resolve, reject) => {
+      console.log(eventId);
+      const url = `https://ra.co${eventId}`;
+
+      const artists = await this.crawler.scrape<EventArtist[]>(
+        url,
+        'a > span[href^="/dj"]',
+        elements =>
+          elements.map(elem => ({
+            name: elem.textContent,
+            id: elem.getAttribute('href')
+          }))
+      );
+
+      for (let i = 0; i < artists.length; i++) {
+        const link = await this.getArtistSoundcloudLink(artists[i].id);
+
+        artists[i].soundcloudUrl = link;
+      }
+      console.log(artists);
+      return resolve(artists);
+    });
+  }
+
+  getRandomSoundcloudTrack(args: {
+    artistSoundcloudUrl?: string;
+    artistId?: string;
+  }): Promise<SoundCloudOembedResponse> {
+    return new Promise(async (resolve, reject) => {
+      try {
+        let oembed;
+
+        if (args.artistSoundcloudUrl) {
+          const tracks = shuffle(
+            await this.getArtistSoundCloudTracks(args.artistSoundcloudUrl)
+          );
+
+          oembed = this.getSoundcloudEmbedCode(tracks[0]);
+        }
+
+        if (args.artistId) {
+          logInfo(`Getting soundcloud URL for ${args.artistId}`);
+
+          const soundcloudUrl = await this.getArtistSoundcloudLink(
+            args.artistId
+          );
+
+          if (soundcloudUrl) {
+            logInfo(`Getting random soundcloud track: ${soundcloudUrl}`);
+
+            const tracks = shuffle(
+              await this.getArtistSoundCloudTracks(soundcloudUrl)
+            );
+
+            if (isEmpty(tracks)) {
+              throw new Error(ErrorMessages.NoSoundcloud);
+            } else {
+              oembed = this.getSoundcloudEmbedCode(tracks[0]);
+
+              return resolve(oembed);
+            }
+          } else {
+            throw new Error(ErrorMessages.NoSoundcloud);
+          }
+        }
+      } catch (error) {
+        if (error.message === ErrorMessages.NoSoundcloud) {
+          logError('Artist has no soundcloud page (404)');
+          return reject(
+            new ApolloError(ErrorMessages.NoSoundcloud, ErrorCodes.NotFound, {
+              artistId: args.artistId,
+              haloo: 1
+            })
+          );
+        }
+      }
+    });
   }
 
   getRandomEvent(args: EventArgs): Promise<RandomEventResponse> {
@@ -331,6 +404,11 @@ export class RaScraper extends DataSource {
                 break;
               } else {
                 logSuccess(`RANDOM EVENT DETAILS SCRAPED: ${randomEvent}`);
+
+                this.shuffledEventArtists = shuffle([
+                  ...this.randomEventDetails.artists
+                ]);
+
                 this.goTo(Step.GetArtistSoundCloudLink);
 
                 break;
@@ -339,26 +417,21 @@ export class RaScraper extends DataSource {
              * Third step is about getting random artist SoundCloud link
              */
             case Step.GetArtistSoundCloudLink:
-              logInfo('>> GETTING RANDOM SOUNDCLOUD URL <<');
+              logInfo('>> GETTING RANDOM SOUNDCLOUD URL <<'); // Shuffle modifies original
 
-              const eventArtists = shuffle(this.randomEventDetails.artists); // Shuffle modifies original
+              while (!this.scLink) {
+                if (isEmpty(this.shuffledEventArtists)) {
+                  logError(
+                    '>> NONE OF THE EVENT ARTISTS HAVE SOUNDCLOUD URL <<'
+                  );
 
-              this.artistsWithSoundcloud = eventArtists.filter(
-                artist => artist.soundcloudUrl
-              );
+                  this.goTo(Step.GetEventDetails);
 
-              if (isEmpty(this.artistsWithSoundcloud)) {
-                /**
-                 * If none of the event artists have soundcloud link,
-                 * go and pick next event
-                 */
-                logError('>> NONE OF THE EVENT ARTISTS HAVE SOUNDCLOUD URL <<');
+                  break;
+                }
 
-                this.goTo(Step.GetEventDetails);
+                const randomArtist = this.shuffledEventArtists.shift(); // also modifies original
 
-                break;
-              } else {
-                const randomArtist = this.artistsWithSoundcloud.shift(); // also modifies original
                 this.scLink = await this.getArtistSoundcloudLink(
                   randomArtist.id
                 );
@@ -370,15 +443,28 @@ export class RaScraper extends DataSource {
 
             case Step.GetSoundCloudTracks:
               logInfo('>> GETTING SOUNDCLOUD TRACKS <<');
+              let tracks;
 
-              this.artistSoundCloudTracks = shuffle(
-                await this.getArtistSoundCloudTracks(this.scLink)
-              );
+              try {
+                tracks = await this.getArtistSoundCloudTracks(this.scLink);
+              } catch (error) {
+                console.log(error);
+                if (error.message === ErrorMessages.NoSoundcloud) {
+                  this.goTo(Step.GetArtistSoundCloudLink);
+                  break;
+                }
+              }
+
+              this.artistSoundCloudTracks = shuffle(tracks);
 
               if (isEmpty(this.artistSoundCloudTracks)) {
                 logError('>> ARTIST HAS NO SOUNDCLOUD TRACKS <<');
 
-                if (isEmpty(this.artistsWithSoundcloud)) {
+                console.log(
+                  'shuffled artists array: ',
+                  this.shuffledEventArtists
+                );
+                if (isEmpty(this.shuffledEventArtists)) {
                   logError('>> NONE OF THE EVENT ARTISTS HAVE TRACKS <<');
 
                   await this.removeCached(this.randomEventDetails.eventUrl);
@@ -403,12 +489,10 @@ export class RaScraper extends DataSource {
 
                   break;
                 } else {
-                  const randomArtist = this.artistsWithSoundcloud.shift(); // also modifies original
-                  this.scLink = await this.getArtistSoundcloudLink(
-                    randomArtist.id
-                  );
-
-                  this.goTo(Step.GetSoundCloudTracks);
+                  /**
+                   * Lets go and pick another artist from the event
+                   */
+                  this.goTo(Step.GetArtistSoundCloudLink);
 
                   break;
                 }

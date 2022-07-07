@@ -27,6 +27,7 @@ type Event {
 }
 
 type Query {
+  eventArtists(eventId: String!): [Artist]
   randomEvent(
     """Will be passed to SoundCloud oembed generator"""
     autoPlay: Boolean
@@ -42,6 +43,7 @@ type Query {
     """
     date: String!
   ): Event
+  randomSoundcloudTrack(artistId: String, soundcloudUrl: String): SoundCloudMeta
 }
 
 type SoundCloudMeta {

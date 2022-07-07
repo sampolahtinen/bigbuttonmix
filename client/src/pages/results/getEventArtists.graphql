@@ -1,0 +1,7 @@
+query EventArtists($eventId: String!) {
+  eventArtists(eventId: $eventId) {
+    id
+    name
+    soundcloudUrl
+  }
+}

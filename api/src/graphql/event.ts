@@ -1,4 +1,11 @@
-import { extendType, objectType, nonNull, stringArg, booleanArg } from 'nexus';
+import {
+  extendType,
+  objectType,
+  nonNull,
+  stringArg,
+  booleanArg,
+  list
+} from 'nexus';
 
 export const Artist = objectType({
   name: 'Artist',
@@ -73,6 +80,35 @@ export const EventQuery = extendType({
       args: eventArgs,
       resolve: async (_, args, ctx) =>
         ctx.dataSources.raScraper.getRandomEvent(args)
+    });
+  }
+});
+
+export const EventArtistsQuery = extendType({
+  type: 'Query',
+  definition: t => {
+    t.field('eventArtists', {
+      type: list('Artist'),
+      args: {
+        eventId: nonNull(stringArg())
+      },
+      resolve: async (_, args, ctx) =>
+        ctx.dataSources.raScraper.getEventArtists(args.eventId)
+    });
+  }
+});
+
+export const RandomSoundcloudTrack = extendType({
+  type: 'Query',
+  definition: t => {
+    t.field('randomSoundcloudTrack', {
+      type: 'SoundCloudMeta',
+      args: {
+        soundcloudUrl: stringArg(),
+        artistId: stringArg()
+      },
+      resolve: async (_, args, ctx) =>
+        ctx.dataSources.raScraper.getRandomSoundcloudTrack(args)
     });
   }
 });

@@ -20,8 +20,10 @@
     "noImplicitAny": true,
     "strictPropertyInitialization": true,
     "importsNotUsedAsValues": "preserve",
-    "outDir": "build"
+    "outDir": "build",
+    "typeRoots": ["node_modules/@types", "src/@types"]
   },
   "include": ["src"],
-  "exclude": ["node_modules", "**/*.test.tsx"]
+  "exclude": ["node_modules", "**/*.test.tsx"],
+  "files": ["src/@types/graphql.d.ts"]
 }

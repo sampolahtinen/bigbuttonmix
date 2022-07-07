@@ -124,6 +124,8 @@
   },
   "devDependencies": {
     "@wojtekmaj/enzyme-adapter-react-17": "^0.6.6",
-    "prettier": "^2.5.1"
+    "graphql-tag": "^2.12.6",
+    "prettier": "^2.5.1",
+    "typewriter-effect": "^2.19.0"
   }
 }
