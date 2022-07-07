@@ -53,9 +53,19 @@ export const Results = () => {
 
   const [getRandomSoundcloudTrack] = useLazyQuery(RandomSoundcloudTrack, {
     notifyOnNetworkStatusChange: true,
-    onCompleted: ({ randomSoundcloudTrack, variables }) => {
-      console.log(randomSoundcloudTrack);
+    onCompleted: ({ randomSoundcloudTrack }) => {
       setSoundcloudData(randomSoundcloudTrack);
+
+      if (scWidget.current) {
+        scWidget.current.load(randomSoundcloudTrack.track_url, {
+          show_teaser: false,
+          show_artwork: true,
+          auto_play: true,
+          hide_related: true,
+          visual: true,
+          callback: () => scWidget.current?.play()
+        });
+      }
     },
     onError: error => {
       if (error.message === 'Artist has no soundcloud page.') {
