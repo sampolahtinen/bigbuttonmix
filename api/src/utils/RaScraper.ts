@@ -242,35 +242,41 @@ export class RaScraper extends DataSource {
       return await this.getCached(artistSoundCloudUrl);
     }
 
-    logInfo('Requesting page from Soundcloud');
+    logInfo(`Requesting page from Soundcloud: "${artistSoundCloudUrl}"`);
 
     // console.time('SC tracks page');
 
-    const scPageString = await axios.get(`${artistSoundCloudUrl}/tracks/`);
+    try {
+      const scPageString = await axios.get(`${artistSoundCloudUrl}/tracks/`);
 
-    logInfo(`Tracks page request status ${scPageString.status}`);
+      logInfo(`Tracks page request status ${scPageString.status}`);
 
-    // console.timeEnd('SC tracks page');
+      // console.timeEnd('SC tracks page');
 
-    const scUserID = scPageString.data.match(/(?<=soundcloud:users:)\d+/g);
-    logInfo(`scUserID ${scUserID}`);
+      const scUserID = scPageString.data.match(/(?<=soundcloud:users:)\d+/g);
 
-    const client_id = 'iZIs9mchVcX5lhVRyQGGAYlNPVldzAoX';
-    // We could look into a better way to manage client IDs. One option is to use the youtube api
+      logInfo(`scUserID ${scUserID}`);
 
-    const api_v2_url = `https://api-v2.soundcloud.com/users/${scUserID[0]}/tracks?representation=&client_id=${client_id}&limit=20&offset=0&linked_partitioning=1&app_version=1628858614&app_locale=en`;
+      const client_id = 'iZIs9mchVcX5lhVRyQGGAYlNPVldzAoX';
+      // We could look into a better way to manage client IDs. One option is to use the youtube api
 
-    const response = await axios.get(api_v2_url);
+      const api_v2_url = `https://api-v2.soundcloud.com/users/${scUserID[0]}/tracks?representation=&client_id=${client_id}&limit=20&offset=0&linked_partitioning=1&app_version=1628858614&app_locale=en`;
 
-    logInfo(`Tracks api request status ${response.status}`);
+      const response = await axios.get(api_v2_url);
 
-    const tracks: string[] = response.data.collection.map(
-      entry => entry.permalink_url
-    );
+      logInfo(`Tracks api request status ${response.status}`);
 
-    await this.setCacheData(artistSoundCloudUrl, tracks);
+      const tracks: string[] = response.data.collection.map(
+        entry => entry.permalink_url
+      );
 
-    return tracks;
+      await this.setCacheData(artistSoundCloudUrl, tracks);
+
+      return tracks;
+    } catch (error) {
+      logError('Soundcloud User not found (404)');
+      throw new Error(ErrorMessages.NoSoundcloud);
+    }
   }
 
   getEventArtists(eventId: string): Promise<EventArtist[]> {
@@ -303,34 +309,53 @@ export class RaScraper extends DataSource {
     artistId?: string;
   }): Promise<SoundCloudOembedResponse> {
     return new Promise(async (resolve, reject) => {
-      console.log(args);
-      let oembed;
+      try {
+        let oembed;
 
-      if (args.artistSoundcloudUrl) {
-        const tracks = shuffle(
-          await this.getArtistSoundCloudTracks(args.artistSoundcloudUrl)
-        );
-
-        oembed = this.getSoundcloudEmbedCode(tracks[0]);
-      }
-
-      if (args.artistId) {
-        const soundcloudUrl = await this.getArtistSoundcloudLink(args.artistId);
-
-        if (soundcloudUrl) {
+        if (args.artistSoundcloudUrl) {
           const tracks = shuffle(
-            await this.getArtistSoundCloudTracks(soundcloudUrl)
+            await this.getArtistSoundCloudTracks(args.artistSoundcloudUrl)
           );
 
           oembed = this.getSoundcloudEmbedCode(tracks[0]);
-        } else {
+        }
+
+        if (args.artistId) {
+          logInfo(`Getting soundcloud URL for ${args.artistId}`);
+
+          const soundcloudUrl = await this.getArtistSoundcloudLink(
+            args.artistId
+          );
+
+          if (soundcloudUrl) {
+            logInfo(`Getting random soundcloud track: ${soundcloudUrl}`);
+
+            const tracks = shuffle(
+              await this.getArtistSoundCloudTracks(soundcloudUrl)
+            );
+
+            if (isEmpty(tracks)) {
+              throw new Error(ErrorMessages.NoSoundcloud);
+            } else {
+              oembed = this.getSoundcloudEmbedCode(tracks[0]);
+
+              return resolve(oembed);
+            }
+          } else {
+            throw new Error(ErrorMessages.NoSoundcloud);
+          }
+        }
+      } catch (error) {
+        if (error.message === ErrorMessages.NoSoundcloud) {
+          logError('Artist has no soundcloud page (404)');
           return reject(
-            new ApolloError(ErrorMessages.NoSoundcloud, ErrorCodes.NotFound)
+            new ApolloError(ErrorMessages.NoSoundcloud, ErrorCodes.NotFound, {
+              artistId: args.artistId,
+              haloo: 1
+            })
           );
         }
       }
-
-      return resolve(oembed);
     });
   }
 
@@ -418,10 +443,19 @@ export class RaScraper extends DataSource {
 
             case Step.GetSoundCloudTracks:
               logInfo('>> GETTING SOUNDCLOUD TRACKS <<');
+              let tracks;
 
-              this.artistSoundCloudTracks = shuffle(
-                await this.getArtistSoundCloudTracks(this.scLink)
-              );
+              try {
+                tracks = await this.getArtistSoundCloudTracks(this.scLink);
+              } catch (error) {
+                console.log(error);
+                if (error.message === ErrorMessages.NoSoundcloud) {
+                  this.goTo(Step.GetArtistSoundCloudLink);
+                  break;
+                }
+              }
+
+              this.artistSoundCloudTracks = shuffle(tracks);
 
               if (isEmpty(this.artistSoundCloudTracks)) {
                 logError('>> ARTIST HAS NO SOUNDCLOUD TRACKS <<');

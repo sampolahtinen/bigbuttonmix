@@ -18,7 +18,6 @@ import { Message, MessageType } from '../../components/Message/Message';
 import { theme } from '../../styles/theme';
 import { DropdownOption } from '../../utils/generateCityOptions';
 import RandomEventQuery from '../index/getRandomEvent.graphql';
-import EventArtists from './getEventArtists.graphql';
 import RandomSoundcloudTrack from './getSoundcloudTrack.graphql';
 
 declare global {
@@ -52,21 +51,24 @@ export const Results = () => {
 
   const [getRandomEvent, { refetch }] = useLazyQuery(RandomEventQuery);
 
-  const [
-    getEventArtists,
-    { refetch: refetchEventArtists, loading: isArtistsLoading }
-  ] = useLazyQuery(EventArtists, {
-    onCompleted: ({ eventArtists }) => {
-      if (raEventInformation) {
-        setRaEventArtists(eventArtists);
-      }
-    }
-  });
-
   const [getRandomSoundcloudTrack] = useLazyQuery(RandomSoundcloudTrack, {
-    onCompleted: ({ randomSoundcloudTrack }) => {
+    notifyOnNetworkStatusChange: true,
+    onCompleted: ({ randomSoundcloudTrack, variables }) => {
       console.log(randomSoundcloudTrack);
       setSoundcloudData(randomSoundcloudTrack);
+    },
+    onError: error => {
+      if (error.message === 'Artist has no soundcloud page.') {
+        const errorArtistId = error.graphQLErrors[0].extensions.artistId;
+        if (errorArtistId) {
+          setRaEventArtists(prevArtists =>
+            prevArtists.map(artist => ({
+              ...artist,
+              hasErrors: artist.id === errorArtistId ? true : false
+            }))
+          );
+        }
+      }
     }
   });
 
@@ -134,18 +136,23 @@ export const Results = () => {
 
   const handleLocationError = (message: string) => setErrorMessage(message);
 
-  const handleGetArtistTrack = (artistId: string) => {
-    console.log(artistId);
-    getRandomSoundcloudTrack({
+  const handleGetArtistTrack = async (artistId: string) => {
+    const response: any = await getRandomSoundcloudTrack({
       variables: { artistId }
     });
+
+    if (response.data.randomSoundcloudTrack) {
+      setRaEventArtists(prevArtists =>
+        prevArtists.map(artist => ({
+          ...artist,
+          soundcloudUrl:
+            artist.id === artistId
+              ? response.data.randomSoundcloudTrack.author_url
+              : artist.soundcloudUrl
+        }))
+      );
+    }
   };
-  // const handleGetArtistTrack = (artistSoundcloudUrl: string) => {
-  //   console.log(artistSoundcloudUrl);
-  //   getRandomSoundcloudTrack({
-  //     variables: { soundcloudUrl: artistSoundcloudUrl }
-  //   });
-  // };
 
   useEffect(() => {
     const storedSearchLocation = localStorage.getItem('search-location');
@@ -176,20 +183,19 @@ export const Results = () => {
 
   useEffect(() => {
     if (location.state) {
-      const { randomTrack: soundcloudData, ...raEventInformation } =
-        location.state.randomEvent;
+      const {
+        randomTrack: soundcloudData,
+        artists,
+        ...raEventInformation
+      } = location.state.randomEvent;
 
       setSoundcloudData(soundcloudData);
+      console.log(raEventInformation);
       setRaEventInformation(raEventInformation);
+      setRaEventArtists(artists);
       setIsLoading(false);
     }
   }, [location]);
-
-  // useEffect(() => {
-  //   if (raEventInformation?.id) {
-  //     getEventArtists({ variables: { eventId: raEventInformation.id } });
-  //   }
-  // }, [raEventInformation]);
 
   return (
     <React.Fragment>
@@ -265,12 +271,12 @@ export const Results = () => {
                               ? theme.colors.orange
                               : theme.colors.text
                         }}
-                        disabled={isArtistsLoading || !artist.soundcloudUrl}
+                        disabled={artist.hasErrors}
                         onClick={() => handleGetArtistTrack(artist.id)}
                       >
                         {artist.name}
                       </Text>
-                      {index < raEventInformation.artists.length - 1 && (
+                      {index < raEventArtists.length - 1 && (
                         <span css={{ padding: '0 0.8rem' }}>|</span>
                       )}
                     </div>
@@ -318,7 +324,7 @@ const Heading = styled.span`
   font-weight: 200;
 `;
 
-const Text = styled.span<{ disabled?: boolean }>`
+const Text = styled.span<{ disabled?: boolean | null | undefined }>`
   font-family: 'bold';
   text-decoration: none;
   opacity: ${props => (props.disabled ? 0.5 : 1)};
@@ -326,6 +332,7 @@ const Text = styled.span<{ disabled?: boolean }>`
   text-align: left;
   margin-bottom: 32px;
   cursor: pointer;
+  pointer-events: ${props => (props.disabled ? 'none' : 'all')};
 `;
 
 const Anchor = styled.a`
