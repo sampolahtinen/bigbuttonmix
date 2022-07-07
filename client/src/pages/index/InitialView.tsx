@@ -168,7 +168,7 @@ export const InitialView = () => {
                 onInit={typewriter => {
                   typewriter
                     .typeString('🥳🥳  HAPPY BIRTHDAY BUDDY 🥳🥳')
-                    .pauseFor(3500)
+                    .pauseFor(4000)
                     .callFunction(() => {
                       setStage(4);
                       setPs(true);
