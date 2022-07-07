@@ -141,7 +141,7 @@ export const Results = () => {
       variables: { artistId }
     });
 
-    if (response.data.randomSoundcloudTrack) {
+    if (response.data && response.data.randomSoundcloudTrack) {
       setRaEventArtists(prevArtists =>
         prevArtists.map(artist => ({
           ...artist,

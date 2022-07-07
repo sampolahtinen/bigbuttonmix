@@ -3,10 +3,12 @@ import { useLazyQuery } from '@apollo/client';
 import { jsx } from '@emotion/react';
 import styled from '@emotion/styled';
 import axios from 'axios';
+import { isToday } from 'date-fns';
 import { useEffect, useState } from 'react';
 import { useNavigate } from 'react-router';
 import { animated, config, useTransition } from 'react-spring';
 import { Box, Flex, Text } from 'theme-ui';
+import Typewriter from 'typewriter-effect';
 import { BigButton } from '../../components/BigButton';
 import { Footer } from '../../components/Footer/Footer';
 import {
@@ -104,6 +106,99 @@ export const InitialView = () => {
     return () => clearInterval(interval);
   }, []);
 
+  const [isCelebrationDone, setIsCelebrationDone] = useState(false);
+  const [stage, setStage] = useState(0);
+  const [ps, setPs] = useState(false);
+
+  if (!isCelebrationDone && isToday(new Date())) {
+    return (
+      <CongratsContainer>
+        <Container css={{ padding: '32px' }}>
+          {stage === 0 && (
+            <Typewriter
+              onInit={typewriter => {
+                typewriter
+                  .typeString('Ou, hey Andy! 👋')
+                  .pauseFor(2500)
+                  .callFunction(() => {
+                    setStage(1);
+                  })
+                  .start();
+              }}
+            />
+          )}
+
+          {stage === 1 && (
+            <Typewriter
+              onInit={typewriter => {
+                typewriter
+                  .typeString('Just wanted to tell you that...')
+                  .pauseFor(2500)
+                  .typeString(' I am really happy to have you in my life!')
+                  .pauseFor(2500)
+                  .callFunction(() => {
+                    setStage(2);
+                  })
+                  .start();
+              }}
+            />
+          )}
+
+          {stage === 2 && (
+            <Typewriter
+              onInit={typewriter => {
+                typewriter
+                  .typeString(' And also that...')
+                  .pauseFor(2500)
+                  .typeString(
+                    ' I appreciate our friendship deep to my core ❤❤❤'
+                  )
+                  .pauseFor(2500)
+                  .callFunction(() => {
+                    setStage(3);
+                  })
+                  .start();
+              }}
+            />
+          )}
+
+          {stage === 3 && (
+            <div>
+              <Typewriter
+                onInit={typewriter => {
+                  typewriter
+                    .typeString('🥳🥳  HAPPY BIRTHDAY BUDDY 🥳🥳')
+                    .pauseFor(3500)
+                    .callFunction(() => {
+                      setStage(4);
+                      setPs(true);
+                    })
+                    .start();
+                }}
+              />
+            </div>
+          )}
+
+          {ps && (
+            <Typewriter
+              onInit={typewriter => {
+                typewriter
+                  .typeString(
+                    '<small>P.S. Remember to click an artist name 😉</small>'
+                  )
+                  .pauseFor(2500)
+                  .callFunction(() => {
+                    setIsCelebrationDone(true);
+                  })
+                  .start();
+              }}
+            />
+          )}
+        </Container>
+      </CongratsContainer>
+    );
+  }
+
   return (
     <Container>
       <Box
@@ -161,6 +256,20 @@ const Title = styled.h1`
   margin: 0;
   color: 'white';
   font-family: 'bold';
+`;
+
+const CongratsContainer = styled.div`
+  position: absolute;
+  top: 0;
+  left: 0;
+  background-image: linear-gradient(
+    to bottom,
+    #12151f,
+    #121521,
+    #121524,
+    #121526,
+    #121528
+  );
 `;
 
 const Container = styled.div`
