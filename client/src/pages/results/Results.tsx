@@ -53,6 +53,7 @@ export const Results = () => {
 
   const [getRandomSoundcloudTrack] = useLazyQuery(RandomSoundcloudTrack, {
     notifyOnNetworkStatusChange: true,
+    fetchPolicy: 'no-cache',
     onCompleted: ({ randomSoundcloudTrack }) => {
       setSoundcloudData(randomSoundcloudTrack);
 
@@ -74,7 +75,7 @@ export const Results = () => {
           setRaEventArtists(prevArtists =>
             prevArtists.map(artist => ({
               ...artist,
-              hasErrors: artist.id === errorArtistId ? true : false
+              hasErrors: artist.id === errorArtistId ? true : artist.hasErrors
             }))
           );
         }

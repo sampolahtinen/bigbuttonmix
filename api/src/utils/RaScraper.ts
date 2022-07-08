@@ -432,8 +432,6 @@ export class RaScraper extends DataSource {
                 }
 
                 const randomArtist = this.shuffledEventArtists.shift(); // also modifies original
-                console.log('shuffled artists', this.shuffledEventArtists);
-                console.log('random artist', randomArtist);
 
                 this.scLink = await this.getArtistSoundcloudLink(
                   randomArtist.id
