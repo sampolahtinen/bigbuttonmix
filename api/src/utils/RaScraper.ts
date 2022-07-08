@@ -275,6 +275,8 @@ export class RaScraper extends DataSource {
       return tracks;
     } catch (error) {
       logError('Soundcloud User not found (404)');
+      logError(`Event: ${this.randomEventDetails.id}`);
+
       throw new Error(ErrorMessages.NoSoundcloud);
     }
   }
@@ -395,8 +397,8 @@ export class RaScraper extends DataSource {
             case Step.GetEventDetails:
               logInfo('>> GETTING EVENT DETAILS <<');
 
-              const randomEvent = '/events/1547648'; // shape is: /events/12345
-              // const randomEvent = this.events.shift(); // shape is: /events/12345
+              // const randomEvent = '/events/1517123';
+              const randomEvent = this.events.shift(); // shape is: /events/12345
               this.randomEventDetails = await this.getEventDetails(randomEvent);
 
               if (isEmpty(this.randomEventDetails.artists)) {
@@ -420,27 +422,41 @@ export class RaScraper extends DataSource {
             case Step.GetArtistSoundCloudLink:
               logInfo('>> GETTING RANDOM SOUNDCLOUD URL <<'); // Shuffle modifies original
 
+              if (isEmpty(this.shuffledEventArtists) && isEmpty(this.scLink)) {
+                logError('>> NONE OF THE EVENT ARTISTS HAVE SOUNDCLOUD URL <<');
+
+                this.goTo(Step.GetEventDetails);
+
+                break;
+              }
+
               while (!this.scLink) {
-                if (isEmpty(this.shuffledEventArtists)) {
-                  logError(
-                    '>> NONE OF THE EVENT ARTISTS HAVE SOUNDCLOUD URL <<'
-                  );
-
-                  this.goTo(Step.GetEventDetails);
-
-                  break;
-                }
-
                 const randomArtist = this.shuffledEventArtists.shift(); // also modifies original
 
                 this.scLink = await this.getArtistSoundcloudLink(
                   randomArtist.id
                 );
+
+                /**
+                 * Here we write the scraped scLink to the eventDetails.
+                 * This is important so that the client can highlight the artist,
+                 * during initial call.
+                 */
+                this.randomEventDetails = {
+                  ...this.randomEventDetails,
+                  artists: this.randomEventDetails.artists.map(artist => ({
+                    ...artist,
+                    soundcloudUrl:
+                      artist.id === randomArtist.id ? this.scLink : ''
+                  }))
+                };
               }
 
               logSuccess(`SOUNDCLOUD LINK: ${this.scLink}`);
 
               this.goTo(Step.GetSoundCloudTracks);
+
+              break;
 
             case Step.GetSoundCloudTracks:
               logInfo('>> GETTING SOUNDCLOUD TRACKS <<');
@@ -449,9 +465,11 @@ export class RaScraper extends DataSource {
               try {
                 tracks = await this.getArtistSoundCloudTracks(this.scLink);
               } catch (error) {
-                console.log(error);
                 if (error.message === ErrorMessages.NoSoundcloud) {
+                  this.scLink = '';
+
                   this.goTo(Step.GetArtistSoundCloudLink);
+
                   break;
                 }
               }
