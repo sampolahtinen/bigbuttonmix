@@ -53,6 +53,7 @@ export const Results = () => {
 
   const [getRandomSoundcloudTrack] = useLazyQuery(RandomSoundcloudTrack, {
     notifyOnNetworkStatusChange: true,
+    fetchPolicy: 'no-cache',
     onCompleted: ({ randomSoundcloudTrack }) => {
       setSoundcloudData(randomSoundcloudTrack);
 
@@ -74,7 +75,7 @@ export const Results = () => {
           setRaEventArtists(prevArtists =>
             prevArtists.map(artist => ({
               ...artist,
-              hasErrors: artist.id === errorArtistId ? true : false
+              hasErrors: artist.id === errorArtistId ? true : artist.hasErrors
             }))
           );
         }
@@ -352,6 +353,12 @@ const Anchor = styled.a`
   margin-bottom: 32px;
   font-family: 'bold';
   text-decoration: none;
+  -webkit-touch-callout: none; /* iOS Safari */
+  -webkit-user-select: none; /* Safari */
+  -khtml-user-select: none; /* Konqueror HTML */
+  -moz-user-select: none; /* Old versions of Firefox */
+  -ms-user-select: none; /* Internet Explorer/Edge */
+  user-select: none;
 `;
 
 const DateText = styled(Text)`
