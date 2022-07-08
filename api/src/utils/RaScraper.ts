@@ -395,7 +395,8 @@ export class RaScraper extends DataSource {
             case Step.GetEventDetails:
               logInfo('>> GETTING EVENT DETAILS <<');
 
-              const randomEvent = this.events.shift(); // shape is: /events/12345
+              const randomEvent = '/events/1547648'; // shape is: /events/12345
+              // const randomEvent = this.events.shift(); // shape is: /events/12345
               this.randomEventDetails = await this.getEventDetails(randomEvent);
 
               if (isEmpty(this.randomEventDetails.artists)) {
@@ -431,6 +432,8 @@ export class RaScraper extends DataSource {
                 }
 
                 const randomArtist = this.shuffledEventArtists.shift(); // also modifies original
+                console.log('shuffled artists', this.shuffledEventArtists);
+                console.log('random artist', randomArtist);
 
                 this.scLink = await this.getArtistSoundcloudLink(
                   randomArtist.id
@@ -459,11 +462,11 @@ export class RaScraper extends DataSource {
 
               if (isEmpty(this.artistSoundCloudTracks)) {
                 logError('>> ARTIST HAS NO SOUNDCLOUD TRACKS <<');
+                /**
+                 * Have to reset scLink so that Step.GetArtistSoundCloudLink works
+                 */
+                this.scLink = '';
 
-                console.log(
-                  'shuffled artists array: ',
-                  this.shuffledEventArtists
-                );
                 if (isEmpty(this.shuffledEventArtists)) {
                   logError('>> NONE OF THE EVENT ARTISTS HAVE TRACKS <<');
 
